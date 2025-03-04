@@ -15,7 +15,14 @@ const routes = [
     {
         path: "/manage",
         name: "Manage",
-        component: () => import("@/views/manage/Home.vue")
+        component: () => import("@/views/manage/Home.vue"),
+        children: [
+            {
+                path: "/user",
+                name: "User",
+                component:() => import("@/views/manage/User.vue")
+            }
+        ]
     }
 ];
 

@@ -1,4 +1,4 @@
-package com.html.server;
+package com.example.gumeng;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

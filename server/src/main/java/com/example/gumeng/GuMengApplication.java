@@ -1,13 +1,11 @@
-package com.html.server;
+package com.example.gumeng;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ServerApplication {
-
+public class GuMengApplication {
     public static void main(String[] args) {
-        SpringApplication.run(ServerApplication.class, args);
+        SpringApplication.run(GuMengApplication.class, args);
     }
-
 }
