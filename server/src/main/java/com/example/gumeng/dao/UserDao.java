@@ -17,10 +17,10 @@ public interface UserDao {
     @Select("SELECT * FROM user")
     List<User> findAll();
 
-    @Insert("INSERT INTO user (name,username,password,city,email) VALUES (#{name},#{username},#{password},#{city},#{email})")
+    @Insert("INSERT INTO user (nickname,username,password,city,email) VALUES (#{nickname},#{username},#{password},#{city},#{email})")
     void insert(User user);
 
-    @Update("UPDATE user set name=#{name},username=#{username},password=#{password},city=#{city},email=#{email} WHERE id=#{id}")
+    @Update("UPDATE user set nickname=#{nickname},username=#{username},password=#{password},city=#{city},email=#{email} WHERE id=#{id}")
     void update(User user);
 
     @Delete("DELETE FROM user WHERE id=#{id}")
