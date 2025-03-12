@@ -12,6 +12,10 @@ spring:
     username: root
     password: 123456
 
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true #开启实体类中驼峰命名和数据库中下划线命名的自动转换
+
 #  redis:
 #    host: 127.0.0.1       # Redis 服务器地址
 #    port: 6379            # Redis 服务器端口

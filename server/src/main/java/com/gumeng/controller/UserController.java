@@ -5,6 +5,7 @@ import com.gumeng.service.UserService;
 import com.github.pagehelper.PageInfo;
 import com.gumeng.entily.User;
 import com.gumeng.utils.JwtUtil;
+import com.gumeng.utils.ThreadLocalUtil;
 import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
@@ -64,7 +65,25 @@ public class UserController {
         return Result.error("密码错误");
     }
 
-    //查询用户信息
+    @GetMapping("/userInfo")
+    public Result<User> userInfo() {
+        //根据用户名查询用户
+        Map<String,Object> map = ThreadLocalUtil.get();
+        String username = (String) map.get("username");
+
+        User user = userService.findByUserName(username);
+        return Result.success(user);
+    }
+
+    //更新用户信息
+    @PutMapping("/update")
+    public Boolean update(@RequestBody User user) {
+        userService.update(user);
+        return true;
+    }
+
+
+    //查询所有用户信息
     @GetMapping("/findAll")
     public List<User> findAll() {
         //数据返回
@@ -75,13 +94,6 @@ public class UserController {
     @PostMapping("/insert")
     public Boolean insert(@RequestBody User user) {
         userService.insert(user);
-        return true;
-    }
-
-    //编辑用户信息
-    @PutMapping("/update")
-    public Boolean update(@RequestBody User user) {
-        userService.update(user);
         return true;
     }
 

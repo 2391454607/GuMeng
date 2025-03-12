@@ -1,6 +1,8 @@
 package com.gumeng.entily;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
+
 
 import java.time.LocalDateTime;
 
@@ -18,6 +20,7 @@ public class User {
 
     private String username;  //用户名
 
+    @JsonIgnore //让springMVC把当前对象转换成json字符，忽略/ 用户获取信息的时候不打印该字符
     private String password;  //密码
 
     private String userPic;  //用户头像地址
