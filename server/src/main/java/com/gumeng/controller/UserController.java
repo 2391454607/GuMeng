@@ -5,11 +5,11 @@ import com.gumeng.service.UserService;
 import com.github.pagehelper.PageInfo;
 import com.gumeng.entily.User;
 import com.gumeng.utils.JwtUtil;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.constraints.Pattern;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
