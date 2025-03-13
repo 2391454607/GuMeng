@@ -10,13 +10,16 @@ public interface UserService {
     User findByUserName(String username);
     //注册
     void register(String username, String password);
-
+    //更新用户信息
+    void update(User user);
+    //更新用户头像
+    void updateAvatar(String avatarUrl);
+    //更新用户密码
+    void updatePwd(String newPwd);
 
     List<User> findAll();
 
     void insert(User user);
-
-    void update(User user);
 
     void delete(Integer[] ids);
 

@@ -7,7 +7,9 @@ import com.gumeng.entily.User;
 import com.gumeng.utils.JwtUtil;
 import com.gumeng.utils.ThreadLocalUtil;
 import jakarta.validation.constraints.Pattern;
+import org.hibernate.validator.constraints.URL;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -77,9 +79,47 @@ public class UserController {
 
     //更新用户信息
     @PutMapping("/update")
-    public Boolean update(@RequestBody User user) {
+    public Result update(@RequestBody @Validated User user) {
         userService.update(user);
-        return true;
+        return Result.success();
+    }
+
+    //更新用户头像
+    @PatchMapping("/updateAvatar")
+    public Result updateAvatar(@RequestParam @URL String avatarUrl){
+        userService.updateAvatar(avatarUrl);
+        return Result.success();
+    }
+
+    //更新用户密码
+    @PatchMapping("/updatePwd")
+    public Result updatePwd(@RequestBody Map<String,String> params){
+        //校验参数
+        String oldPwd = params.get("old_pwd");
+        String newPwd = params.get("new_pwd");
+        String rePwd = params.get("re_pwd");
+
+        if (!StringUtils.hasLength(oldPwd) || !StringUtils.hasLength(newPwd) || !StringUtils.hasLength(rePwd)){
+            return Result.error("不能为空");
+        }
+
+        //检验原密码是否正确
+        //调用 userService 根据用户名拿到原密码，再和 old_pwd 比对
+        Map<String,Object> map = ThreadLocalUtil.get();
+        String username = (String) map.get("username");
+        User loginUser = userService.findByUserName(username);
+        if(!loginUser.getPassword().equals(oldPwd)){
+            return Result.error("原密码错误");
+        }
+
+        //检查 rePwd 和 newPwd 是否一样
+        if (!rePwd.equals(newPwd)){
+            return Result.error("两次填写的密码不一样");
+        }
+
+        //调用 service 完成密码更新
+        userService.updatePwd(newPwd);
+        return Result.success();
     }
 
 

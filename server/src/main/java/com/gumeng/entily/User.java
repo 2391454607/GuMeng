@@ -1,7 +1,12 @@
 package com.gumeng.entily;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
+
 
 
 import java.time.LocalDateTime;
@@ -14,8 +19,11 @@ import java.time.LocalDateTime;
 @Data
 public class User {
 
+    @NotNull
     private Integer id;  //主键ID
 
+    @NotEmpty
+    @Pattern(regexp = "^\\S{1,8}$")
     private String nickname;  //昵称
 
     private String username;  //用户名
@@ -27,6 +35,8 @@ public class User {
 
     private String address;  //地址
 
+    @NotEmpty
+    @Email
     private String email;  //邮件
 
     private LocalDateTime createTime;  //创建时间

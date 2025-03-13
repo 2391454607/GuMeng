@@ -5,9 +5,11 @@ import com.gumeng.entily.User;
 import com.gumeng.service.UserService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.gumeng.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +31,27 @@ public class UserServiceImpl implements UserService {
         //加密
 
         //添加注册用户
-        Map<String, Object> params = new HashMap<>();
-        params.put("username", username);
-        params.put("password", password);
-        userMapper.add(params);
+        userMapper.add(username,password);
+    }
+    //更新用户信息
+    @Override
+    public void update(User user) {
+        user.setUpdateTime(LocalDateTime.now());
+        userMapper.update(user);
+    }
+    //更新用户头像
+    @Override
+    public void updateAvatar(String avatarUrl) {
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Integer id = (Integer) map.get("id");
+        userMapper.updateAvatar(avatarUrl,id);
+    }
+    //更新用户密码
+    @Override
+    public void updatePwd(String newPwd) {
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Integer id = (Integer) map.get("id");
+        userMapper.updatePwd(newPwd,id);
     }
 
 
@@ -44,11 +63,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public void insert(User user) {
         userMapper.insert(user);
-    }
-
-    @Override
-    public void update(User user) {
-        userMapper.update(user);
     }
 
     @Override

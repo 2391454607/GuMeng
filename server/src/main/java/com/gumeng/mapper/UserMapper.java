@@ -19,7 +19,16 @@ public interface UserMapper {
     User findByUserName(String username);
     //添加注册用户
     @Insert("INSERT INTO user (username,password,create_time,update_time) VALUES (#{username},#{password},now(),now())")
-    void add(Map<String, Object> params);
+    void add(String username, String password);
+    //更新用户信息
+    @Update("UPDATE user SET nickname=#{nickname},username=#{username},address=#{address},email=#{email},update_time=#{updateTime} WHERE id=#{id}")
+    void update(User user);
+    //更新用户头像
+    @Update("UPDATE user SET user_pic=#{avatarUrl},update_time=now() WHERE id=#{id}")
+    void updateAvatar(String avatarUrl, Integer id);
+    //更新用户密码
+    @Update("UPDATE user SET password=#{newPwd},update_time=now() WHERE id=#{id}")
+    void updatePwd(String newPwd, Integer id);
 
 
     @Select("SELECT * FROM user")
@@ -27,9 +36,6 @@ public interface UserMapper {
 
     @Insert("INSERT INTO user (username,password,create_time,update_time) VALUES (#{username},#{password},now(),now())")
     void insert(User user);
-
-    @Update("UPDATE user set nickname=#{nickname},username=#{username},password=#{password},address=#{address},email=#{email} WHERE id=#{id}")
-    void update(User user);
 
     @Delete("DELETE FROM user WHERE id=#{id}")
     void delete(Integer id);
