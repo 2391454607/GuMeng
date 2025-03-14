@@ -5,6 +5,7 @@ import com.gumeng.entily.User;
 import com.gumeng.service.UserService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.gumeng.utils.Argon2Util;
 import com.gumeng.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,10 +29,10 @@ public class UserServiceImpl implements UserService {
     //注册
     @Override
     public void register(String username, String password) {
-        //加密
-
+        //对密码使用 Argon2 加密
+        String hashedPassword = Argon2Util.hash(password);
         //添加注册用户
-        userMapper.add(username,password);
+        userMapper.add(username,hashedPassword);
     }
     //更新用户信息
     @Override

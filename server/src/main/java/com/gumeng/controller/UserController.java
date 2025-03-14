@@ -4,6 +4,7 @@ import com.gumeng.entily.Result;
 import com.gumeng.service.UserService;
 import com.github.pagehelper.PageInfo;
 import com.gumeng.entily.User;
+import com.gumeng.utils.Argon2Util;
 import com.gumeng.utils.JwtUtil;
 import com.gumeng.utils.ThreadLocalUtil;
 import jakarta.validation.constraints.Pattern;
@@ -56,7 +57,7 @@ public class UserController {
             return Result.error("用户名不存在");
         }
         //判断密码是否正确
-        if (password.equals(loginUser.getPassword())){
+        if (Argon2Util.verify(password, loginUser.getPassword())){
             //登录成功
             Map<String,Object> claims = new HashMap<>();
             claims.put("id",loginUser.getId());

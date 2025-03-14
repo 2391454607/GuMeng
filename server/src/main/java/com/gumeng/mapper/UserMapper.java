@@ -18,8 +18,8 @@ public interface UserMapper {
     @Select("SELECT * FROM user WHERE username=#{username}")
     User findByUserName(String username);
     //添加注册用户
-    @Insert("INSERT INTO user (username,password,create_time,update_time) VALUES (#{username},#{password},now(),now())")
-    void add(String username, String password);
+    @Insert("INSERT INTO user (username,password,create_time,update_time) VALUES (#{username},#{passwordHash},now(),now())")
+    void add(String username, String passwordHash);
     //更新用户信息
     @Update("UPDATE user SET nickname=#{nickname},username=#{username},address=#{address},email=#{email},update_time=#{updateTime} WHERE id=#{id}")
     void update(User user);

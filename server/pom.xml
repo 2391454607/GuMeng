@@ -94,6 +94,13 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
+        <!-- argon2-jvm 依赖, 用于加密密码后存储 -->
+        <dependency>
+            <groupId>de.mkammerer</groupId>
+            <artifactId>argon2-jvm</artifactId>
+            <version>2.11</version>
+        </dependency>
+
         <!-- jwt坐标 token令牌 -->
         <dependency>
             <groupId>com.auth0</groupId>
