@@ -27,8 +27,8 @@ public interface UserMapper {
     @Update("UPDATE user SET user_pic=#{avatarUrl},update_time=now() WHERE id=#{id}")
     void updateAvatar(String avatarUrl, Integer id);
     //更新用户密码
-    @Update("UPDATE user SET password=#{newPwd},update_time=now() WHERE id=#{id}")
-    void updatePwd(String newPwd, Integer id);
+    @Update("UPDATE user SET password=#{hashedNewPwd},update_time=now() WHERE id=#{id}")
+    void updatePwd(String hashedNewPwd, Integer id);
 
 
     @Select("SELECT * FROM user")

@@ -10,6 +10,8 @@ import com.gumeng.utils.ThreadLocalUtil;
 import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.URL;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 功能：
@@ -31,6 +34,8 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
 
     //用户注册
     @PostMapping("/register")
@@ -63,6 +68,11 @@ public class UserController {
             claims.put("id",loginUser.getId());
             claims.put("username",loginUser.getUsername());
             String token = JwtUtil.genToken(claims);
+
+            //将token注入到redis中存储
+            ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+            operations.set(token,token,1, TimeUnit.HOURS);
+
             return Result.success(token);
         }
         return Result.error("密码错误");
@@ -94,7 +104,7 @@ public class UserController {
 
     //更新用户密码
     @PatchMapping("/updatePwd")
-    public Result updatePwd(@RequestBody Map<String,String> params){
+    public Result updatePwd(@RequestBody Map<String,String> params, @RequestHeader("Authorization") String token){
         //校验参数
         String oldPwd = params.get("old_pwd");
         String newPwd = params.get("new_pwd");
@@ -109,7 +119,7 @@ public class UserController {
         Map<String,Object> map = ThreadLocalUtil.get();
         String username = (String) map.get("username");
         User loginUser = userService.findByUserName(username);
-        if(!loginUser.getPassword().equals(oldPwd)){
+        if(!Argon2Util.verify(oldPwd, loginUser.getPassword())){
             return Result.error("原密码错误");
         }
 
@@ -117,9 +127,14 @@ public class UserController {
         if (!rePwd.equals(newPwd)){
             return Result.error("两次填写的密码不一样");
         }
+        //对新密码进行哈希加密
+        String hashedNewPwd = Argon2Util.hash(newPwd);
 
         //调用 service 完成密码更新
-        userService.updatePwd(newPwd);
+        userService.updatePwd(hashedNewPwd);
+        //删除redis中对应的token
+        ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
+        operations.getOperations().delete(token);
         return Result.success();
     }
 
