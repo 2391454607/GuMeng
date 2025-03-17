@@ -1,19 +1,23 @@
 <script setup>
-import Header from "@/components/home/Header.vue";
-import Content from "@/components/home/Content.vue";
-import Footer from "@/components/home/Footer.vue";
+import { ref } from 'vue';
+import Header from "@/views/home/layout/Header.vue";
+import Content from "@/views/home/layout/Content.vue";
+import Footer from "@/views/home/layout/Footer.vue";
 
 </script>
 
 <template>
-  <a-space :style="{ width: '100%' }" direction="vertical">
+  <a-layout  class="layout">
     <Header></Header>
+
     <Content></Content>
+
     <Footer></Footer>
-  </a-space>
+  </a-layout>
+
+
 </template>
 
 <style scoped>
-
 
 </style>

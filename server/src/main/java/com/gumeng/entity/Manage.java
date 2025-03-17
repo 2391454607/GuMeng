@@ -1,4 +1,4 @@
-package com.gumeng.entily;
+package com.gumeng.entity;
 
 import lombok.Data;
 

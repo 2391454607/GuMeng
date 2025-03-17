@@ -1,6 +1,6 @@
 package com.gumeng.exception;
 
-import com.gumeng.entily.Result;
+import com.gumeng.entity.Result;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;

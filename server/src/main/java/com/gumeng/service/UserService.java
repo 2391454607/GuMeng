@@ -1,6 +1,7 @@
 package com.gumeng.service;
 
-import com.gumeng.entily.User;
+import com.gumeng.entity.Menu;
+import com.gumeng.entity.User;
 import com.github.pagehelper.PageInfo;
 
 import java.util.List;
@@ -16,6 +17,9 @@ public interface UserService {
     void updateAvatar(String avatarUrl);
     //更新用户密码
     void updatePwd(String newPwd);
+
+    //获取用户界面的菜单数据
+    List<Menu> getUserMenu();
 
     List<User> findAll();
 

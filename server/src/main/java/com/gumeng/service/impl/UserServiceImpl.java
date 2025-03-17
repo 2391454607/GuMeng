@@ -1,7 +1,8 @@
 package com.gumeng.service.impl;
 
+import com.gumeng.entity.Menu;
 import com.gumeng.mapper.UserMapper;
-import com.gumeng.entily.User;
+import com.gumeng.entity.User;
 import com.gumeng.service.UserService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
@@ -11,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,6 +54,12 @@ public class UserServiceImpl implements UserService {
         Integer id = (Integer) map.get("id");
         userMapper.updatePwd(newPwd,id);
     }
+    //获取用户界面菜单
+    @Override
+    public List<Menu> getUserMenu() {
+        return userMapper.getUserMenu();
+    }
+
 
 
     @Override

@@ -1,6 +1,6 @@
 package com.gumeng.mapper;
 
-import com.gumeng.entily.Manage;
+import com.gumeng.entity.Manage;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 

@@ -4,14 +4,15 @@
 
 <template>
   <a-layout-footer class="footer">
-    footer
+    Ant Design ©2018 Created by Ant UED
   </a-layout-footer>
 </template>
 
 <style scoped>
 .footer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100%;
+  text-align: center;
+  background-color: #7f8080;
+  color: #000000;
 }
 </style>

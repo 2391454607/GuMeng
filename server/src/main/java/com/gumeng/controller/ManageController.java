@@ -1,6 +1,6 @@
 package com.gumeng.controller;
 
-import com.gumeng.entily.Manage;
+import com.gumeng.entity.Manage;
 import com.gumeng.service.ManageService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;

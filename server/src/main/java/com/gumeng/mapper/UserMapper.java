@@ -1,10 +1,10 @@
 package com.gumeng.mapper;
 
-import com.gumeng.entily.User;
+import com.gumeng.entity.Menu;
+import com.gumeng.entity.User;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 功能：
@@ -29,6 +29,10 @@ public interface UserMapper {
     //更新用户密码
     @Update("UPDATE user SET password=#{hashedNewPwd},update_time=now() WHERE id=#{id}")
     void updatePwd(String hashedNewPwd, Integer id);
+    //获取用户菜单
+    @Select("SELECT * FROM user_menu")
+    List<Menu> getUserMenu();
+
 
 
     @Select("SELECT * FROM user")

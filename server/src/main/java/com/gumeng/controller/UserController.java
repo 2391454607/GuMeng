@@ -1,9 +1,10 @@
 package com.gumeng.controller;
 
-import com.gumeng.entily.Result;
+import com.gumeng.entity.Menu;
+import com.gumeng.entity.User;
+import com.gumeng.entity.Result;
 import com.gumeng.service.UserService;
 import com.github.pagehelper.PageInfo;
-import com.gumeng.entily.User;
 import com.gumeng.utils.Argon2Util;
 import com.gumeng.utils.JwtUtil;
 import com.gumeng.utils.ThreadLocalUtil;
@@ -39,7 +40,7 @@ public class UserController {
 
     //用户注册
     @PostMapping("/register")
-    public Result register(@Pattern(regexp = "^\\S{5,16}$") String username, @Pattern(regexp = "^\\S{5,16}$") String password) {
+    public Result register(@Pattern(regexp = "^\\S{5,16}$") String username, @Pattern(regexp = "^(?=.*[A-Za-z])\\S{8,16}$") String password) {
         //查询用户是否注册
         User u = userService.findByUserName(username);
         if (u==null){
@@ -54,7 +55,7 @@ public class UserController {
 
     //用户登录
     @PostMapping("/login")
-    public Result<String> login(@Pattern(regexp = "^\\S{5,16}$") String username, @Pattern(regexp = "^\\S{5,16}$") String password) {
+    public Result<String> login(String username, String password) {
         //根据用户名查询用户
         User loginUser = userService.findByUserName(username);
         //判断用户是否存在
@@ -132,11 +133,18 @@ public class UserController {
 
         //调用 service 完成密码更新
         userService.updatePwd(hashedNewPwd);
-        //删除redis中对应的token
+        //删除 redis 中对应的 token
         ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
         operations.getOperations().delete(token);
         return Result.success();
     }
+
+    //获取用户界面的菜单数据
+    @GetMapping("/getMenu")
+    public List<Menu> getUserMenu() {
+        return userService.getUserMenu();
+    }
+
 
 
     //查询所有用户信息

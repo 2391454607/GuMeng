@@ -1,4 +1,4 @@
-package com.gumeng.entily;
+package com.gumeng.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;

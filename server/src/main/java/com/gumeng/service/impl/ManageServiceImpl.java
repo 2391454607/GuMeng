@@ -1,7 +1,7 @@
 package com.gumeng.service.impl;
 
 import com.gumeng.mapper.ManageMapper;
-import com.gumeng.entily.Manage;
+import com.gumeng.entity.Manage;
 import com.gumeng.service.ManageService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;

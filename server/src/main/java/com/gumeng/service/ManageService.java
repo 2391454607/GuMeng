@@ -1,6 +1,6 @@
 package com.gumeng.service;
 
-import com.gumeng.entily.Manage;
+import com.gumeng.entity.Manage;
 
 import java.util.List;
 
