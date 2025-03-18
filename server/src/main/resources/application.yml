@@ -6,9 +6,14 @@ spring:
   application:
     name: gumeng
 
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://175.178.10.187:3306/gumeng
+#    username: root
+#    password: 123456
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://175.178.10.187:3306/gumeng
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/gumeng
     username: root
     password: 123456
 

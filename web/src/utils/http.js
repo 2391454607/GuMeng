@@ -12,6 +12,7 @@ const request = axios.create({
         'Accept': 'application/json',
     },
     responseType: "json",
+    withCredentials: true,
 });
 
 
@@ -21,7 +22,6 @@ const request = axios.create({
  */
 request.interceptors.response.use(
     (response) => {
-
         return response.data;
     },
     (error) => {

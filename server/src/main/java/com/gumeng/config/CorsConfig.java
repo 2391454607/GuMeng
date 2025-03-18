@@ -21,3 +21,5 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowCredentials(true); // 允许携带凭证（如 Cookie）
     }
 }
+
+

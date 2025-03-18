@@ -39,24 +39,25 @@ import { LeftCircleOutlined, RightCircleOutlined } from "@ant-design/icons-vue";
 
 <style scoped>
 .c123 {
-  height: 200px;
+  height: 300px;
   background-color: #40a9ff;
 }
 .content {
   text-align: center;
+  transform: translateY(-100px);
+
 }
 
 /* 轮播图样式 */
 .carousel {
   width: 100%;
-  height: 100%; /* 继承父容器高度 */
-  margin: auto;
+  height:calc(100vh); /* 继承父容器高度 */
 }
 
 /* 轮播图图片样式 */
 .carousel img {
   width: 100%;
-  height: 100%; /* 继承父容器高度 */
+  height: calc(100vh); /* 继承父容器高度 */
   object-fit: cover; /* 保持图片比例并铺满容器 */
 }
 
@@ -84,7 +85,7 @@ import { LeftCircleOutlined, RightCircleOutlined } from "@ant-design/icons-vue";
 :deep(.slick-slide) {
   text-align: center;
   height: 100%; /* 继承父容器高度 */
-  line-height: calc(100vh - 64px); /* 垂直居中，减去头部高度 */
+  line-height: calc(100vh - 100px); /* 垂直居中，减去头部高度 */
   background: #364d79;
   overflow: hidden;
 }

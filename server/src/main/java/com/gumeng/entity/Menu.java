@@ -18,7 +18,7 @@ public class Menu {
 
     private String url;   //路径
 
-    private String permission;  //
+    private String permission;  //角色
 
     private String icon;  //图标
 

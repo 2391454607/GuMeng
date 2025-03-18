@@ -146,7 +146,6 @@ public class UserController {
     }
 
 
-
     //查询所有用户信息
     @GetMapping("/findAll")
     public List<User> findAll() {

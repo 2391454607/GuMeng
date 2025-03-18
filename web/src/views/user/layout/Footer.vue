@@ -4,7 +4,7 @@
 
 <template>
   <a-layout-footer class="footer">
-    Ant Design ©2018 Created by Ant UED
+    故梦阑珊非遗文化数字化平台
   </a-layout-footer>
 </template>
 
@@ -12,7 +12,7 @@
 .footer {
   width: 100%;
   text-align: center;
-  background-color: #7f8080;
+  background-color: #FFFFFF;
   color: #000000;
 }
 </style>
