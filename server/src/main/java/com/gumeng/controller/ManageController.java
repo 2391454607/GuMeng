@@ -16,7 +16,7 @@ import java.util.List;
  * 作者：Z
  * 日期：2025/3/5 下午3:55
  */
-@RequestMapping("/manage")
+@RequestMapping("/sys")
 @RestController
 public class ManageController {
 
@@ -24,7 +24,7 @@ public class ManageController {
     private ManageService manageService;
 
     //查询管理员信息
-    @GetMapping("findAll")
+    @GetMapping("/findAll")
     public List<Manage> findAll() {
         //数据返回
         return manageService.findAll();

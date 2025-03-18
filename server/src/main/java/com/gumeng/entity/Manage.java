@@ -10,7 +10,9 @@ import lombok.Data;
 @Data
 public class Manage {
 
-    private int id;
+    private Integer id;
+
+    private Integer roleId;
 
     private String nickname;
 

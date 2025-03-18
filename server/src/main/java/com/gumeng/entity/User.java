@@ -22,6 +22,8 @@ public class User {
     @NotNull
     private Integer id;  //主键ID
 
+    private Integer roleId;  //角色权限id
+
     @NotEmpty
     @Pattern(regexp = "^\\S{1,8}$")
     private String nickname;  //昵称
