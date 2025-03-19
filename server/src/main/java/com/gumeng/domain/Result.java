@@ -1,4 +1,4 @@
-package com.gumeng.entity;
+package com.gumeng.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

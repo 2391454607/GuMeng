@@ -1,10 +1,9 @@
 package com.gumeng.controller;
 
-import com.gumeng.entity.Menu;
-import com.gumeng.entity.User;
-import com.gumeng.entity.Result;
+import com.gumeng.domain.User;
+import com.gumeng.domain.Result;
+import com.gumeng.domain.UserMenu;
 import com.gumeng.service.UserService;
-import com.github.pagehelper.PageInfo;
 import com.gumeng.utils.Argon2Util;
 import com.gumeng.utils.JwtUtil;
 import com.gumeng.utils.ThreadLocalUtil;
@@ -18,7 +17,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -40,7 +38,8 @@ public class UserController {
 
     //用户注册
     @PostMapping("/register")
-    public Result register(@Pattern(regexp = "^\\S{5,16}$") String username, @Pattern(regexp = "^(?=.*[A-Za-z])\\S{8,16}$") String password) {
+    public Result register(@RequestParam @Pattern(regexp = "^\\S{5,16}$") String username, 
+                          @RequestParam @Pattern(regexp = "^(?=.*[A-Za-z])\\S{8,16}$") String password) {
         //查询用户是否注册
         User u = userService.findByUserName(username);
         if (u==null){
@@ -56,8 +55,10 @@ public class UserController {
     //用户登录
     @PostMapping("/login")
     public Result<String> login(@RequestBody Map<String,String> loginRequest) {
+        System.out.println(loginRequest);
         String username = loginRequest.get("username");
         String password = loginRequest.get("password");
+
 
         //根据用户名查询用户
         User loginUser = userService.findByUserName(username);
@@ -142,43 +143,13 @@ public class UserController {
         return Result.success();
     }
 
-    //获取用户界面的菜单数据
-    @GetMapping("/getMenu")
-    public List<Menu> getUserMenu() {
-        return userService.getUserMenu();
-    }
+//    //获取用户界面的菜单数据
+//    @GetMapping("/getMenu")
+//    public List<UserMenu> getUserMenu() {
+//        return userService.getUserMenu();
+//    }
 
 
-    //查询所有用户信息
-    @GetMapping("/findAll")
-    public List<User> findAll() {
-        //数据返回
-        return userService.findAll();
-    }
-
-    //插入用户信息
-    @PostMapping("/insert")
-    public Boolean insert(@RequestBody User user) {
-        userService.insert(user);
-        return true;
-    }
-
-    //删除用户信息
-    @DeleteMapping("/delete")
-    public Boolean delete(@RequestBody Integer[] ids) { // 通过 id 删除用户
-        userService.delete(ids);
-        return true;
-    }
-
-    //分页查询
-    @GetMapping("/findPage")
-    public PageInfo<User> findPage(
-            @RequestParam(name = "pageNum", defaultValue = "1") Integer pageNum,
-            @RequestParam(name = "pageSize", defaultValue = "10") Integer pageSize,
-            @RequestParam(name = "username", defaultValue = "") String username
-            ){
-        return userService.findPage(pageNum,pageSize,username);
-    }
 
 
 }

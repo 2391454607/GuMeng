@@ -31,22 +31,18 @@ spring:
           min-idle: 0       # 连接池最小空闲连接数
           max-wait: -1ms    # 连接池最大阻塞等待时间（-1 表示无限制）
 
-
-mybatis:
+mybatis-plus:
+  # 对应的 XML 文件位置
+  mapperLocations: classpath*:mapper/*Mapper.xml
   configuration:
     map-underscore-to-camel-case: true #开启实体类中驼峰命名和数据库中下划线命名的自动转换
+    logImpl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: isDelete
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+    banner: false
 
 
-pagehelper:
-  #数据库类型
-  helperDialect: mysql
-  #开启分页合理化
-  reasonable: true
-  #开启支持方法参数
-  supportMethodsArguments: true
-  #统计总记录数的 SQL 查询语句
-  #如何判断当前有多少页
-  #总页数/每页页数=当前有多少页
-  #{list:[],total:100}
-  params: count = countSql
 
