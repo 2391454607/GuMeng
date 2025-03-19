@@ -55,7 +55,10 @@ public class UserController {
 
     //用户登录
     @PostMapping("/login")
-    public Result<String> login(String username, String password) {
+    public Result<String> login(@RequestBody Map<String,String> loginRequest) {
+        String username = loginRequest.get("username");
+        String password = loginRequest.get("password");
+
         //根据用户名查询用户
         User loginUser = userService.findByUserName(username);
         //判断用户是否存在

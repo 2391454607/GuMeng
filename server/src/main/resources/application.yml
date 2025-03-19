@@ -9,8 +9,8 @@ spring:
 #  datasource:
 #    driver-class-name: com.mysql.cj.jdbc.Driver
 #    url: jdbc:mysql://175.178.10.187:3306/gumeng
-#    username: root
-#    password: 123456
+#    username: gumeng_user
+#    password: sail123
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://localhost:3306/gumeng

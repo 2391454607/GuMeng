@@ -19,6 +19,11 @@ public class ManageServiceImpl implements ManageService{
     private ManageMapper manageMapper;
 
     @Override
+    public Manage findByAdminName(String name) {
+        return manageMapper.findByAdminName(name);
+    }
+
+    @Override
     public List<Manage> findAll() {
         return manageMapper.findAll();
     }

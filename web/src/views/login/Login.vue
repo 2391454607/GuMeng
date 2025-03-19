@@ -2,26 +2,48 @@
 import { reactive, computed, ref } from 'vue';
 
 import { UserOutlined, LockOutlined } from "@ant-design/icons-vue";
+import {message} from "ant-design-vue";
+import {useRouter} from "vue-router";
+import {adminLoginAPI, userLoginAPI} from "@/api/Login.js";
 
+
+const router = useRouter(); // 获取路由实例
 const loginType = ref('user'); // 默认用户登录
+const loading = ref(false); // 加载状态
 
 const formState = reactive({
   username: '',
   password: '',
   remember: true,
 });
-const onFinish = values => {
-  if (loginType.value === 'admin') {
-    console.log('管理员登录:', values);
-    // 这里处理管理员登录逻辑
-  } else {
-    console.log('用户登录:', values);
-    // 这里处理用户登录逻辑
+
+
+const onFinish = async (record) => {
+  loading.value = true; // 开始加载
+  if (loginType.value === "admin") {
+    adminLoginAPI({name: record.name, password: record.password}).then((res) => {
+      if (res.data.code === 200) {
+        message.success("登录成功")
+      }else {
+        message.error("登录失败,请检查用户名和密码")
+      }
+    })
+  }else {
+    userLoginAPI({username: record.username, password: record.password}).then((res) => {
+      console.log(res.data.code)
+      if (res.data.code === 200) {
+        message.success("登录成功")
+      }else {
+        message.error("登录失败,请检查用户名和密码")
+      }
+    })
   }
 };
-const onFinishFailed = errorInfo => {
-  console.log('Failed:', errorInfo);
+// 表单验证失败
+const onFinishFailed = (errorInfo) => {
+  console.log('表单验证失败:', errorInfo);
 };
+// 计算登录按钮是否禁用
 const disabled = computed(() => {
   return !(formState.username && formState.password);
 });

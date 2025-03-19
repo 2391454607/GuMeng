@@ -23,8 +23,7 @@ public class UserServiceImpl implements UserService {
     //根据用户名查询用户
     @Override
     public User findByUserName(String username) {
-        User u = userMapper.findByUserName(username);
-        return u;
+        return userMapper.findByUserName(username);
     }
     //注册
     @Override

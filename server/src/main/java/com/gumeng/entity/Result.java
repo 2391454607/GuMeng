@@ -21,12 +21,12 @@ public class Result<T> {
 
     //快速返回操作成功的响应结果（带响应数据）
     public static <E> Result<E> success(E data) {
-        return new Result<>(0, "操作成功", data);
+        return new Result<>(200, "操作成功", data);
     }
 
     //快速返回操作成功的响应结果（无响应数据）
     public static Result success() {
-        return new Result(0, "操作成功", null);
+        return new Result(200, "操作成功", null);
     }
 
     public static Result error(String msg) {

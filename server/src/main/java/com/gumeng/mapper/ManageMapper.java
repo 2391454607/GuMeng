@@ -9,7 +9,9 @@ import java.util.List;
 @Mapper
 public interface ManageMapper {
 
+    @Select("SELECT * FROM admin WHERE name=#{name}")
+    Manage findByAdminName(String name);
+
     @Select("SELECT * FROM admin")
     List<Manage> findAll();
-
 }

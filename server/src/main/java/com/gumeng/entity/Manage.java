@@ -16,7 +16,7 @@ public class Manage {
 
     private String nickname;
 
-    private String name;
+    private String username;
 
     private String password;
 
