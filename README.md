@@ -2,7 +2,7 @@
 vue3 3.5
 
 # Server
-springboot 2.7.6
+springboot 3.2.4
 
 MySql 8.0.33
 
