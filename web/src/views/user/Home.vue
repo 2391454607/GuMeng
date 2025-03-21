@@ -64,9 +64,7 @@ onUnmounted(() => {
     <a-layout class="layout">
       <Header :class="{ 'header-hidden': !isHeaderVisible && isHeaderEffectEnabled }"></Header>
 
-      <a-layout-content class="content">
-        <router-view></router-view>
-      </a-layout-content>
+      <router-view></router-view>
 
     </a-layout>
 
@@ -93,7 +91,5 @@ Header {
   z-index: 1000; /* 确保 Header 在最上层 */
 }
 
-.content {
-}
 
 </style>

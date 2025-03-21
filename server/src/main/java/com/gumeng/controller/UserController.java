@@ -17,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -143,11 +144,11 @@ public class UserController {
         return Result.success();
     }
 
-//    //获取用户界面的菜单数据
-//    @GetMapping("/getMenu")
-//    public List<UserMenu> getUserMenu() {
-//        return userService.getUserMenu();
-//    }
+    //获取用户界面的菜单数据
+    @GetMapping("/getUserMenu")
+    public List<UserMenu> getUserMenu() {
+        return userService.getUserMenu();
+    }
 
 
 

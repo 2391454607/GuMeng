@@ -17,10 +17,9 @@ import { LeftCircleOutlined, RightCircleOutlined } from "@ant-design/icons-vue";
       </template>
 
       <div><img src="" alt="Slide 1" /></div>
-      <div><img src="" alt="Slide 2" /></div>
-      <div><img src="" alt="Slide 3" /></div>
-      <div><img src="" alt="Slide 4" /></div>
+
     </a-carousel>
+
 
     <div class="c123">
       123

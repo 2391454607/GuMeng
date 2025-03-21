@@ -21,20 +21,20 @@ const formState = reactive({
 const onFinish = async (record) => {
   loading.value = true; // 开始加载
   if (loginType.value === "admin") {
-    adminLoginAPI({name: record.name, password: record.password}).then((res) => {
-      if (res.data.code === 200) {
+    adminLoginAPI({username: record.username, password: record.password}).then((res) => {
+      if (res.code === 200) {
         message.success("登录成功")
       }else {
-        message.error("登录失败,请检查用户名和密码")
+        message.error(res.msg + "，请重新输入")
       }
     })
   }else {
     userLoginAPI({username: record.username, password: record.password}).then((res) => {
-      console.log(res.data.code)
-      if (res.data.code === 200) {
+      if (res.code === 200) {
         message.success("登录成功")
+        router.push("/")
       }else {
-        message.error("登录失败,请检查用户名和密码")
+        message.error(res.msg + "，请重新输入")
       }
     })
   }
