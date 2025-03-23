@@ -2,6 +2,7 @@ package com.gumeng.controller;
 
 import com.gumeng.domain.Admin;
 import com.gumeng.domain.Result;
+import com.gumeng.domain.menu.SysMenu;
 import com.gumeng.service.AdminService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,10 +29,10 @@ public class AdminController {
 
     //用户登录
     @PostMapping("/login")
-    public Result<String> login(String name, String password) {
-        //根据用户名查询用户
-        Admin loginAdmin = adminService.findByAdminName(name);
-        //判断用户是否存在
+    public Result<String> login(String username, String password) {
+        //根据用户名查询管理员
+        Admin loginAdmin = adminService.findByAdminName(username);
+        //判断管理员是否存在
         if (loginAdmin==null){
             return Result.error("用户名不存在");
         }
@@ -49,6 +50,13 @@ public class AdminController {
     public List<Admin> findAll() {
         //数据返回
         return adminService.findAll();
+    }
+
+    //查询管理菜单
+    @GetMapping("/getMenu")
+    public List<SysMenu> getMenu() {
+        //数据返回
+        return adminService.getMenu();
     }
 
 

@@ -2,7 +2,7 @@ package com.gumeng.controller;
 
 import com.gumeng.domain.User;
 import com.gumeng.domain.Result;
-import com.gumeng.domain.UserMenu;
+import com.gumeng.domain.menu.UserMenu;
 import com.gumeng.service.UserService;
 import com.gumeng.utils.Argon2Util;
 import com.gumeng.utils.JwtUtil;
@@ -145,9 +145,9 @@ public class UserController {
     }
 
     //获取用户界面的菜单数据
-    @GetMapping("/getUserMenu")
-    public List<UserMenu> getUserMenu() {
-        return userService.getUserMenu();
+    @GetMapping("/getMenu")
+    public List<UserMenu> getMenu() {
+        return userService.getMenu();
     }
 
 

@@ -27,11 +27,11 @@ public class WebConfig implements WebMvcConfigurer {
         //用户端拦截器
         registry.addInterceptor(loginInterceptor)
                 .addPathPatterns("/user/**")   //拦截所有 /user 开头的请求
-                .excludePathPatterns("/user/login", "/user/register", "/user/getUserMenu");  //排除不需要拦截的请求
+                .excludePathPatterns("/user/login", "/user/register", "/user/getMenu");  //排除不需要拦截的请求
 
-        //管理端拦截器
-        registry.addInterceptor(adminInterceptor)
-                .addPathPatterns("/sys/**")   //拦截所有 /sys 开头的请求
-                .excludePathPatterns("/sys/login");  //排除不需要拦截的请求
+//        //管理端拦截器
+//        registry.addInterceptor(adminInterceptor)
+//                .addPathPatterns("/sys/**")   //拦截所有 /sys 开头的请求
+//                .excludePathPatterns("/sys/login");  //排除不需要拦截的请求
     }
 }
