@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gumeng.mapper.UserMapper">
+
+    <resultMap id="BaseResultMap" type="com.gumeng.domain.User">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="roleId" column="role_id" jdbcType="INTEGER"/>
+            <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+            <result property="username" column="username" jdbcType="VARCHAR"/>
+            <result property="password" column="password" jdbcType="VARCHAR"/>
+            <result property="userPic" column="user_pic" jdbcType="VARCHAR"/>
+            <result property="address" column="address" jdbcType="VARCHAR"/>
+            <result property="email" column="email" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="isDeleted" column="is_deleted" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,role_id,nickname,username,password,user_pic,
+        address,email,create_time,update_time,is_deleted
+    </sql>
+
+
+    <!-- 根据用户名查询用户 -->
+    <select id="findByUserName" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user
+        WHERE username = #{username}
+    </select>
+
+    <!-- 添加注册用户 -->
+    <insert id="add">
+        INSERT INTO user (username, password, create_time, update_time)
+        VALUES (#{username}, #{passwordHash}, now(), now())
+    </insert>
+
+    <!-- 更新用户信息 -->
+    <update id="update">
+        UPDATE user
+        SET nickname = #{nickname},
+            username = #{username},
+            address = #{address},
+            email = #{email},
+            update_time = now()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新用户头像 -->
+    <update id="updateAvatar">
+        UPDATE user
+        SET user_pic = #{avatarUrl},
+            update_time = now()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 更新用户密码 -->
+    <update id="updatePwd">
+        UPDATE user
+        SET password = #{hashedNewPwd},
+            update_time = now()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 获取用户菜单 -->
+    <select id="getMenu" resultType="com.gumeng.domain.menu.UserMenu">
+        SELECT * FROM user_menu
+    </select>
+
+</mapper>

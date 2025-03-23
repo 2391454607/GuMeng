@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gumeng.mapper.AdminMapper">
+
+    <resultMap id="BaseResultMap" type="com.gumeng.domain.Admin">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="roleId" column="role_id" jdbcType="INTEGER"/>
+            <result property="nickname" column="nickname" jdbcType="VARCHAR"/>
+            <result property="username" column="username" jdbcType="VARCHAR"/>
+            <result property="password" column="password" jdbcType="VARCHAR"/>
+            <result property="email" column="email" jdbcType="VARCHAR"/>
+            <result property="phone" column="phone" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,role_id,nickname,username,password,email,
+        phone
+    </sql>
+
+    <!-- 根据username查询管理员 -->
+    <select id="findByAdminName" resultType="com.gumeng.domain.Admin">
+        SELECT * FROM admin WHERE username=#{username}
+    </select>
+
+    <!-- 获取管理员信息 -->
+    <select id="findAll" resultType="com.gumeng.domain.Admin">
+        SELECT * FROM admin
+    </select>
+
+    <!-- 获取管理菜单 -->
+    <select id="getMenu" resultType="com.gumeng.domain.menu.SysMenu">
+        SELECT * FROM sys_menu
+    </select>
+</mapper>
