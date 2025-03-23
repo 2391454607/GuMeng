@@ -19,7 +19,14 @@ public interface CarouselMapper extends BaseMapper<Carousel> {
 
     //获取轮播图
     List<Carousel> getCarousel();
-
+    //根据Id查询轮播图
+    Carousel findById(Integer id);
+    //新增
+    void insertCarousel(Carousel carousel);
+    //修改
+    void updateCarousel(Integer id, String imageUrl);
+    //删除
+    void deleteCarousel(Integer id);
 }
 
 

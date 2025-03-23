@@ -84,6 +84,7 @@ public class UserController {
         return Result.error("密码错误");
     }
 
+    //获取用户信息
     @GetMapping("/userInfo")
     public Result<User> userInfo() {
         //根据用户名查询用户
