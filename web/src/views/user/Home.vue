@@ -64,7 +64,7 @@ onUnmounted(() => {
     <a-layout class="layout">
       <Header :class="{ 'header-hidden': !isHeaderVisible && isHeaderEffectEnabled }"></Header>
 
-      <router-view></router-view>
+      <RouterView></RouterView>
 
     </a-layout>
 

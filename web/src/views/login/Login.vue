@@ -17,13 +17,15 @@ const formState = reactive({
   remember: true,
 });
 
-
 const onFinish = async (record) => {
   loading.value = true; // 开始加载
   if (loginType.value === "admin") {
     adminLoginAPI({username: record.username, password: record.password}).then((res) => {
+      console.log(record.username)
+      console.log(record);
       if (res.code === 200) {
         message.success("登录成功")
+        router.push('/sys')
       }else {
         message.error(res.msg + "，请重新输入")
       }

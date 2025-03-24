@@ -15,7 +15,7 @@ import java.util.List;
 @Service
 public interface AdminService extends IService<Admin> {
 
-    Admin findByAdminName(String name);
+    Admin findByAdminName(String username);
 
     List<Admin> findAll();
 

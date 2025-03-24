@@ -9,6 +9,6 @@ export const userLoginAPI = async ({username: username,password: password}) => {
 
 //管理员登录接口
 export const adminLoginAPI = async ({username: username,password: password}) => {
-    return http.post('/admin/login',{username: username,password: password})
+    return http.post('/sys/login',{username: username,password: password})
 }
 

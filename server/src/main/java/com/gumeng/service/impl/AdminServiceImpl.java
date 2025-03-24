@@ -24,8 +24,8 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin>
 
     //根据用户名查询管理员
     @Override
-    public Admin findByAdminName(String name) {
-        return adminMapper.findByAdminName(name);
+    public Admin findByAdminName(String username) {
+        return adminMapper.findByAdminName(username);
     }
     //查询管理员信息
     @Override

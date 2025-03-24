@@ -1,7 +1,7 @@
 <script setup>
 import {h, onMounted, ref, computed, watch} from 'vue';
 import {getUserMenuAPI} from "@/api/Menu.js";
-import router from "@/router/index.js";
+import {router} from "@/router/index.js";
 import { message } from 'ant-design-vue';
 
 import {

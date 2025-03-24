@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <RouterView></RouterView>
+用户管理
 </template>
 
 <style scoped>
