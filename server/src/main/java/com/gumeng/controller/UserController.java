@@ -7,9 +7,9 @@ import com.gumeng.service.UserService;
 import com.gumeng.utils.Argon2Util;
 import com.gumeng.utils.JwtUtil;
 import com.gumeng.utils.ThreadLocalUtil;
+import jakarta.annotation.Resource;
 import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.URL;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.StringUtils;
@@ -32,9 +32,9 @@ import java.util.concurrent.TimeUnit;
 @Validated
 public class UserController {
 
-    @Autowired
+    @Resource
     private UserService userService;
-    @Autowired
+    @Resource
     private StringRedisTemplate stringRedisTemplate;
 
     //用户注册

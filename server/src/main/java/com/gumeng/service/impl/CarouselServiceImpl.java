@@ -4,13 +4,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.pages.Carousel;
 import com.gumeng.service.CarouselService;
 import com.gumeng.mapper.CarouselMapper;
-import com.gumeng.utils.ThreadLocalUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
 
 /**
 * @author Chine
@@ -21,7 +19,7 @@ import java.util.Map;
 public class CarouselServiceImpl extends ServiceImpl<CarouselMapper, Carousel>
     implements CarouselService {
 
-    @Autowired
+    @Resource
     private CarouselMapper carouselMapper;
 
     @Override

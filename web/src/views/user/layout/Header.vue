@@ -70,31 +70,12 @@ const handleMenuClick = ({ key }) => {
       break;
   }
 };
-const route = useRoute(); // 获取当前路由
-const headerClass = ref(''); // 动态样式类
-const container = ref('')
-
-// 监听路由变化
-watch(
-    () => route.path,
-    (newPath) => {
-      // 根据路由设置不同的 Header 样式类
-      if (newPath === '/') {
-        headerClass.value = 'home-header';
-        container.value = 'home-container';
-      } else {
-        headerClass.value = 'default-header';
-        container.value = 'default-container';
-      }
-    },
-    { immediate: true } // 立即执行一次
-);
 
 </script>
 
 <template>
-  <a-layout-header :class="['header', headerClass]">
-    <div :class="['header', container]">
+  <a-layout-header class="header">
+    <div class="container">
       <!-- 渲染动态菜单 -->
       <a-menu mode="horizontal" class="menu">
         <template v-for="menu in menuData" :key="menu.id">
@@ -149,26 +130,12 @@ watch(
 
 <style scoped>
 
-.home-header{
-  background-color: rgba(174, 174, 174, 0.29);
-  height: 100px;
-}
-
-.default-header{
+.header{
   background-color: rgb(255, 255, 255);
 
 }
 
-.home-container{
-  width: 100%;
-  height: 100px;
-  display: flex;
-  justify-content: center; /* 水平居中 */
-  align-items: center; /* 垂直居中 */
-  position: relative; /* 相对定位 */
-}
-
-.default-container {
+.container {
   width: 100%;
   height: 64px;
   display: flex;

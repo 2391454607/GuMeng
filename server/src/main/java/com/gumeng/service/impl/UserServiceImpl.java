@@ -7,7 +7,7 @@ import com.gumeng.service.UserService;
 import com.gumeng.mapper.UserMapper;
 import com.gumeng.utils.Argon2Util;
 import com.gumeng.utils.ThreadLocalUtil;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -23,7 +23,7 @@ import java.util.Map;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService{
 
-    @Autowired
+    @Resource
     private UserMapper userMapper;
 
     @Override

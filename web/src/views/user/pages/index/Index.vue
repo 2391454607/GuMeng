@@ -17,7 +17,8 @@ import { LeftCircleOutlined, RightCircleOutlined } from "@ant-design/icons-vue";
       </template>
 
       <div><img src="" alt="Slide 1" /></div>
-
+      <div><img src="" alt="Slide 1" /></div>
+      <div><img src="" alt="Slide 1" /></div>
     </a-carousel>
 
 
@@ -41,10 +42,9 @@ import { LeftCircleOutlined, RightCircleOutlined } from "@ant-design/icons-vue";
   height: 300px;
   background-color: #40a9ff;
 }
+
 .content {
   text-align: center;
-  transform: translateY(-100px);
-
 }
 
 /* 轮播图样式 */
