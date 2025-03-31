@@ -18,6 +18,11 @@ import java.util.List;
 public interface AdminMapper extends BaseMapper<Admin> {
     //根据用户名查询管理员
     Admin findByAdminName(String username);
+    //查询管理员信息
+    List<Admin> findAll();
+    //查询管理菜单
+    List<SysMenu> getMenu();
+}
 
 
 
