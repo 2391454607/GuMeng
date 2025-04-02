@@ -35,9 +35,9 @@ public class CarouselController {
     }
 
     //新增轮播图
-    @PostMapping("/insertCarousel")
+    @PostMapping("/addCarousel")
     public Result setCarousel(@RequestBody Carousel carousel) {
-        carouselService.insertCarousel(carousel);
+        carouselService.addCarousel(carousel);
         return Result.success();
     }
 

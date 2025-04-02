@@ -1,8 +1,6 @@
 <script setup>
 import { reactive, computed, ref } from 'vue';
 
-import { UserOutlined, LockOutlined } from "@ant-design/icons-vue";
-import {message} from "ant-design-vue";
 import {useRouter} from "vue-router";
 import {adminLoginAPI, userLoginAPI} from "@/api/Login.js";
 

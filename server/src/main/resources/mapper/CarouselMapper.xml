@@ -29,7 +29,7 @@
     </select>
 
     <!-- 新增 -->
-    <select id="insertCarousel" resultType="com.gumeng.domain.pages.Carousel">
+    <select id="addCarousel" resultType="com.gumeng.domain.pages.Carousel">
         INSERT INTO carousel
         SET image_url = #{imageUrl},
             created_time = now(),

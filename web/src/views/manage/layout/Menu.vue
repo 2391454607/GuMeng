@@ -2,16 +2,10 @@
 import {onMounted, ref} from 'vue';
 import {useCollapsedStore} from '@/stores/CollapsedStore.js';
 import {router} from "@/router/index.js";
-import Message from "@ant-design/icons-vue/lib/utils.js";
 import {getAdminMenuAPI} from "@/api/Menu.js";
+import {Message} from "@arco-design/web-vue";
 
-//导入图标
-import {
-  HomeOutlined,
-  PictureOutlined,
-  UserOutlined,
 
-} from "@ant-design/icons-vue"
 
 
 // 获取 collapsed store
@@ -39,9 +33,7 @@ onMounted(() => {
 
 // 图标映射
 const iconMap = {
-  Home: HomeOutlined,
-  Picture: PictureOutlined,
-  User: UserOutlined,
+
 };
 </script>
 

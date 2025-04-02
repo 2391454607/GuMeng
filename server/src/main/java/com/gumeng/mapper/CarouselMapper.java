@@ -22,7 +22,7 @@ public interface CarouselMapper extends BaseMapper<Carousel> {
     //根据Id查询轮播图
     Carousel findById(Integer id);
     //新增
-    void insertCarousel(Carousel carousel);
+    void addCarousel(Carousel carousel);
     //修改
     void updateCarousel(Integer id, String imageUrl);
     //删除

@@ -2,16 +2,9 @@
 import {h, onMounted, ref, computed, watch} from 'vue';
 import {getUserMenuAPI} from "@/api/Menu.js";
 import {router} from "@/router/index.js";
-import { message } from 'ant-design-vue';
+import {Message} from "@arco-design/web-vue";
 
-import {
-  HomeOutlined,
-  SettingOutlined,
-  LogoutOutlined,
-  UserOutlined,
 
-} from '@ant-design/icons-vue';
-import {useRoute} from "vue-router";
 
 const menuData = ref();
 
@@ -40,16 +33,14 @@ const onClickMenuItem = (menu) => {
   if (menu.url) {
     router.push(menu.url);
   } else {
-    message.warning('该菜单项没有配置跳转地址');
+    Message.warning('该菜单项没有配置跳转地址');
   }
 };
 
 
 // 图标映射
 const iconMap = {
-  home: HomeOutlined,
-  settings: SettingOutlined,
-  user: UserOutlined,
+
 };
 
 // 处理用户头像下拉菜单点击事件

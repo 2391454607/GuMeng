@@ -1,5 +1,5 @@
 <script setup>
-import { LeftCircleOutlined, RightCircleOutlined } from "@ant-design/icons-vue";
+import { IconMenuFold, IconMenuUnfold } from "@arco-design/web-vue/es/icon";
 </script>
 
 <template>
@@ -7,12 +7,12 @@ import { LeftCircleOutlined, RightCircleOutlined } from "@ant-design/icons-vue";
     <a-carousel arrows autoplay class="carousel">
       <template #prevArrow>
         <div class="custom-slick-arrow" style="left: 10px; z-index: 1">
-          <left-circle-outlined />
+          <icon-menu-fold />
         </div>
       </template>
       <template #nextArrow>
         <div class="custom-slick-arrow" style="right: 10px">
-          <right-circle-outlined />
+          <icon-menu-unfold />
         </div>
       </template>
 

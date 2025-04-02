@@ -33,8 +33,8 @@ public class CarouselServiceImpl extends ServiceImpl<CarouselMapper, Carousel>
     }
 
     @Override
-    public void insertCarousel(Carousel carousel) {
-        carouselMapper.insertCarousel(carousel);
+    public void addCarousel(Carousel carousel) {
+        carouselMapper.addCarousel(carousel);
     }
 
     @Override

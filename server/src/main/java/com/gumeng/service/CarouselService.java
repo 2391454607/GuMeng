@@ -20,7 +20,7 @@ public interface CarouselService extends IService<Carousel> {
     //根据id查询轮播图信息
     Carousel findById(Integer id);
     //新增
-    void insertCarousel(Carousel carousel);
+    void addCarousel(Carousel carousel);
     //更新轮播图
     void updateCarousel(Integer id, String imageUrl);
     //删除

@@ -2,13 +2,8 @@
 import {ref} from "vue";
 import { useCollapsedStore } from '@/stores/CollapsedStore.js';
 
-import {
-  MenuUnfoldOutlined,
-  MenuFoldOutlined,
-  UserOutlined, LogoutOutlined, SettingOutlined
-} from '@ant-design/icons-vue';
+
 import {router} from "@/router/index.js";
-import {message} from "ant-design-vue"; // 导入图标
 
 // 获取 collapsed store
 const collapsedStore = useCollapsedStore();
