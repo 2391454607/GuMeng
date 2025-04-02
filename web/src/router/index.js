@@ -1,6 +1,6 @@
 import {createRouter, createWebHistory} from "vue-router";
-import Home from "@/views/user/Home.vue";
-import {userRouters} from "@/router/userIndex.js"
+import Home from "@/views/web/Home.vue";
+import {userRouters} from "@/router/web.js"
 import SysHome from "@/views/manage/Home.vue"
 import {sysRouters} from "@/router/sysIndex.js"
 
