@@ -1,7 +1,7 @@
 package com.gumeng.controller;
 
+import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.Admin;
-import com.gumeng.domain.Result;
 import com.gumeng.domain.menu.SysMenu;
 import com.gumeng.service.AdminService;
 import jakarta.annotation.Resource;
@@ -27,7 +27,7 @@ public class AdminController {
 
     //用户登录
     @PostMapping("/login")
-    public Result<String> login(@RequestBody Map<String,String> loginRequest) {
+    public HttpResponse login(@RequestBody Map<String,String> loginRequest) {
         System.out.println(loginRequest);
         String username = loginRequest.get("username");
         String password = loginRequest.get("password");
@@ -36,15 +36,15 @@ public class AdminController {
         Admin loginAdmin = adminService.findByAdminName(username);
         //判断管理员是否存在
         if (loginAdmin==null){
-            return Result.error("管理员账号不存在");
+            return HttpResponse.error("管理员账号不存在");
         }
         //判断密码是否正确
         if (Objects.equals(password, loginAdmin.getPassword())){
             //登录成功
 
-            return Result.success();
+            return HttpResponse.success();
         }
-        return Result.error("密码错误");
+        return HttpResponse.error("密码错误");
     }
 
     //查询管理员信息

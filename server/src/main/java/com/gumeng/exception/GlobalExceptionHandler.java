@@ -1,6 +1,6 @@
 package com.gumeng.exception;
 
-import com.gumeng.domain.Result;
+import com.gumeng.code.HttpResponse;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -15,9 +15,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
-    public Result handleException(Exception e){
+    public HttpResponse handleException(Exception e){
         e.printStackTrace();
-        return Result.error(StringUtils.hasLength(e.getMessage())? e.getMessage() : "操作失败");
+        return HttpResponse.error(StringUtils.hasLength(e.getMessage())? e.getMessage() : "操作失败");
 //        return Result.error("输入参数不合法");
     }
 }

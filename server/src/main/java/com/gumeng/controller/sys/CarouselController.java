@@ -1,12 +1,11 @@
 package com.gumeng.controller.sys;
 
-import com.gumeng.domain.Result;
+import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.pages.Carousel;
 import com.gumeng.service.CarouselService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 /**
  * 功能：
@@ -23,36 +22,37 @@ public class CarouselController {
 
     //获取轮播图数据
     @GetMapping("/getCarousel")
-    public List<Carousel> getCarousel() {
-        return carouselService.getCarousel();
+    public HttpResponse getCarousel() {
+        Object carousel = carouselService.getCarousel();
+        return HttpResponse.success(carousel);
     }
 
     //根据id查询轮播图
     @GetMapping("/CarouselInfo")
-    public Result<Carousel> CarouselInfo(@RequestParam Integer id) {
+    public HttpResponse CarouselInfo(@RequestParam Integer id) {
         Carousel carousel = carouselService.findById(id);
-        return Result.success(carousel);
+        return HttpResponse.success(carousel);
     }
 
     //新增轮播图
     @PostMapping("/addCarousel")
-    public Result setCarousel(@RequestBody Carousel carousel) {
+    public HttpResponse setCarousel(@RequestBody Carousel carousel) {
         carouselService.addCarousel(carousel);
-        return Result.success();
+        return HttpResponse.success();
     }
 
     //修改轮播图
     @PostMapping("/updateCarousel")
-    public Result updateCarousel(@RequestParam Integer id, String imageUrl) {
+    public HttpResponse updateCarousel(@RequestParam Integer id, String imageUrl) {
         carouselService.updateCarousel(id, imageUrl);
-        return Result.success();
+        return HttpResponse.success();
     }
 
     //删除
     @PostMapping("/deleteCarousel")
-    public Result deleteCarousel(@RequestParam Integer id) {
+    public HttpResponse deleteCarousel(@RequestParam Integer id) {
         carouselService.deleteCarousel(id);
-        return Result.success();
+        return HttpResponse.success();
     }
 
 
