@@ -5,7 +5,7 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * 功能：
+ * 功能：跨域配置
  * 作者：Z
  * 日期：2025/3/5 下午9:49
  */

@@ -5,7 +5,7 @@ import com.gumeng.domain.User;
 import com.gumeng.domain.menu.UserMenu;
 import com.gumeng.service.UserService;
 import com.gumeng.mapper.UserMapper;
-import com.gumeng.utils.Argon2Util;
+import com.gumeng.utils.BCryptUtil;
 import com.gumeng.utils.ThreadLocalUtil;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -33,8 +33,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public void register(String username, String password) {
-        //对密码使用 Argon2 加密
-        String hashedPassword = Argon2Util.hash(password);
+        //对密码使用 BCrypt 加密
+        String hashedPassword = BCryptUtil.hash(password);
         //添加注册用户
         userMapper.add(username,hashedPassword);
     }

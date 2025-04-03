@@ -83,6 +83,12 @@
             <version>2.11</version>
         </dependency>
 
+        <!-- Spring Security 依赖配置-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
         <!-- jwt坐标 token令牌 -->
         <dependency>
             <groupId>com.auth0</groupId>
