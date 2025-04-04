@@ -9,7 +9,6 @@ import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,7 +26,6 @@ import java.util.concurrent.TimeUnit;
  */
 @RestController
 @RequestMapping("/auth") //给当前控制器下的所有接口添加前缀
-@PreAuthorize("hasAnyAuthority('ADMIN', 'superAdmin')")
 public class AuthController {
 
     @Autowired
@@ -77,10 +75,9 @@ public class AuthController {
             Map<String,Object> claims = new HashMap<>();
             claims.put("id", userDetails.getId());
             claims.put("username", userDetails.getUsername());
-            claims.put("roles", userDetails.getRoles());
-            claims.put("permissions", userDetails.getPermissions());
+            claims.put("role", userDetails.getRole());
+            claims.put("permission", userDetails.getPermission());
             String token = JwtUtil.genToken(claims);
-
             // 存储到 Redis
             ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
             operations.set(token, token, 1, TimeUnit.HOURS);

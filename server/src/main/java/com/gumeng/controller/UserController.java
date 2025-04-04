@@ -2,29 +2,21 @@ package com.gumeng.controller;
 
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.User;
-import com.gumeng.security.CustomUserDetails;
 import com.gumeng.service.RoleService;
 import com.gumeng.service.UserService;
 import com.gumeng.utils.BCryptUtil;
-import com.gumeng.utils.JwtUtil;
 import com.gumeng.utils.ThreadLocalUtil;
-import jakarta.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.URL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 功能：
@@ -45,15 +37,15 @@ public class UserController {
     private StringRedisTemplate stringRedisTemplate;
 
     //查看当前用户的角色
-    @GetMapping("/current/roles")
+    @GetMapping("/current/role")
     public HttpResponse getCurrentUserRoles() {
         Map<String,Object> map = ThreadLocalUtil.get();
         Integer userId = (Integer) map.get("id");
-        List<String> roles = roleService.getRoleByUserId(userId);
-        return HttpResponse.success(roles);
+        List<String> role = roleService.getRoleByUserId(userId);
+        return HttpResponse.success(role);
     }
     //获取用户信息
-    @GetMapping("/userInfo")
+    @GetMapping("/getInfo")
     public HttpResponse userInfo() {
         //根据用户名查询用户
         Map<String,Object> map = ThreadLocalUtil.get();

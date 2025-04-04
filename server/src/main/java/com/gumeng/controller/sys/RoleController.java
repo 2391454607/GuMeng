@@ -19,7 +19,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/sys/role")
-@PreAuthorize("hasAnyAuthority('ADMIN', 'superAdmin')")
+@PreAuthorize("hasAnyAuthority('ADMIN', 'RPLE_superAdmin')")
 public class RoleController {
 
     @Autowired

@@ -2,6 +2,7 @@ package com.gumeng.config;
 
 import com.gumeng.filter.JwtAuthenticationFilter;
 import com.gumeng.security.CustomUserDetailsService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,9 +37,9 @@ public class SecurityConfig {
         http
                 .securityMatcher("/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("auth/login", "/auth/register", "/user/getMenu").permitAll()
-                        .requestMatchers("/sys/**").hasAnyRole("ADMIN", "superAdmin")
-                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN","superAdmin")
+                        .requestMatchers("/auth/login", "/auth/register", "/user/getMenu").permitAll()
+                        .requestMatchers("/sys/**").hasAnyAuthority("admin", "superAdmin")
+                        .requestMatchers("/user/**").hasAnyAuthority("user", "admin","superAdmin")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
@@ -46,7 +47,19 @@ public class SecurityConfig {
                 )
                 .csrf(AbstractHttpConfigurer::disable)
                 .userDetailsService(userDetailsService)
-                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.getWriter().write("{\"code\":401,\"message\":\"未授权\"}");
+                        })
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            response.getWriter().write("{\"code\":403,\"message\":\"权限不足\"}");
+                        })
+                );
 
         return http.build();
     }

@@ -2,6 +2,7 @@ package com.gumeng.filter;
 
 import com.gumeng.security.CustomUserDetails;
 import com.gumeng.utils.JwtUtil;
+import com.gumeng.utils.ThreadLocalUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
-*功能：
+*功能：Jwt过滤器
 *作者：Z
 *日期：2025/4/3 下午9:18
 */
@@ -30,12 +31,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             token = token.substring(7);
             try {
                 Map<String, Object> claims = JwtUtil.parseToken(token);
+                
+                // 将用户信息存入ThreadLocal
+                ThreadLocalUtil.set(claims);
 
                 CustomUserDetails userDetails = new CustomUserDetails();
                 userDetails.setId((Integer) claims.get("id"));
                 userDetails.setUsername((String) claims.get("username"));
-                userDetails.setRoles((List<String>) claims.get("roles"));
-                userDetails.setPermissions((List<String>) claims.get("permissions"));
+                userDetails.setRole((List<String>) claims.get("role"));
+                userDetails.setPermission((List<String>) claims.get("permission"));
 
                 UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
@@ -48,6 +52,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        chain.doFilter(request, response);
+        try {
+            chain.doFilter(request, response);
+        } finally {
+            // 清理ThreadLocal
+            ThreadLocalUtil.remove();
+        }
     }
 }

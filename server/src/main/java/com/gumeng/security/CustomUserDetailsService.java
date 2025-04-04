@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * 功能：UserDetailsService 实现
+ * 功能：用户登录时，加载用户的角色和权限
  * 作者：Z
  * 日期：2025/4/3 下午9:06
  */
@@ -40,8 +40,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         List<String> roles = roleService.getRoleByUserId(user.getId());
 
         // 查询用户权限
-        List<String> permissions = permissionsService.getPermissionByUserId(user.getId());
+        List<String> permission = permissionsService.getPermissionByUserId(user.getId());
 
-        return CustomUserDetails.fromUser(user, roles, permissions);
+        return CustomUserDetails.fromUser(user, roles, permission);
     }
 }

@@ -22,8 +22,8 @@ public class CustomUserDetails implements UserDetails {
     private Integer id;
     private String username;
     private String password;
-    private List<String> roles;
-    private List<String> permissions;
+    private List<String> role;
+    private List<String> permission;
     private boolean enabled = true;
 
     public static CustomUserDetails fromUser(User user, List<String> roles, List<String> permissions) {
@@ -31,8 +31,8 @@ public class CustomUserDetails implements UserDetails {
         details.setId(user.getId());
         details.setUsername(user.getUsername());
         details.setPassword(user.getPassword());
-        details.setRoles(roles);
-        details.setPermissions(permissions);
+        details.setRole(roles);
+        details.setPermission(permissions);
         return details;
     }
 
@@ -40,16 +40,16 @@ public class CustomUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         
-        // 添加角色，不再添加 ROLE_ 前缀
-        if (roles != null) {
-            authorities.addAll(roles.stream()
+        // 添加角色，不添加 ROLE_ 前缀
+        if (role != null) {
+            authorities.addAll(role.stream()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList()));
         }
         
         // 添加权限
-        if (permissions != null) {
-            authorities.addAll(permissions.stream()
+        if (permission != null) {
+            authorities.addAll(permission.stream()
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList()));
         }
