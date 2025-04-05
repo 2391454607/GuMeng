@@ -29,8 +29,6 @@ public class User implements Serializable {
     /**
      * 名称
      */
-    @NotEmpty
-    @Pattern(regexp = "^\\S{1,8}$")
     @TableField(value = "nickname")
     private String nickname;
 
@@ -63,7 +61,6 @@ public class User implements Serializable {
     /**
      * 邮件
      */
-    @NotEmpty
     @Email
     @TableField(value = "email")
     private String email;

@@ -1,9 +1,14 @@
 package com.gumeng.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.gumeng.domain.Role;
 import com.gumeng.domain.UserRole;
+import com.gumeng.mapper.RoleMapper;
 import com.gumeng.service.UserRoleService;
 import com.gumeng.mapper.UserRoleMapper;
+import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -15,6 +20,28 @@ import org.springframework.stereotype.Service;
 public class UserRoleServiceImpl extends ServiceImpl<UserRoleMapper, UserRole>
     implements UserRoleService{
 
+    @Autowired
+    private RoleMapper roleMapper;
+
+    @Autowired
+    private UserRoleMapper userRoleMapper;
+
+    //根据新注册用户id添加默认user角色
+    @Override
+    public void setDefaultRole(Integer id) {
+        //查询user角色
+        Role userRole = roleMapper.selectOne(
+                new LambdaQueryWrapper<Role>()
+                        .eq(Role::getName, "user")
+        );
+
+        if (userRole != null) {
+            UserRole userRoleRelation = new UserRole();
+            userRoleRelation.setUserId(id);
+            userRoleRelation.setRoleId(userRole.getId());
+            userRoleMapper.setDefaultRole(userRoleRelation);
+        }
+    }
 }
 
 

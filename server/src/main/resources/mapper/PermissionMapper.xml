@@ -14,6 +14,14 @@
         id,name,description
     </sql>
 
+    <!-- 查询用户角色 -->
+    <select id="selectRoleNamesByUserId" resultType="string">
+        SELECT r.name
+        FROM role r
+                INNER JOIN user_role ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId}
+
+    </select>
     <!-- 查询角色权限 -->
     <select id="selectPermissionNamesByUserId" resultType="string">
         SELECT p.name

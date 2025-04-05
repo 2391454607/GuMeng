@@ -4,6 +4,8 @@ import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.pages.Carousel;
 import com.gumeng.service.CarouselService;
 import jakarta.annotation.Resource;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/sys") //给当前控制器下的所有接口添加前缀
+@PreAuthorize("hasAnyAuthority('admin','superAdmin')")
 public class CarouselController {
 
     @Resource

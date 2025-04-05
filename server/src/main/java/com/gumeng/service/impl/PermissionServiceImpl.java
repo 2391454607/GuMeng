@@ -21,15 +21,17 @@ public class PermissionServiceImpl extends ServiceImpl<PermissionMapper, Permiss
     @Resource
     private PermissionMapper permissionMapper;
 
+    //根据用户id获取角色权限
     @Override
     public List<String> getPermissionByUserId(Integer userId) {
-        return permissionMapper.selectPermissionNamesByUserId(userId);
+        return permissionMapper.selectRoleNamesByUserId(userId);
     }
 
     @Override
     public List<String> getPermissionByRoleId(Integer roleId) {
-        return List.of();
+        return permissionMapper.selectPermissionNamesByUserId(roleId);
     }
+
 }
 
 

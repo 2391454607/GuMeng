@@ -7,7 +7,6 @@ import com.gumeng.service.RolePermissionService;
 import com.gumeng.service.RoleService;
 import com.gumeng.service.UserRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,7 +18,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/sys/role")
-@PreAuthorize("hasAnyAuthority('ADMIN', 'RPLE_superAdmin')")
 public class RoleController {
 
     @Autowired

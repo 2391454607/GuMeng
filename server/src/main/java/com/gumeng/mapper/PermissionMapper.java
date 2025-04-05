@@ -12,9 +12,12 @@ import java.util.List;
 * @Entity com.gumeng.domain.Permission
 */
 public interface PermissionMapper extends BaseMapper<Permission> {
+    //查询用户角色
+    List<String> selectRoleNamesByUserId(Integer userId);
 
     //查询用户权限
     List<String> selectPermissionNamesByUserId(Integer userId);
+
 }
 
 

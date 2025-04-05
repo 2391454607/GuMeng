@@ -27,6 +27,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/user") //给当前控制器下的所有接口添加前缀
 @Validated
+@PreAuthorize("hasAnyAuthority('user','admin','superAdmin')")
 public class UserController {
 
     @Autowired

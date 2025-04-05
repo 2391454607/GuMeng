@@ -15,7 +15,7 @@ import java.util.List;
 @Mapper
 public interface RoleMapper extends BaseMapper<Role> {
 
-    //查询用户角色
+    //根据用户id查询用户角色
     List<String> selectRoleNamesByUserId(Integer userId);
 
 }

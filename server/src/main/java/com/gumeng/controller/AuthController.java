@@ -2,10 +2,11 @@ package com.gumeng.controller;
 
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.User;
+import com.gumeng.entity.DTO.UserRegisterDTO;
 import com.gumeng.security.CustomUserDetails;
+import com.gumeng.service.UserRoleService;
 import com.gumeng.service.UserService;
 import com.gumeng.utils.JwtUtil;
-import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -13,6 +14,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -32,6 +34,9 @@ public class AuthController {
     private UserService userService;
 
     @Autowired
+    private UserRoleService userRoleService;
+
+    @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
     @Autowired
@@ -40,13 +45,18 @@ public class AuthController {
 
     //用户注册
     @PostMapping("/register")
-    public HttpResponse register(@RequestParam @Pattern(regexp = "^\\S{5,16}$") String username,
-                                 @RequestParam @Pattern(regexp = "^(?=.*[A-Za-z])\\S{8,16}$") String password) {
+    public HttpResponse register(@RequestBody @Validated UserRegisterDTO user) {
+
         //查询用户是否注册
-        User u = userService.findByUserName(username);
-        if (u==null){
+        User u = userService.findByUserName(user.getUsername());
+        if (u == null){
             //注册
-            userService.register(username,password);
+            userService.register(user.getUsername(),user.getPassword());
+            //获取新注册用户
+            User newUser = userService.findByUserName(user.getUsername());
+            //注册自动分配用户user权限
+            userRoleService.setDefaultRole(newUser.getId());
+
             return HttpResponse.success();
         }else{
             //该用户名已被注册

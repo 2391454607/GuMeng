@@ -26,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     private RoleService roleService;
 
     @Autowired
-    private PermissionService permissionsService;
+    private PermissionService permissionService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -37,11 +37,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         // 查询用户角色
-        List<String> roles = roleService.getRoleByUserId(user.getId());
+        List<String> role = roleService.getRoleByUserId(user.getId());
 
         // 查询用户权限
-        List<String> permission = permissionsService.getPermissionByUserId(user.getId());
-
-        return CustomUserDetails.fromUser(user, roles, permission);
+        List<String> permission = permissionService.getPermissionByUserId(user.getId());
+        return CustomUserDetails.fromUser(user, role, permission);
     }
 }

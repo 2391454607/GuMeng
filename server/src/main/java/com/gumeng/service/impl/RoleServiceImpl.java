@@ -2,6 +2,7 @@ package com.gumeng.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.Role;
+import com.gumeng.domain.UserRole;
 import com.gumeng.service.RoleService;
 import com.gumeng.mapper.RoleMapper;
 import jakarta.annotation.Resource;
@@ -21,10 +22,12 @@ public class RoleServiceImpl extends ServiceImpl<RoleMapper, Role>
     @Resource
     private RoleMapper roleMapper;
 
+    //根据用户id获取用户角色
     @Override
     public List<String> getRoleByUserId(Integer userId) {
         return roleMapper.selectRoleNamesByUserId(userId);
     }
+
 }
 
 
