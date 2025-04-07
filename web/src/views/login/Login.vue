@@ -6,6 +6,27 @@ import {userLoginAPI} from "@/api/Login.js";
 //引入3D文本组件
 import {St3DText, St3DTiltContainer, StDynamicBorder1, StGhostText,} from "st-common-ui-vue3";
 
+const edge = ref(72) // 边数
+
+const getDivStyle = (i, { start, end }) => {
+  let imageIndex = start + Math.floor(i % (end - start + 1))
+  return {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    width: '100%',
+    height: '100%',
+    transform: `rotateX(${(360 / edge.value) * i}deg) translateZ(3430px)`,
+    background: `url(../src/assets/background/${imageIndex}.jpeg) no-repeat`,
+    backgroundSize: 'cover'
+  }
+}
+
+const getImageRange = (sectionIndex) => {
+  const start = 1 + (sectionIndex * 3)
+  const end = 3 + (sectionIndex * 3)
+  return { start, end }
+}
 
 const router = useRouter();
 const loading = ref(false);
@@ -59,7 +80,14 @@ const handleSubmit = async () => {
 <template>
 
   <div class="login-container">
-    
+    <div id="container">
+      <section v-for="(_, index) in 3" :key="index">
+        <div v-for="i in edge" :key="i"
+             :style="getDivStyle(i - 1, getImageRange(index))">
+        </div>
+      </section>
+    </div>
+
     <div>
       <St3DTiltContainer :start-x="10" :start-y="20" full-page-listening>
         <St3DText base-color="#59B6EB" color="#fefefe" content="故梦阑珊" font-size="5rem"></St3DText>
@@ -175,32 +203,24 @@ const handleSubmit = async () => {
   margin-top: 16px;
 }
 
-背景滚动效果
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
+#container {
   height: 100vh;
   width: 100vw;
   display: flex;
+  position: absolute;
   justify-content: center;
-  align-items: center;
-  background-color: #f3f3f3;
-}
-
-#container {
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  border-radius: 30px;
   overflow: hidden;
 }
 
 section {
-  width: 450px;
+  width: 600px;
   height: 300px;
   position: relative;
   transform-style: preserve-3d;
