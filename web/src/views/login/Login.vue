@@ -6,7 +6,7 @@ import {userLoginAPI} from "@/api/Login.js";
 //引入3D文本组件
 import {St3DText, St3DTiltContainer, StDynamicBorder1, StGhostText,} from "st-common-ui-vue3";
 
-const edge = ref(72) // 边数
+const img = ref(72) // 边数
 
 const getDivStyle = (i, { start, end }) => {
   let imageIndex = start + Math.floor(i % (end - start + 1))
@@ -16,8 +16,8 @@ const getDivStyle = (i, { start, end }) => {
     top: 0,
     width: '100%',
     height: '100%',
-    transform: `rotateX(${(360 / edge.value) * i}deg) translateZ(3430px)`,
-    background: `url(../src/assets/background/${imageIndex}.jpeg) no-repeat`,
+    transform: `rotateX(${(360 / img.value) * i}deg) translateZ(3430px)`,
+    background: `url(/src/assets/background/${imageIndex}.jpg) no-repeat`,
     backgroundSize: 'cover'
   }
 }
@@ -82,7 +82,7 @@ const handleSubmit = async () => {
   <div class="login-container">
     <div id="container">
       <section v-for="(_, index) in 3" :key="index">
-        <div v-for="i in edge" :key="i"
+        <div v-for="i in img" :key="i"
              :style="getDivStyle(i - 1, getImageRange(index))">
         </div>
       </section>
@@ -224,11 +224,11 @@ section {
   height: 300px;
   position: relative;
   transform-style: preserve-3d;
-  animation: rotate 900s linear infinite;
+  animation: rotate 800s linear infinite;
 }
 
 section:nth-child(2) {
-  animation: rotate2 900s linear infinite;
+  animation: rotate2 800s linear infinite;
 }
 
 @keyframes rotate {
