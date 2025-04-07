@@ -10,7 +10,6 @@ import org.hibernate.validator.constraints.URL;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +26,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/user") //给当前控制器下的所有接口添加前缀
 @Validated
-@PreAuthorize("hasAnyAuthority('user','admin','superAdmin')")
 public class UserController {
 
     @Autowired

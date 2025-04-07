@@ -4,6 +4,7 @@ import { useCollapsedStore } from '@/stores/CollapsedStore.js';
 
 
 import {router} from "@/router/index.js";
+import {Message} from "@arco-design/web-vue";
 
 // 获取 collapsed store
 const collapsedStore = useCollapsedStore();
@@ -19,7 +20,7 @@ const handleMenuClick = ({ key }) => {
       break;
     case '3':
       // 处理退出登录逻辑
-      message.success('退出登录成功');
+      Message.success('退出登录成功');
       router.push('/login');
       break;
     default:

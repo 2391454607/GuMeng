@@ -94,7 +94,11 @@ public class AuthController {
 
             return HttpResponse.success(token);
         } catch (AuthenticationException e) {
-            return HttpResponse.error("用户名或密码错误");
+            if (loginRequest.get("username") == null || loginRequest.get("password") == null){
+                return HttpResponse.error("用户名或密码不能为空！");
+            }else {
+                return HttpResponse.error("用户名或密码错误");
+            }
         }
     }
 }

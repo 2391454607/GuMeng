@@ -1,5 +1,5 @@
 <script setup>
-import {h, onMounted, ref, computed, watch} from 'vue';
+import { onMounted, ref } from 'vue';
 import {getUserMenuAPI} from "@/api/Menu.js";
 import {router} from "@/router/index.js";
 import {Message} from "@arco-design/web-vue";
@@ -10,7 +10,7 @@ const menuData = ref();
 
 onMounted(() => {
   getUserMenuAPI().then(res => {
-    menuData.value = buildMenuTree(res); // 转换为树形结构
+    menuData.value = buildMenuTree(res.data); // 转换为树形结构
     console.log(menuData.value);
   })
 })
@@ -54,7 +54,7 @@ const handleMenuClick = ({ key }) => {
       break;
     case '3':
       // 处理退出登录逻辑
-      message.success('退出登录成功');
+      Message.success('退出登录成功');
       router.push('/login');
       break;
     default:
@@ -88,32 +88,6 @@ const handleMenuClick = ({ key }) => {
         </template>
       </a-menu>
 
-      <a-dropdown placement="bottom">
-        <a-space class="avatar" direction="vertical" :size="32">
-          <a-space wrap :size="16">
-            <a-avatar size="large" class="avatar-icon">
-              <template #icon><UserOutlined /></template>
-            </a-avatar>
-          </a-space>
-        </a-space>
-        <template #overlay>
-          <a-menu @click="handleMenuClick" class="dropdown-menu">
-            <a-menu-item key="1">
-              <user-outlined />
-              个人中心
-            </a-menu-item>
-            <a-menu-item key="2">
-              <setting-outlined />
-              设置
-            </a-menu-item>
-            <a-menu-divider />
-            <a-menu-item key="3">
-              <logout-outlined />
-              退出登录
-            </a-menu-item>
-          </a-menu>
-        </template>
-      </a-dropdown>
 
     </div>
   </a-layout-header>
@@ -136,12 +110,13 @@ const handleMenuClick = ({ key }) => {
 }
 
 .menu{
-  background-color: rgba(255, 255, 255, 0);
+  background-color: #ffffff;
 }
 
 
 .avatar {
   position: absolute; /* 绝对定位 */
+  margin-top: 15px;
   right: 48px; /* 右侧距离 */
 }
 
