@@ -104,14 +104,6 @@ public class UserController {
         return HttpResponse.success();
     }
 
-    //获取用户界面的菜单数据
-    @GetMapping("/getMenu")
-    public HttpResponse getMenu() {
-        Object menuData = userService.getMenu();
-        return HttpResponse.success(menuData);
-    }
-
-
 
 
 }

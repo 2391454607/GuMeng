@@ -64,9 +64,5 @@
         WHERE id = #{id}
     </update>
 
-    <!-- 获取用户菜单 -->
-    <select id="getMenu" resultType="com.gumeng.domain.menu.UserMenu">
-        SELECT * FROM user_menu
-    </select>
 
 </mapper>

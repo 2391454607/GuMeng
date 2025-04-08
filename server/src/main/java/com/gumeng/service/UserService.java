@@ -2,10 +2,7 @@ package com.gumeng.service;
 
 import com.gumeng.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.gumeng.domain.menu.UserMenu;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 
 /**
@@ -27,8 +24,5 @@ public interface UserService extends IService<User> {
     void updateAvatar(String avatarUrl);
     //更新用户密码
     void updatePwd(String newPwd);
-
-    //获取用户界面的菜单数据
-    List<UserMenu> getMenu();
 
 }
