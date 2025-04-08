@@ -27,7 +27,7 @@ import Footer from "@/views/manage/layout/Footer.vue";
 
 <style scoped>
 .layout {
-  min-height: 100vh; /* 确保布局占满整个视口高度 */
+  min-height: 100vh;
 }
 
 .content{
