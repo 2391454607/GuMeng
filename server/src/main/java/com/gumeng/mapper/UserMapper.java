@@ -2,7 +2,6 @@ package com.gumeng.mapper;
 
 import com.gumeng.domain.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.gumeng.domain.menu.UserMenu;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -27,8 +26,6 @@ public interface UserMapper extends BaseMapper<User> {
     //更新用户密码
     void updatePwd(String hashedNewPwd, Integer id);
 
-    //获取用户菜单
-    List<UserMenu> getMenu();
 
 }
 

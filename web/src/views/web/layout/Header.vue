@@ -1,104 +1,76 @@
 <script setup>
-import { onMounted, ref } from 'vue';
-import {getUserMenuAPI} from "@/api/Menu.js";
-import {router} from "@/router/index.js";
-import {Message} from "@arco-design/web-vue";
+import { ref, onMounted } from 'vue';
+import { router } from "@/router/index.js";
+import { Message } from "@arco-design/web-vue";
 
+const position = ref(0);
+let begin = 0;
+let end = 0;
+let beginX = 0;
 
-
-const menuData = ref();
-
-onMounted(() => {
-  getUserMenuAPI().then(res => {
-    menuData.value = buildMenuTree(res.data); // 转换为树形结构
-    console.log(menuData.value);
-  })
-})
-
-// 将扁平数据转换为树形结构
-const buildMenuTree = (flatData, parentId = 0) => {
-  return flatData
-      .filter((item) => item.parent === parentId) // 过滤出当前层级的菜单项
-      .map((item) => {
-        const children = buildMenuTree(flatData, item.id); // 递归构建子菜单
-        if (children.length > 0) {
-          item.children = children; // 如果有子菜单，添加到 children 字段
-        }
-        return item;
-      });
-};
+const menuItems = [
+  { name: '首页', url: '/' },
+  { name: '资讯', url: '/information' },
+  { name: '非遗论坛', url: ''},
+  { name: '虚拟展厅', url: ''},
+  { name: '政策', url: ''},
+  { name: 'xx', url: ''},
+];
 
 // 点击菜单项
-const onClickMenuItem = (menu) => {
-  if (menu.url) {
-    router.push(menu.url);
+const onClickMenuItem = (menuItems) => {
+  if (menuItems.url) {
+    router.push(menuItems.url);
   } else {
     Message.warning('该菜单项没有配置跳转地址');
   }
 };
 
-
-// 图标映射
-const iconMap = {
-
+const handleMouseOver = (event) => {
+  end = event.target.offsetLeft;
 };
 
-// 处理用户头像下拉菜单点击事件
-const handleMenuClick = ({ key }) => {
-  switch (key) {
-    case '1':
-      router.push('/profile'); // 跳转到个人中心
-      break;
-    case '2':
-      router.push('/settings'); // 跳转到设置
-      break;
-    case '3':
-      // 处理退出登录逻辑
-      Message.success('退出登录成功');
-      router.push('/login');
-      break;
-    default:
-      break;
-  }
+const handleMouseDown = (event) => {
+  beginX = event.target.offsetLeft;
 };
+
+const handleMouseOut = () => {
+  end = beginX;
+};
+
+onMounted(() => {
+  setInterval(() => {
+    begin = begin + (end - begin) * 0.1;
+    position.value = begin;
+  }, 10);
+});
+
 
 </script>
 
 <template>
   <a-layout-header class="header">
-    <div class="container">
-      <!-- 渲染动态菜单 -->
-      <a-menu mode="horizontal" class="menu">
-        <template v-for="menu in menuData" :key="menu.id">
-          <a-sub-menu v-if="menu.children && menu.children.length" :key="menu.id">
-            <template #title>
-              <component :is="iconMap[menu.icon]" v-if="menu.icon" />
-              {{ menu.name }}
-            </template>
-            <a-menu-item v-for="sub in menu.children" :key="sub.id" @click="onClickMenuItem(sub)">
-              <component :is="iconMap[sub.icon]" v-if="sub.icon" />
-              {{ sub.name }}
-            </a-menu-item>
-          </a-sub-menu>
 
-          <a-menu-item v-else :key="menu.id" @click="onClickMenuItem(menu)">
-            <component :is="iconMap[menu.icon]" v-if="menu.icon" />
-            {{ menu.name }}
-          </a-menu-item>
-        </template>
-      </a-menu>
+      <div class="container">
+        <nav class="nav">
+          <span class="t-mall" :style="{ left: position + 'px' }"></span>
+          <ul>
+            <li v-for="(item, index) in menuItems"
+                :key="index"
+                @mouseover="handleMouseOver"
+                @mousedown="handleMouseDown"
+                @mouseout="handleMouseOut"
+                @click="onClickMenuItem(item)">
+              {{ item.name }}
+            </li>
+          </ul>
+        </nav>
+      </div>
 
-
-    </div>
   </a-layout-header>
 </template>
 
 <style scoped>
-
-.header{
-  background-color: rgb(255, 255, 255);
-
-}
 
 .container {
   width: 100%;
@@ -109,16 +81,34 @@ const handleMenuClick = ({ key }) => {
   position: relative; /* 相对定位 */
 }
 
-.menu{
-  background-color: #ffffff;
+.nav {
+  background: #ac8cea;
+  border-radius: 10px;
+  position: relative;
 }
 
-
-.avatar {
-  position: absolute; /* 绝对定位 */
-  margin-top: 15px;
-  right: 48px; /* 右侧距离 */
+.nav ul {
+  position: relative;
+  display: flex;
+  margin: 0;
+  padding: 0;
 }
 
+.nav ul li {
+  width: 88px;
+  height: 63px;
+  text-align: center;
+  line-height: 63px;
+  cursor: pointer;
+  list-style: none;
+}
 
+.t-mall {
+  width: 88px;
+  height: 63px;
+  border-radius: 10px;
+  background: url("@/assets/image/logo.png") no-repeat;
+  position: absolute;
+  transition: left 0.1s ease;
+}
 </style>

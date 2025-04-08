@@ -2,7 +2,6 @@ package com.gumeng.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.User;
-import com.gumeng.domain.menu.UserMenu;
 import com.gumeng.service.UserService;
 import com.gumeng.mapper.UserMapper;
 import com.gumeng.utils.BCryptUtil;
@@ -11,7 +10,6 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,10 +57,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         userMapper.updatePwd(newPwd,id);
     }
 
-    @Override
-    public List<UserMenu> getMenu() {
-        return userMapper.getMenu();
-    }
 }
 
 

@@ -1,95 +1,57 @@
 <script setup>
-import { IconMenuFold, IconMenuUnfold } from "@arco-design/web-vue/es/icon";
+import {StTimeline1, StTimelineItem1} from 'st-common-ui-vue3'
+import bg1 from '@/assets/image/3.jpg'
+import bg2 from '@/assets/image/4.jpg'
+import bg3 from "@/assets/image/7.jpg"
+
+// 时间线数据
+const timelineData = [
+  {
+    title: 'Small Tail Common UI Vue3',
+    desc: '小尾巴通用 Vue3 UI 组件库',
+    bgImg: bg1,
+  },
+  {
+    title: 'StTimeline1',
+    desc: '时间线组件',
+    bgImg: bg2,
+  },
+  {
+    title: 'StTimelineItem1',
+    desc: '时间线子组件',
+    bgImg: bg3,
+  },
+]
+
 </script>
 
 <template>
   <a-layout-content class="content">
-    <a-carousel arrows autoplay class="carousel">
-      <template #prevArrow>
-        <div class="custom-slick-arrow" style="left: 10px; z-index: 1">
-          <icon-menu-fold />
-        </div>
-      </template>
-      <template #nextArrow>
-        <div class="custom-slick-arrow" style="right: 10px">
-          <icon-menu-unfold />
-        </div>
-      </template>
 
-      <div><img src="" alt="Slide 1" /></div>
-      <div><img src="" alt="Slide 1" /></div>
-      <div><img src="" alt="Slide 1" /></div>
-    </a-carousel>
+    <div class="timeline-1-demo">
+      <StTimeline1 :timeline-data="timelineData.map(item => item.title)">
+        <StTimelineItem1
+            v-for="(item, index) in timelineData"
+            :key="index"
+            :idx="index"
+            :title="item.title"
+            :desc="item.desc"
+            :bg-img-src="item.bgImg"
+        >
+          <template #suffix>
+            <div class="timeline-1-demo__item__suffix">时间线数据展示组件的后缀内容区域 {{ index }}</div>
+          </template>
+        </StTimelineItem1>
+      </StTimeline1>
+    </div>
 
-
-    <div class="c123">
-      123
-    </div>
-    <div class="c123">
-      123
-    </div>
-    <div class="c123">
-      123
-    </div>
-    <div class="c123">
-      123
-    </div>
   </a-layout-content>
 </template>
 
 <style scoped>
-.c123 {
-  height: 300px;
-  background-color: #40a9ff;
-}
-
 .content {
   text-align: center;
 }
 
-/* 轮播图样式 */
-.carousel {
-  width: 100%;
-  height:calc(100vh); /* 继承父容器高度 */
-}
 
-/* 轮播图图片样式 */
-.carousel img {
-  width: 100%;
-  height: calc(100vh); /* 继承父容器高度 */
-  object-fit: cover; /* 保持图片比例并铺满容器 */
-}
-
-/* 轮播图箭头样式 */
-:deep(.slick-arrow.custom-slick-arrow) {
-  width: 40px;
-  height: 40px;
-  font-size: 40px;
-  color: rgba(200, 200, 200, 0.3);
-  transition: ease all 0.3s;
-  opacity: 0.7;
-  z-index: 1;
-}
-
-:deep(.slick-arrow.custom-slick-arrow:hover) {
-  opacity: 1;
-  color: rgba(255, 255, 255, 0.65);
-}
-
-:deep(.slick-arrow.custom-slick-arrow:before) {
-  display: none;
-}
-
-/* 轮播图内容样式 */
-:deep(.slick-slide) {
-  text-align: center;
-  height: 100%; /* 继承父容器高度 */
-  line-height: calc(100vh - 100px); /* 垂直居中，减去头部高度 */
-  background: #364d79;
-  overflow: hidden;
-}
-
-:deep(.slick-slide h3) {
-  color: #fff;
-}
 </style>
