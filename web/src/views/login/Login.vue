@@ -37,6 +37,7 @@ const login = reactive({
   rememberMe: false,
 });
 
+
 const rules = {
   username: [
     {required: true, message: '请输入用户名'},
@@ -61,7 +62,7 @@ const handleSubmit = async () => {
       userLoginAPI(login).then((res) => {
         if (res.code === 200) {
           Message.success(res.msg);
-          router.push('/login');
+          router.push('/');
         } else {
           Message.error(res.msg);
         }
