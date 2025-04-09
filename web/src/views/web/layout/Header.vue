@@ -12,6 +12,7 @@ const menuItems = [
   { name: '首页', url: '/' },
   { name: '资讯', url: '/information' },
   { name: '非遗论坛', url: ''},
+  { name: '非遗互动', url: ''},
   { name: '虚拟展厅', url: ''},
   { name: '政策', url: ''},
   { name: '百科', url: ''},
@@ -109,7 +110,7 @@ onMounted(() => {
   width: 88px;
   height: 63px;
   border-radius: 10px;
-  background: url("@/assets/image/logo.png") no-repeat;
+  background: url("@/assets/image/dh.png") no-repeat;
   position: absolute;
   transition: left 0.1s ease;
 }
