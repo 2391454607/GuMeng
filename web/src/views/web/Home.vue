@@ -23,7 +23,7 @@ import Footer from "@/views/web/layout/Footer.vue";
 
 <style scoped>
 .layout {
-  min-height: calc(100vh - 64); /* 确保布局占满整个视口高度 */
+  min-height: calc(100vh - 64px); /* 确保布局占满整个视口高度 */
 }
 
 

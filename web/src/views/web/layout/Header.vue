@@ -14,7 +14,7 @@ const menuItems = [
   { name: '非遗论坛', url: ''},
   { name: '虚拟展厅', url: ''},
   { name: '政策', url: ''},
-  { name: 'xx', url: ''},
+  { name: '百科', url: ''},
 ];
 
 // 点击菜单项
@@ -71,6 +71,9 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.header{
+  background: #C2101C;
+}
 
 .container {
   width: 100%;
@@ -82,7 +85,6 @@ onMounted(() => {
 }
 
 .nav {
-  background: #ac8cea;
   border-radius: 10px;
   position: relative;
 }

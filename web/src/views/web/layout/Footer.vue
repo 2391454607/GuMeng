@@ -17,7 +17,7 @@
   width: 100%;
   display: flex;
   text-align: center;
-  background-color: #f2f3f5;
+  background-color: #F5F5F0;
   color: #000000;
 }
 
