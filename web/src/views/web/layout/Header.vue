@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue';
 import { router } from "@/router/index.js";
 import { Message } from "@arco-design/web-vue";
+import { useRoute } from 'vue-router';
+const route = useRoute();
 
 const position = ref(0);
 let begin = 0;
@@ -11,11 +13,11 @@ let beginX = 0;
 const menuItems = [
   { name: '首页', url: '/' },
   { name: '资讯', url: '/information' },
-  { name: '非遗论坛', url: ''},
-  { name: '非遗互动', url: ''},
-  { name: '虚拟展厅', url: ''},
-  { name: '政策', url: ''},
-  { name: '百科', url: ''},
+  { name: '非遗论坛', url: '/forum'},
+  { name: '非遗互动', url: '/interaction'},
+  { name: '虚拟展厅', url: '/showroom'},
+  { name: '政策', url: '/policy'},
+  { name: '百科', url: '/encyclopedia'},
 ];
 
 // 点击菜单项
@@ -53,11 +55,16 @@ onMounted(() => {
   <a-layout-header class="header">
 
       <div class="container">
+        <div class="header-left">
+          故梦阑珊
+        </div>
+
         <nav class="nav">
           <span class="t-mall" :style="{ left: position + 'px' }"></span>
           <ul>
             <li v-for="(item, index) in menuItems"
                 :key="index"
+                :class="{ active: $route.path === item.url }"
                 @mouseover="handleMouseOver"
                 @mousedown="handleMouseDown"
                 @mouseout="handleMouseOut"
@@ -85,6 +92,20 @@ onMounted(() => {
   position: relative; /* 相对定位 */
 }
 
+.header-left{
+  position: absolute;
+  left: 24px;  /* 增加左边距 */
+  display: flex;
+  align-items: center;  /* 垂直居中 */
+  color: white;
+  height: 64px;
+  font-size: 24px;  /* 设置字体大小 */
+  font-weight: bold;  /* 加粗 */
+  letter-spacing: 2px;  /* 字间距 */
+  font-family: 'Courier New', Courier, monospace; /* 设置字体 */
+  border: none;  /* 移除边框 */
+}
+
 .nav {
   border-radius: 10px;
   position: relative;
@@ -98,17 +119,28 @@ onMounted(() => {
 }
 
 .nav ul li {
-  width: 88px;
-  height: 63px;
+  width: 90px;
+  height: 64px;
   text-align: center;
-  line-height: 63px;
+  color: #eddede;
+  font-weight: bold;
+  line-height: 64px;
   cursor: pointer;
   list-style: none;
+  transition: color 0.3s; /* 添加颜色过渡效果 */
+}
+.nav ul li:hover {
+  color: #ffd700; /* 添加悬停效果 */
+  font-weight: bold;
+}
+.nav ul li.active {
+  color: #ffd700;
+  font-weight: bold;
 }
 
 .t-mall {
-  width: 88px;
-  height: 63px;
+  width: 90px;
+  height: 64px;
   border-radius: 10px;
   background: url("@/assets/image/dh.png") no-repeat;
   position: absolute;
