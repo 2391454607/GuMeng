@@ -3,9 +3,8 @@ package com.gumeng.controller.sys;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.pages.Carousel;
 import com.gumeng.service.CarouselService;
-import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -20,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @PreAuthorize("hasAnyAuthority('admin','superAdmin')")
 public class CarouselController {
 
-    @Resource
+    @Autowired
     private CarouselService carouselService;
 
     //获取轮播图数据

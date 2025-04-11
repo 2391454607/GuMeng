@@ -5,6 +5,7 @@ import com.gumeng.domain.pages.Carousel;
 import com.gumeng.service.CarouselService;
 import com.gumeng.mapper.CarouselMapper;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.List;
 public class CarouselServiceImpl extends ServiceImpl<CarouselMapper, Carousel>
     implements CarouselService {
 
-    @Resource
+    @Autowired
     private CarouselMapper carouselMapper;
 
     @Override

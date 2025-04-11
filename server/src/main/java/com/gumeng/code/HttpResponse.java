@@ -3,7 +3,7 @@ package com.gumeng.code;
 import lombok.Data;
 
 /**
- * 功能：
+ * 功能：请求返回信息
  * 作者：Z
  * 日期：2025/4/2 下午11:11
  */

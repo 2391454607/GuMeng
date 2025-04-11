@@ -45,7 +45,7 @@
     </select>
 
     <!-- 删除 -->
-    <select id="deleteCarousel" resultType="com.gumeng.domain.pages.Carousel">
+    <select id="deleteCarousel">
         DELETE FROM carousel WHERE id = #{id}
     </select>
 

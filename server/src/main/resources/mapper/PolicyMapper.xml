@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gumeng.mapper.PolicyMapper">
+
+    <resultMap id="BaseResultMap" type="com.gumeng.domain.Policy">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="title" column="title" jdbcType="VARCHAR"/>
+            <result property="type" column="type" jdbcType="VARCHAR"/>
+            <result property="documentNumber" column="document_number" jdbcType="INTEGER"/>
+            <result property="publishOrg" column="publish_org" jdbcType="VARCHAR"/>
+            <result property="publishDate" column="publish_date" jdbcType="TIMESTAMP"/>
+            <result property="effectiveDate" column="effective_date" jdbcType="TIMESTAMP"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="attachmentUrl" column="attachment_url" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="isDelete" column="is_delete" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,title,type,document_number,publish_org,publish_date,
+        effective_date,content,attachment_url,create_time,update_time,
+        is_delete
+    </sql>
+
+
+    <select id="getPolicyList" resultType="com.gumeng.domain.Policy">
+        SELECT * FROM policy
+    </select>
+
+    <select id="findById" resultType="com.gumeng.domain.Policy">
+        SELECT * FROM policy WHERE id = #{id}
+    </select>
+
+    <select id="addPolicy" resultType="com.gumeng.domain.Policy">
+        INSERT INTO policy
+        SET
+            title = #{title},
+            type = #{type},
+            document_number = #{documentNumber},
+            publish_org = #{publishOrg},
+            publish_date = #{publishDate},
+            effective_date = #{effectiveDate},
+            content = #{content},
+            attachment_url = #{attachmentUrl},
+            create_time = now(),
+            update_time = now()
+    </select>
+
+    <select id="updatePolicy" resultType="com.gumeng.domain.Policy">
+        UPDATE policy
+        SET
+            title = #{title},
+            type = #{type},
+            document_number = #{documentNumber},
+            publish_org = #{publishOrg},
+            publish_date = #{publishDate},
+            effective_date = #{effectiveDate},
+            content = #{content},
+            attachment_url = #{attachmentUrl},
+            create_time = now(),
+            update_time = now()
+        WHERE id = #{id}
+    </select>
+
+    <select id="deletePolicy">
+        DELETE FROM carousel WHERE id = #{id}
+    </select>
+
+</mapper>

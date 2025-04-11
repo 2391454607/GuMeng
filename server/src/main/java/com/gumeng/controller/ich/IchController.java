@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 功能：
+ * 功能：非遗资源
  * 作者：Z
  * 日期：2025/3/26 上午10:30
  */
