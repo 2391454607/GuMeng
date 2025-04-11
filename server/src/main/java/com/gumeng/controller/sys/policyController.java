@@ -2,8 +2,6 @@ package com.gumeng.controller.sys;
 
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.Policy;
-import com.gumeng.domain.pages.Carousel;
-import com.gumeng.entity.vo.PolicyVO;
 import com.gumeng.service.PolicyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
