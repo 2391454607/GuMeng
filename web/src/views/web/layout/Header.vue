@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { router } from "@/router/index.js";
-import { Message } from "@arco-design/web-vue";
+import { Message, Avatar, Dropdown, Doption } from "@arco-design/web-vue";
+import { IconUser, IconExport, IconSettings } from '@arco-design/web-vue/es/icon';
 
 const position = ref(0);
 let begin = 0;
@@ -46,7 +47,11 @@ onMounted(() => {
   }, 10);
 });
 
-
+// 添加登出处理函数
+const handleLogout = () => {
+  Message.success('退出登录成功');
+  // 这里可以添加登出逻辑
+};
 </script>
 
 <template>
@@ -71,6 +76,22 @@ onMounted(() => {
             </li>
           </ul>
         </nav>
+
+        <div class="header-right">
+          <a-dropdown trigger="hover" position="bottom">
+            <a-avatar :size="40" style="cursor: pointer">
+              <icon-user />
+            </a-avatar>
+            <template #content>
+              <a-doption @click="router.push('/')">
+                <icon-user />个人中心
+              </a-doption>
+              <a-doption @click="handleLogout">
+                <icon-export />退出登录
+              </a-doption>
+            </template>
+          </a-dropdown>
+        </div>
       </div>
 
   </a-layout-header>
@@ -93,6 +114,20 @@ onMounted(() => {
 .header-left{
   position: absolute;
   left: 24px;  /* 增加左边距 */
+  display: flex;
+  align-items: center;  /* 垂直居中 */
+  color: white;
+  height: 64px;
+  font-size: 24px;  /* 设置字体大小 */
+  font-weight: bold;  /* 加粗 */
+  letter-spacing: 2px;  /* 字间距 */
+  font-family: 'Courier New', Courier, monospace; /* 设置字体 */
+  border: none;  /* 移除边框 */
+}
+
+.header-right{
+  position: absolute;
+  right: 24px;  /* 增加右边距 */
   display: flex;
   align-items: center;  /* 垂直居中 */
   color: white;
@@ -143,5 +178,15 @@ onMounted(() => {
   background: url("@/assets/image/dh.png") no-repeat;
   position: absolute;
   transition: left 0.1s ease;
+}
+.header-right :deep(.arco-dropdown-item) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+.header-right :deep(.arco-icon) {
+  font-size: 16px;
 }
 </style>

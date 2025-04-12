@@ -22,13 +22,6 @@ public class CarouselController {
     @Autowired
     private CarouselService carouselService;
 
-    //获取轮播图数据
-    @GetMapping("/getCarousel")
-    public HttpResponse getCarousel() {
-        Object carousel = carouselService.getCarousel();
-        return HttpResponse.success(carousel);
-    }
-
     //根据id查询轮播图
     @GetMapping("/CarouselInfo")
     public HttpResponse CarouselInfo(@RequestParam Integer id) {

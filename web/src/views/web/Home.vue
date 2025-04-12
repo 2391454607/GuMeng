@@ -10,9 +10,9 @@ import Footer from "@/views/web/layout/Footer.vue";
     <a-layout class="layout">
       <Header></Header>
 
-      <a-layout-content>
+      <div class="content">
         <RouterView></RouterView>
-      </a-layout-content>
+      </div>
 
     </a-layout>
 
@@ -24,6 +24,10 @@ import Footer from "@/views/web/layout/Footer.vue";
 <style scoped>
 .layout {
   min-height: calc(100vh - 64px); /* 确保布局占满整个视口高度 */
+}
+
+.content {
+  z-index: 0;
 }
 
 

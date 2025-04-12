@@ -85,7 +85,8 @@ onMounted(()=>{
 
 .policy-item {
   margin-top: 10px;
-  width: calc(100vw - 250px);
+  width: calc(100vw - 300px);
+  height: 120px;
   border-radius: 8px;
   background: #fff;
   border: 1px solid #e5e6eb;
@@ -100,7 +101,6 @@ onMounted(()=>{
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
 }
 
 .left-content {

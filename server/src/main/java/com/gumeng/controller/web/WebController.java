@@ -2,6 +2,7 @@ package com.gumeng.controller.web;
 
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.Policy;
+import com.gumeng.service.CarouselService;
 import com.gumeng.service.PolicyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,7 +20,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class WebController {
 
     @Autowired
+    private CarouselService carouselService;
+
+    @Autowired
     private PolicyService policyService;
+
+    //获取轮播图列表
+    @GetMapping("/getCarousel")
+    public HttpResponse getCarousel() {
+        Object carousel = carouselService.getCarousel();
+        return HttpResponse.success(carousel);
+    }
 
     //获取政策列表
     @GetMapping("/getPolicyList")
