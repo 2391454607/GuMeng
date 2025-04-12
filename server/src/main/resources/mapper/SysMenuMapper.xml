@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gumeng.mapper.SysMenuMapper">
+
+    <resultMap id="BaseResultMap" type="com.gumeng.domain.menu.SysMenu">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="type" column="type" jdbcType="VARCHAR"/>
+            <result property="url" column="url" jdbcType="VARCHAR"/>
+            <result property="permission" column="permission" jdbcType="VARCHAR"/>
+            <result property="icon" column="icon" jdbcType="VARCHAR"/>
+            <result property="parent" column="parent" jdbcType="INTEGER"/>
+            <result property="isDelete" column="is_delete" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,type,url,permission,icon,
+        parent,is_delete
+    </sql>
+
+    <select id="getSysMenu" resultType="com.gumeng.domain.menu.SysMenu">
+        SELECT * FROM sys_menu
+    </select>
+</mapper>

@@ -37,7 +37,7 @@ public class SecurityConfig {
         http
                 .securityMatcher("/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login", "/auth/register", "/user/getMenu", "/web/**").permitAll()
+                        .requestMatchers("/auth/login", "/auth/register", "/user/getMenu", "/web/**","/sys/getSysMenu").permitAll()
                         .requestMatchers("/sys/**").hasAnyAuthority("admin", "superAdmin")
                         .requestMatchers("/user/**").hasAnyAuthority("user", "admin","superAdmin")
                         .anyRequest().authenticated()

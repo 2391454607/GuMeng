@@ -2,7 +2,6 @@ package com.gumeng.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.Policy;
-import com.gumeng.entity.vo.PolicyVO;
 import com.gumeng.service.PolicyService;
 import com.gumeng.mapper.PolicyMapper;
 import org.springframework.beans.factory.annotation.Autowired;

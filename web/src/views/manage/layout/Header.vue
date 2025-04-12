@@ -1,101 +1,78 @@
 <script setup>
 import {ref} from "vue";
-import { useCollapsedStore } from '@/stores/CollapsedStore.js';
-
-
 import {router} from "@/router/index.js";
-import {Message} from "@arco-design/web-vue";
+import {IconCaretLeft, IconCaretRight, IconHome} from "@arco-design/web-vue/es/icon";
 
-// 获取 collapsed store
-const collapsedStore = useCollapsedStore();
-
-// 处理用户头像下拉菜单点击事件
-const handleMenuClick = ({ key }) => {
-  switch (key) {
-    case '1':
-      router.push('/profile'); // 跳转到个人中心
-      break;
-    case '2':
-      router.push('/settings'); // 跳转到设置
-      break;
-    case '3':
-      // 处理退出登录逻辑
-      Message.success('退出登录成功');
-      router.push('/login');
-      break;
-    default:
-      break;
-  }
-};
-
+const props = defineProps({
+  coll: {
+    type: Function
+  },
+  collapsed: {
+    type: Boolean,
+    required: true
+  },
+  onClickButton: Function
+})
 </script>
 
 <template>
+  <a-layout-header class="header">
+    <a-button shape="round" @click="props.coll" class="collapse-btn">
+      <IconCaretRight v-if="props.collapsed"/>
+      <IconCaretLeft v-else/>
+    </a-button>
 
-    <a-layout-header class="header">
-      <a-space class="flex">
-        <MenuUnfoldOutlined
-            v-if="collapsedStore.collapsed"
-            class="trigger"
-            @click="collapsedStore.toggleCollapsed"/>
-        <MenuFoldOutlined
-            v-else
-            class="trigger"
-            @click="collapsedStore.toggleCollapsed" />
-
-        <a-dropdown placement="bottom">
-          <a-space class="avatar" direction="vertical" :size="32">
-            <a-space wrap :size="16">
-              <a-avatar size="large" class="avatar-icon">
-                <template #icon><UserOutlined /></template>
-              </a-avatar>
-            </a-space>
-          </a-space>
-          <template #overlay>
-            <a-menu @click="handleMenuClick" class="dropdown-menu">
-              <a-menu-item key="1">
-                <user-outlined />
-                个人中心
-              </a-menu-item>
-              <a-menu-item key="2">
-                <setting-outlined />
-                设置
-              </a-menu-item>
-              <a-menu-divider />
-              <a-menu-item key="3">
-                <logout-outlined />
-                退出登录
-              </a-menu-item>
-            </a-menu>
-          </template>
-        </a-dropdown>
-
-      </a-space>
-
-    </a-layout-header>
-
+    <a-space size="large" class="header-right">
+      <a-button type="text" class="e-button" @click="router.push('/')">
+        <IconHome :size="25"/>
+        首页
+      </a-button>
+      <a-avatar :size="40" shape="square" :image-url="1"></a-avatar>
+      <a-dropdown>
+        <template #content>
+          <a-doption>退出登录</a-doption>
+        </template>
+      </a-dropdown>
+    </a-space>
+  </a-layout-header>
 </template>
 
 <style scoped>
-.header{
-  background: #FFFFFF;
-  .flex{
-    display: flex;
-    justify-content: space-between;
+.header {
+  background: #fff;
+  height: 64px;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  z-index: 99;
+  transition: all 0.3s ease-in-out;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-right {
+  margin-right: 16px;
+}
+
+.collapse-btn {
+  margin-left: 16px;
+  transition: transform 0.3s ease-in-out;
+
+  &:hover {
+    transform: scale(1.1);
   }
 }
 
-.trigger {
-  margin-left: -30px;
-  font-size: 24px;
-  transition: color 0.3s;
+.e-button {
+  transition: all 0.3s ease-in-out;
 }
 
-.avatar{
-  margin-right: 30px;
-}
-
-.trigger:hover {
-  color: #1890ff;
+:deep(.arco-btn-icon) {
+  transition: transform 0.3s ease-in-out;
 }
 </style>

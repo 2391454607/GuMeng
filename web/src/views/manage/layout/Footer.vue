@@ -11,7 +11,12 @@
 <style scoped>
 
 .footer {
-  text-align: center
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  height: 64px;
+  background-color: #f5f5f5;
 }
 
 </style>

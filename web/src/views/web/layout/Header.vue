@@ -41,6 +41,21 @@ const handleMouseOut = () => {
 };
 
 onMounted(() => {
+  // 获取当前路由对应的菜单项
+  const currentMenuItem = menuItems.find(item => item.url === router.currentRoute.value.path);
+  if (currentMenuItem) {
+    // 获取当前菜单项的DOM元素
+    const currentElement = document.querySelector(`li:nth-child(${menuItems.indexOf(currentMenuItem) + 1})`);
+    if (currentElement) {
+      // 设置初始位置
+      begin = currentElement.offsetLeft;
+      end = begin;
+      beginX = begin;
+      position.value = begin;
+    }
+  }
+
+  // 继续保持动画效果
   setInterval(() => {
     begin = begin + (end - begin) * 0.1;
     position.value = begin;
