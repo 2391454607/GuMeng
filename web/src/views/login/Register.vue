@@ -38,7 +38,7 @@ const handleSubmit = async () => {
       userRegisterAPI(register).then((res) => {
         if (res.code === 200) {
           Message.success(res.msg);
-          router.push('/');
+          router.push('/login');
         } else {
           Message.error(res.msg);
         }

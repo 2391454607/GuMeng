@@ -2,8 +2,6 @@
 import { ref, onMounted } from 'vue';
 import { router } from "@/router/index.js";
 import { Message } from "@arco-design/web-vue";
-import { useRoute } from 'vue-router';
-const route = useRoute();
 
 const position = ref(0);
 let begin = 0;

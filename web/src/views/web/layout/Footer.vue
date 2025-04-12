@@ -19,6 +19,7 @@
   text-align: center;
   background-color: #F5F5F0;
   color: #000000;
+  height: 64px;
 }
 
 .container {

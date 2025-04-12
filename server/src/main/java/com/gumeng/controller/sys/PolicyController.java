@@ -15,17 +15,11 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/sys") //给当前控制器下的所有接口添加前缀
 @PreAuthorize("hasAnyAuthority('admin','superAdmin')")
-public class policyController {
+public class PolicyController {
 
     @Autowired
     private PolicyService policyService;
 
-    //根据id查询政策
-    @GetMapping("/policyInfo")
-    public HttpResponse policyInfo(@RequestParam Integer id) {
-        Policy policy = policyService.findById(id);
-        return HttpResponse.success(policy);
-    }
 
     //新增政策信息
     @PostMapping("/addPolicy")
