@@ -85,7 +85,8 @@ onUnmounted(() => {
           class="carousel" 
           :auto-play="true"
           indicator-type="line"
-          show-arrow="always"
+          show-arrow="hover"
+          arrow-class=""
         >
           <a-carousel-item v-for="item in carouselList" :key="item.id">
             <div class="image-container">
@@ -147,7 +148,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: calc(100vh - 100px);
+  height: calc(100vh - 128px);
   width: 100vw;
 }
 

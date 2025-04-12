@@ -1,6 +1,6 @@
 <script setup>
 import {onMounted, ref} from "vue";
-import {getPolicyList} from "@/api/web/Policy.js";
+import {getPolicyList} from "@/api/web/Web.js";
 import {IconEye, IconDownload, IconLoading } from '@arco-design/web-vue/es/icon';
 
 const PolicyList = ref({
