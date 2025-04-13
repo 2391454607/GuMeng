@@ -16,6 +16,7 @@
   justify-content: center;
   text-align: center;
   height: 64px;
+  width: 100vw;
   background-color: #f5f5f5;
 }
 

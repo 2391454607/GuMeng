@@ -1,6 +1,7 @@
 <script setup>
 import {onMounted, onUnmounted, ref} from 'vue'
 import {getCarouselAPI} from "@/api/web/Web.js";
+import Footer from "@/views/web/layout/Footer.vue";
 
 const currentSection = ref(0);
 let isScrolling = false;
@@ -47,24 +48,19 @@ const scrollToSection = (index) => {
   }, 800);
 };
 
-// 点击指示器切换页面
-const goToSection = (index) => {
-  if (isScrolling || index === currentSection.value) return;
-  currentSection.value = index;
-  scrollToSection(index);
-};
-
 //轮播图列表
-const carouselList = ref({
-  id:"",
-  imageUrl:""
-})
+const carouselList = ref([
+  {
+    id: "default",
+    imageUrl: "/src/assets/image/gumeng.png"  // 默认轮播图
+  }
+])
 
 onMounted(() => {
   sections.value = document.querySelectorAll('.section');
   window.addEventListener('wheel', handleWheel, {passive: false});
   window.addEventListener('keydown', handleKeydown);
-
+  
   getCarouselAPI().then((res => {
     carouselList.value = res.data
   }))
@@ -86,7 +82,7 @@ onUnmounted(() => {
           :auto-play="true"
           indicator-type="line"
           show-arrow="hover"
-          arrow-class=""
+          move-speed="2000"
         >
           <a-carousel-item v-for="item in carouselList" :key="item.id">
             <div class="image-container">
@@ -94,6 +90,11 @@ onUnmounted(() => {
             </div>
           </a-carousel-item>
         </a-carousel>
+        <!-- 添加下滑提示 -->
+        <div class="scroll-hint">
+          <p>下滑获取更多内容</p>
+          <div class="scroll-arrow"></div>
+        </div>
       </section>
 
       <section class="section">第二屏</section>
@@ -102,7 +103,9 @@ onUnmounted(() => {
 
       <section class="section">第四屏</section>
 
-      <section class="section">第五屏</section>
+      <section class="section">
+        <Footer class="footer"></Footer>
+      </section>
       
       <!-- 删除页面指示器部分 -->
     </div>
@@ -113,7 +116,7 @@ onUnmounted(() => {
 .content {
   text-align: center;
   background-color: #fff;
-  height: calc(100vh - 128px);
+  height: calc(100vh - 64px);
   overflow: hidden;
   position: relative;
 }
@@ -148,7 +151,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: calc(100vh - 128px);
+  height: calc(100vh - 64px);
   width: 100vw;
 }
 
@@ -164,26 +167,15 @@ onUnmounted(() => {
   transition: all 0.5s ease-out;
   padding: 0;
   overflow: hidden;
-}
-
-.section:nth-child(2) {
-  background-color: #e8e8e8;
-  transition: all 0.5s ease-out;
-}
-
-.section:nth-child(3) {
-  background-color: #d9d9d9;
-  transition: all 0.5s ease-out;
-}
-
-.section:nth-child(4) {
-  background-color: #cccccc;
-  transition: all 0.5s ease-out;
+  position: relative;
 }
 
 .section:nth-child(5) {
-  background-color: #cccccc;
+  background-color: #34f4aa;
   transition: all 0.5s ease-out;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
 }
 
 /* 修改滚动条样式 */
@@ -194,6 +186,66 @@ onUnmounted(() => {
 .full_page-container {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+.scroll-hint {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #ffffff;
+  font-size: 16px;
+  animation: bounce 2s infinite;
+  z-index: 10; /* 提高层级 */
+  pointer-events: none; /* 防止遮挡点击事件 */
+}
+
+.scroll-arrow {
+  width: 20px;
+  height: 20px;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(45deg);
+  margin: 10px auto;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) translateX(-50%);
+  }
+  40% {
+    transform: translateY(-10px) translateX(-50%);
+  }
+  60% {
+    transform: translateY(-5px) translateX(-50%);
+  }
+}
+
+:deep(.arco-carousel-arrow-left) {
+  left: 30px;
+  width: 50px;
+  height: 50px;
+}
+
+:deep(.arco-carousel-arrow-right) {
+  right: 30px;
+  width: 50px;
+  height: 50px;
+}
+
+:deep(.arco-icon) {
+  font-size: 30px;
+  color: #ffffff;
+}
+
+.footer{
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  bottom: 0;
 }
 
 </style>

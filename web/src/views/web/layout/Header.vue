@@ -65,6 +65,7 @@ onMounted(() => {
 // 添加登出处理函数
 const handleLogout = () => {
   Message.success('退出登录成功');
+  router.push('/login');
   // 这里可以添加登出逻辑
 };
 </script>

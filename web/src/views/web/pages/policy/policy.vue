@@ -2,6 +2,7 @@
 import {onMounted, ref} from "vue";
 import {getPolicyList} from "@/api/web/Web.js";
 import {IconEye, IconDownload, IconLoading } from '@arco-design/web-vue/es/icon';
+import Footer from "@/views/manage/layout/Footer.vue";
 
 const PolicyList = ref({
   id:"",
@@ -67,6 +68,11 @@ onMounted(()=>{
       </a-spin>
     </div>
   </div>
+
+  <div>
+    <Footer class="footer"></Footer>
+  </div>
+
 </template>
 
 <style scoped>
@@ -159,4 +165,12 @@ onMounted(()=>{
   font-size: 24px;
 }
 
+.footer{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  font-size: 16px;
+  bottom: 0;
+}
 </style>
