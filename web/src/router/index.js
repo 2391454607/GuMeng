@@ -1,6 +1,6 @@
 import {createRouter, createWebHistory} from "vue-router";
-import Home from "@/views/web/Home.vue";
-import {userRouters} from "@/router/web.js"
+import WebHome from "@/views/web/Home.vue";
+import {webRouters} from "@/router/web.js"
 import SysHome from "@/views/manage/Home.vue"
 import {sysRouters} from "@/router/sysIndex.js"
 
@@ -16,16 +16,16 @@ export const router = createRouter({
          */
         {
             path: "/",
-            name: "index",
-            component: Home,
-            children: userRouters,
+            name: "web",
+            component: WebHome,
+            children: webRouters,
         },
         /**
          * @description 管理端路由
          */
         {
             path: "/sys",
-            name: "system",
+            name: "sys",
             component: SysHome,
             children: sysRouters,
         },
