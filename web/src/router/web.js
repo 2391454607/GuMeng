@@ -1,5 +1,5 @@
 
-const userRouters = [
+const webRouters = [
     {
         path: "/",
         name: "Home",
@@ -39,4 +39,4 @@ const userRouters = [
 
 ];
 
-export {userRouters};
+export {webRouters};

@@ -47,11 +47,11 @@ onMounted(() => {
 })
 
 const onClickMenuItem = (menu) => {
-  if (menu.url) {
+  if (menu.url !== undefined && menu.url !== null && menu.url !== '') {
     selectedKeys.value = [menu.id];
     router.push("/sys" + menu.url);
   } else {
-    Message.warning('该菜单项没有配置跳转地址');
+    Message.warning('该菜单项没有配置跳转地址!');
   }
 }
 
@@ -61,7 +61,6 @@ const loading = ref(true);
 
 onMounted(() => {
   getAdminMenuAPI().then(res => {
-    console.log(res);
     menuData.value = res.data;
     loading.value = false;  // 数据加载完成
   })
@@ -93,7 +92,6 @@ const iconMap = {
         :collapsed="hidden"
         :selected-keys="selectedKeys"
         :open-keys="openKeys"
-        @menu-item-click="onClickMenuItem"
         auto-open
         class="side-menu"
       >
