@@ -15,8 +15,6 @@ import org.apache.ibatis.annotations.Mapper;
 public interface UserMapper extends BaseMapper<User> {
     //根据用户名查询用户
     User findByUserName(String username);
-    //添加注册用户
-    void add(String username, String passwordHash);
     //更新用户信息
     void update(User user);
     //更新用户头像

@@ -4,6 +4,7 @@ import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.User;
 import com.gumeng.entity.DTO.UserRegisterDTO;
 import com.gumeng.security.CustomUserDetails;
+import com.gumeng.service.AuthService;
 import com.gumeng.service.UserRoleService;
 import com.gumeng.service.UserService;
 import com.gumeng.utils.JwtUtil;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.Random;
 
 /**
  * 功能：认证接口（登录/注册）
@@ -31,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 public class AuthController {
 
     @Autowired
-    private UserService userService;
+    private AuthService authService;
 
     @Autowired
     private UserRoleService userRoleService;
@@ -42,24 +44,66 @@ public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    //发送邮箱验证码
+    @PostMapping("/sendCode")
+    public HttpResponse sendVerificationCode(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        if (email == null || email.isEmpty()) {
+            return HttpResponse.error("邮箱不能为空");
+        }
+
+        // 检查邮箱是否已被注册
+        User emailUser = authService.findByEmail(email);
+        if (emailUser != null) {
+            return HttpResponse.error("该邮箱已被注册！");
+        }
+
+        // 生成6位随机验证码
+        String code = String.format("%06d", new Random().nextInt(1000000));
+        
+        try {
+            // 发送验证码
+            authService.sendVerificationCode(email, code);
+            
+            // 将验证码存入Redis，设置1分钟过期
+            stringRedisTemplate.opsForValue().set(
+                "email:code:" + email,
+                code,
+                1,
+                TimeUnit.MINUTES
+            );
+            
+            return HttpResponse.success();
+        } catch (Exception e) {
+            e.printStackTrace(); // 查看具体错误信息
+            return HttpResponse.error("验证码发送失败：" + e.getMessage());
+        }
+    }
 
     //用户注册
     @PostMapping("/register")
     public HttpResponse register(@RequestBody @Validated UserRegisterDTO user) {
+        // 验证验证码
+        String cachedCode = stringRedisTemplate.opsForValue().get("email:code:" + user.getEmail());
+        if (cachedCode == null || !cachedCode.equals(user.getCode())) {
+            return HttpResponse.error("验证码错误或已过期");
+        }
 
-        //查询用户是否注册
-        User u = userService.findByUserName(user.getUsername());
-        if (u == null){
-            //注册
-            userService.register(user.getUsername(),user.getPassword());
-            //获取新注册用户
-            User newUser = userService.findByUserName(user.getUsername());
-            //注册自动分配用户user权限
+        // 查询用户是否注册
+        User u = authService.findByUserName(user.getUsername());
+        if (u == null) {
+            // 注册
+            authService.register(user.getUsername(), user.getPassword(),user.getEmail());
+            // 获取新注册用户
+            User newUser = authService.findByUserName(user.getUsername());
+            // 注册自动分配用户user权限
             userRoleService.setDefaultRole(newUser.getId());
-
+            
+            // 注册成功后删除验证码
+            stringRedisTemplate.delete("email:code:" + user.getEmail());
+            
             return HttpResponse.success();
-        }else{
-            //该用户名已被注册
+        } else {
             return HttpResponse.error("该用户名已被注册！");
         }
     }

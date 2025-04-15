@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.pages.Carousel;
 import com.gumeng.service.CarouselService;
 import com.gumeng.mapper.CarouselMapper;
-import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

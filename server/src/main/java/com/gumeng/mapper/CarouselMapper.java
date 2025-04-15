@@ -3,7 +3,6 @@ package com.gumeng.mapper;
 import com.gumeng.domain.pages.Carousel;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 

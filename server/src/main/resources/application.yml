@@ -25,6 +25,24 @@ spring:
 #    username: root
 #    password: 123456
 
+  #邮箱配置
+  mail:
+    host: smtp.qq.com  #发送邮件的服务器地址
+    port: 465  # 使用465端口
+    username: 2391454607@qq.com  # 邮箱账号
+    password: elihqgrnadevechh  #开启 IMAP/SMTP 服务 授权码
+    default-encoding: UTF-8
+    protocol: smtps  # 使用smtps协议
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true  # 启用SSL
+          socketFactory:
+            port: 465
+            class: javax.net.ssl.SSLSocketFactory
+
   data:
     redis:
       host: 127.0.0.1       # Redis 服务器地址

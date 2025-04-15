@@ -70,6 +70,12 @@
             <artifactId>lombok</artifactId>
         </dependency>
 
+        <!-- 邮箱服务（用于验证码） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- validation依赖，调整参数合法性 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

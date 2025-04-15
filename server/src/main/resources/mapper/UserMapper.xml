@@ -31,12 +31,6 @@
         WHERE username = #{username}
     </select>
 
-    <!-- 添加注册用户 -->
-    <insert id="add">
-        INSERT INTO user (username, password, create_time, update_time)
-        VALUES (#{username}, #{passwordHash}, now(), now())
-    </insert>
-
     <!-- 更新用户信息 -->
     <update id="update">
         UPDATE user
