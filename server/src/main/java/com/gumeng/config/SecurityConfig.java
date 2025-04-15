@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/user/getMenu", "/web/**","/sys/getSysMenu").permitAll()
                         .requestMatchers("/sys/**").hasAnyAuthority("admin", "superAdmin")
-                        .requestMatchers("/user/**").hasAnyAuthority("user", "admin","superAdmin")
+                        .requestMatchers("/user/**","/forum/**").hasAnyAuthority("user", "admin","superAdmin")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
