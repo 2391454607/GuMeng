@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, reactive, ref} from 'vue';
+import {onMounted, onBeforeUnmount, reactive, ref} from 'vue';
 import {Message} from '@arco-design/web-vue';
 import {useRouter} from 'vue-router';
 import {SendEmailApi, userRegisterAPI} from "@/api/Auth.js";
@@ -78,6 +78,10 @@ const rules = {
 };
 const emailPattern = /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/;
 
+// 添加状态控制变量
+const show3DEffect = ref(true);
+
+// 修改路由跳转和组件卸载逻辑
 const handleSubmit = async () => {
   loading.value = true;
 
@@ -106,7 +110,12 @@ const handleSubmit = async () => {
       const res = await userRegisterAPI(register);
       if (res.code === 200) {
         Message.success(res.msg);
-        await router.push('/login');
+        // 先移除 3D 效果
+        show3DEffect.value = false;
+        // 延迟跳转
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 500);
       } else {
         Message.error(res.msg);
       }
@@ -156,6 +165,24 @@ const sendCode = async () => {
     Message.error('发送验证码失败，请稍后重试');
   }
 };
+
+// 添加 ref 用于存储组件实例
+const tiltContainerRef = ref(null);
+
+// 卸载前的清理函数
+onBeforeUnmount(() => {
+  try {
+    // 移除所有事件监听器
+    window.removeEventListener('mousemove', () => {});
+    window.removeEventListener('deviceorientation', () => {});
+    // 清除组件实例
+    if (tiltContainerRef.value) {
+      tiltContainerRef.value = null;
+    }
+  } catch (error) {
+    console.warn('组件卸载清理失败:', error);
+  }
+});
 </script>
 
 <template>
@@ -171,7 +198,12 @@ const sendCode = async () => {
     </div>
 
     <div class="St3DTiltContainer">
-      <St3DTiltContainer :start-x="10" :start-y="20" full-page-listening>
+      <St3DTiltContainer 
+        ref="tiltContainerRef"
+        :start-x="10" 
+        :start-y="20" 
+        full-page-listening
+      >
         <St3DText base-color="#59B6EB" color="#fefefe" content="故梦阑珊" font-size="5rem"></St3DText>
       </St3DTiltContainer>
     </div>
@@ -471,3 +503,4 @@ section:nth-child(2) {
   white-space: nowrap;
 }
 </style>
+

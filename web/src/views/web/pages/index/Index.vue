@@ -82,7 +82,7 @@ onUnmounted(() => {
           :auto-play="{interval: 3000, hoverToPause: false }"
           indicator-type="line"
           show-arrow="hover"
-          move-speed="2000"
+          :move-speed="2000"
         >
           <a-carousel-item v-for="item in carouselList" :key="item.id">
             <div class="image-container">

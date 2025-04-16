@@ -1,8 +1,8 @@
 <script setup>
-import {onMounted, reactive, ref} from 'vue';
+import {onMounted, onBeforeUnmount, reactive, ref} from 'vue';
 import {Message} from '@arco-design/web-vue';
 import {useRouter} from 'vue-router';
-import {userLoginAPI} from "@/api/Login.js";
+import {userLoginAPI} from "@/api/Auth.js";
 //引入3D文本组件
 import {St3DText, St3DTiltContainer, StDynamicBorder1, StGhostText,} from "st-common-ui-vue3";
 
@@ -49,6 +49,9 @@ const rules = {
   ]
 };
 
+// 添加状态控制变量
+const show3DEffect = ref(true);
+
 const handleSubmit = async () => {
   loading.value = true;
 
@@ -59,28 +62,59 @@ const handleSubmit = async () => {
   }
   if (login.username.length >= 5 && login.password.length >= 6) {
     try {
-      userLoginAPI(login).then((res) => {
-        if (res.code === 200) {
-          Message.success(res.msg);
-          router.push('/');
-        } else {
-          Message.error(res.msg);
-        }
-      })
+      const res = await userLoginAPI(login);
+      if (res.code === 200) {
+        // 存储 token
+        localStorage.setItem('token', res.data);
+        
+        // 解析 token 中的用户信息
+        const tokenParts = res.data.split('.');
+        const claims = JSON.parse(atob(tokenParts[1]));
+        
+        Message.success(res.msg);
+        show3DEffect.value = false;
+        
+        setTimeout(() => {
+          // 根据解析出的角色信息决定跳转路径
+          if (claims.claims.role.includes('superAdmin') || claims.claims.role.includes('ROLE_ADMIN')) {
+            window.location.href = '/sys';
+          } else {
+            window.location.href = '/';
+          }
+        }, 500);
+      } else {
+        Message.error(res.msg);
+      }
     } catch (error) {
       Message.error(error);
-    } finally {
-      loading.value = false;
     }
   }
   loading.value = false;
 };
 
+// 添加 ref 用于存储组件实例
+const tiltContainerRef = ref(null);
+
+// 卸载前的清理函数
+onBeforeUnmount(() => {
+  try {
+    // 移除所有事件监听器
+    window.removeEventListener('mousemove', () => {});
+    window.removeEventListener('deviceorientation', () => {});
+    // 清除组件实例
+    if (tiltContainerRef.value) {
+      tiltContainerRef.value = null;
+    }
+  } catch (error) {
+    console.warn('组件卸载清理失败:', error);
+  }
+});
 </script>
 
 <template>
 
   <div class="login-container">
+    <div class="blur-overlay"></div>
     <div id="container">
       <section v-for="(_, index) in 3" :key="index">
         <div v-for="i in img" :key="i"
@@ -89,7 +123,7 @@ const handleSubmit = async () => {
       </section>
     </div>
 
-    <div>
+    <div class="St3DTiltContainer">
       <St3DTiltContainer :start-x="10" :start-y="20" full-page-listening>
         <St3DText base-color="#59B6EB" color="#fefefe" content="故梦阑珊" font-size="5rem"></St3DText>
       </St3DTiltContainer>
@@ -171,6 +205,32 @@ const handleSubmit = async () => {
   background-color: #f5f5f5;
 }
 
+.blur-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 2;
+  pointer-events: none;
+}
+
+#container {
+  z-index: 1;
+}
+
+.dynamic-border-1-demo-1 {
+  position: relative;
+  z-index: 3;
+}
+
+.St3DTiltContainer {
+  z-index: 3;
+}
+
 .dynamic-border-1-demo-1 {
   margin-top: 1rem;
 }
@@ -248,5 +308,25 @@ section:nth-child(2) {
   100% {
     transform: rotateX(-360deg);
   }
+}
+
+:deep(.arco-input-wrapper .arco-input-prefix) {
+  padding-right: 0;
+  color: var(--color-text-2);
+}
+/* 添加图标居中样式 */
+:deep(.arco-input-wrapper) {
+  display: flex;
+  align-items: center;
+  height: 36px;  /* 设置固定高度 */
+  padding: 0 10px 0 0;
+}
+
+:deep(.arco-input-prefix) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;  /* 设置固定宽度 */
+  height: 100%;
 }
 </style>
