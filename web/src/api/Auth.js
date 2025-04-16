@@ -15,4 +15,8 @@ export const userLoginAPI = async ({username: username,password: password}) => {
     return http.post('/auth/login',{username: username,password: password})
 }
 
+//用户登出接口
+export const userLogoutAPI = async () => {
+    return http.post('/auth/logout')
+}
 

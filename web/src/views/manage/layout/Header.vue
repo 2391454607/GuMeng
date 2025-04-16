@@ -1,7 +1,9 @@
 <script setup>
-import {ref} from "vue";
+import {ref, onMounted} from "vue";
 import {router} from "@/router/index.js";
-import {IconCaretLeft, IconCaretRight, IconHome} from "@arco-design/web-vue/es/icon";
+import {Message} from '@arco-design/web-vue';
+import {IconCaretLeft, IconCaretRight, IconHome, IconUser, IconExport} from "@arco-design/web-vue/es/icon";
+import {userLogoutAPI} from "@/api/Auth.js";
 
 const props = defineProps({
   coll: {
@@ -13,6 +15,41 @@ const props = defineProps({
   },
   onClickButton: Function
 })
+
+// 用户信息
+const userInfo = ref({});
+
+// 获取用户信息
+onMounted(() => {
+
+  const storedUserInfo = localStorage.getItem('userInfo');
+  if (storedUserInfo) {
+    userInfo.value = JSON.parse(storedUserInfo);
+  }
+});
+
+// 退出登录
+const handleLogout = () => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    userLogoutAPI().then(res => {
+      if (res.code === 200) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        Message.success('退出登录成功');
+        router.push('/login');
+      } else {
+        Message.error(res.msg || '退出登录失败');
+      }
+    }).catch(error => {
+      Message.error('退出登录失败');
+      console.error('退出登录错误:', error);
+    });
+  } else {
+    Message.warning('您尚未登录');
+    router.push('/login');
+  }
+};
 </script>
 
 <template>
@@ -27,10 +64,20 @@ const props = defineProps({
         <IconHome :size="25"/>
         首页
       </a-button>
-      <a-avatar :size="40" shape="square" :image-url="1"></a-avatar>
-      <a-dropdown>
+      <a-dropdown trigger="hover">
+        <a-space>
+          <a-avatar :size="40">
+            <IconUser/>
+          </a-avatar>
+          <span>{{ userInfo.username || '用户' }}</span>
+        </a-space>
         <template #content>
-          <a-doption>退出登录</a-doption>
+          <a-doption>
+            <IconUser />个人信息
+          </a-doption>
+          <a-doption @click="handleLogout">
+            <IconExport />退出登录
+          </a-doption>
         </template>
       </a-dropdown>
     </a-space>
