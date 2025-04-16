@@ -1,8 +1,13 @@
 import { http } from '@/utils/http.js'
 
+//发送验证码
+export const SendEmailApi = async ({email:email}) => {
+    return http.post('/auth/sendCode', {email: email})
+}
+
 //用户注册接口
-export const userRegisterAPI = async ({username:username, password:password}) => {
-    return http.post('/auth/register', {username: username, password: password})
+export const userRegisterAPI = async ( data ) => {
+    return http.post('/auth/register', data)
 }
 
 //用户登录接口

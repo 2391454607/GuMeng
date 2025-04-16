@@ -47,7 +47,7 @@ public class AuthServiceImpl extends ServiceImpl<AuthMapper, User>
             message.setFrom(from);
             message.setTo(to);
             message.setSubject("故梦阑珊网站注册验证码");
-            message.setText("您的验证码是：" + code + "，有效期为1分钟。请勿将验证码泄露给他人。");
+            message.setText("您的验证码是：" + code + "，有效期为5分钟。请勿将验证码泄露给他人。");
             mailSender.send(message);
         } catch (Exception e) {
             e.printStackTrace();

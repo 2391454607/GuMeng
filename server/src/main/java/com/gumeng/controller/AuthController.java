@@ -6,7 +6,6 @@ import com.gumeng.entity.DTO.UserRegisterDTO;
 import com.gumeng.security.CustomUserDetails;
 import com.gumeng.service.AuthService;
 import com.gumeng.service.UserRoleService;
-import com.gumeng.service.UserService;
 import com.gumeng.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -52,6 +51,12 @@ public class AuthController {
             return HttpResponse.error("邮箱不能为空");
         }
 
+        // 验证邮箱格式
+        String emailRegex = "^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\\.[a-zA-Z0-9_-]+)+$";
+        if (!email.matches(emailRegex)) {
+            return HttpResponse.error("邮箱格式不正确");
+        }
+
         // 检查邮箱是否已被注册
         User emailUser = authService.findByEmail(email);
         if (emailUser != null) {
@@ -65,18 +70,18 @@ public class AuthController {
             // 发送验证码
             authService.sendVerificationCode(email, code);
             
-            // 将验证码存入Redis，设置1分钟过期
+            // 将验证码存入Redis，设置5分钟过期
             stringRedisTemplate.opsForValue().set(
                 "email:code:" + email,
                 code,
-                1,
+                5,
                 TimeUnit.MINUTES
             );
             
             return HttpResponse.success();
         } catch (Exception e) {
             e.printStackTrace(); // 查看具体错误信息
-            return HttpResponse.error("验证码发送失败：" + e.getMessage());
+            return HttpResponse.error("验证码发送失败：请检查您的邮箱是否正确");
         }
     }
 
