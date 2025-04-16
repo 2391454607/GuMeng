@@ -7,6 +7,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -21,6 +23,9 @@ import java.util.Map;
 *日期：2025/4/3 下午9:18
 */
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
@@ -30,6 +35,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null && token.startsWith("Bearer ")) {
             token = token.substring(7);
             try {
+                // 先检查 Redis 中是否存在该 token
+                String redisToken = stringRedisTemplate.opsForValue().get(token);
+                if (redisToken == null) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
+
                 Map<String, Object> claims = JwtUtil.parseToken(token);
                 
                 // 将用户信息存入ThreadLocal

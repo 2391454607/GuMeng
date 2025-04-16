@@ -7,6 +7,7 @@ import com.gumeng.security.CustomUserDetails;
 import com.gumeng.service.AuthService;
 import com.gumeng.service.UserRoleService;
 import com.gumeng.utils.JwtUtil;
+import com.gumeng.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -14,6 +15,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -149,5 +151,26 @@ public class AuthController {
                 return HttpResponse.error("用户名或密码错误");
             }
         }
+    }
+
+    //用户登出
+    @PostMapping("/logout")
+    public HttpResponse logout(@RequestHeader("Authorization") String token) {
+        if (token != null && token.startsWith("Bearer ")) {
+            // 去除Bearer 前缀
+            token = token.substring(7);
+            try {
+                // 从Redis中删除token
+                stringRedisTemplate.delete(token);
+                // 清除安全上下文
+                SecurityContextHolder.clearContext();
+                // 清除ThreadLocal
+                ThreadLocalUtil.remove();
+                return HttpResponse.success("登出成功");
+            } catch (Exception e) {
+                return HttpResponse.error("登出失败");
+            }
+        }
+        return HttpResponse.error("无效的token");
     }
 }
