@@ -28,7 +28,6 @@ const getImageRange = (sectionIndex) => {
   return { start, end }
 }
 
-const router = useRouter();
 const loading = ref(false);
 
 const login = reactive({

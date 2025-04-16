@@ -36,11 +36,18 @@ request.interceptors.request.use(
 /**
  * @description axios请求后拦截器
  */
+// 响应拦截器
 request.interceptors.response.use(
     (response) => {
         return response.data;
     },
     (error) => {
+        if (error.response && error.response.status === 401) {
+            // token 过期或无效，清除本地存储并跳转到登录页
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+            window.location.href = '/401';
+        }
         console.error("请求失败:", error);
         return Promise.reject(error);
     }

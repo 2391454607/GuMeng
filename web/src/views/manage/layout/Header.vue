@@ -3,7 +3,7 @@ import {ref, onMounted} from "vue";
 import {router} from "@/router/index.js";
 import {Message} from '@arco-design/web-vue';
 import {IconCaretLeft, IconCaretRight, IconHome, IconUser, IconExport} from "@arco-design/web-vue/es/icon";
-import {userLogoutAPI} from "@/api/Auth.js";
+import {userLogoutAPI, getUserInfoAPI} from "@/api/Auth.js";
 
 const props = defineProps({
   coll: {
@@ -17,20 +17,35 @@ const props = defineProps({
 })
 
 // 用户信息
-const userInfo = ref({});
+const userInfo = ref({
+  id:"",
+  naicname:'',
+  userPic:''
+});
+const token = localStorage.getItem('token');
 
-// 获取用户信息
 onMounted(() => {
-
-  const storedUserInfo = localStorage.getItem('userInfo');
-  if (storedUserInfo) {
-    userInfo.value = JSON.parse(storedUserInfo);
+  try {
+    if (token){
+      getUserInfoAPI().then(res => {
+        console.log(res.data);
+        if (res.code === 200) {
+          userInfo.value = res.data;
+          // 更新本地存储的用户信息
+          localStorage.setItem('userInfo', JSON.stringify(res.data));
+        }else {
+          Message.error('获取用户信息失败');
+        }
+      });
+    }
+  }catch(error) {
+    console.error('获取用户信息错误:', error);
+    Message.error('获取用户信息失败');
   }
 });
 
 // 退出登录
 const handleLogout = () => {
-  const token = localStorage.getItem('token');
   if (token) {
     userLogoutAPI().then(res => {
       if (res.code === 200) {
@@ -66,10 +81,15 @@ const handleLogout = () => {
       </a-button>
       <a-dropdown trigger="hover">
         <a-space>
-          <a-avatar :size="40">
-            <IconUser/>
+          <a-avatar 
+            :size="40" 
+            :image-url="userInfo.userPic || '/src/assets/image/gumeng.png'"
+          >
+            <template #fallback>
+              <IconUser />
+            </template>
           </a-avatar>
-          <span>{{ userInfo.username || '用户' }}</span>
+          <span>{{ userInfo.nickname || '用户' }}</span>
         </a-space>
         <template #content>
           <a-doption>
@@ -97,10 +117,6 @@ const handleLogout = () => {
   transition: all 0.3s ease-in-out;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-}
 
 .header-right {
   margin-right: 16px;

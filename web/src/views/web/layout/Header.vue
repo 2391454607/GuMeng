@@ -2,7 +2,8 @@
 import { ref, onMounted } from 'vue';
 import { router } from "@/router/index.js";
 import { Message, Avatar, Dropdown, Doption } from "@arco-design/web-vue";
-import { IconUser, IconExport, IconSettings } from '@arco-design/web-vue/es/icon';
+import { IconUser, IconExport } from '@arco-design/web-vue/es/icon';
+import {getUserInfoAPI, userLogoutAPI} from "@/api/Auth.js";
 
 const position = ref(0);
 let begin = 0;
@@ -40,6 +41,10 @@ const handleMouseOut = () => {
   end = beginX;
 };
 
+const token = localStorage.getItem('token');
+// 存储用户信息
+const userInfo = ref({});
+
 onMounted(() => {
   // 获取当前路由对应的菜单项
   const currentMenuItem = menuItems.find(item => item.url === router.currentRoute.value.path);
@@ -54,20 +59,56 @@ onMounted(() => {
       position.value = begin;
     }
   }
-
   // 继续保持动画效果
   setInterval(() => {
     begin = begin + (end - begin) * 0.1;
     position.value = begin;
   }, 10);
+  //获取用户登录信息
+  try {
+    if (token){
+      getUserInfoAPI().then(res => {
+        console.log(res.data);
+        if (res.code === 200) {
+          userInfo.value = res.data;
+          // 更新本地存储的用户信息
+          localStorage.setItem('userInfo', JSON.stringify(res.data));
+        }else {
+          Message.error('获取用户信息失败');
+        }
+      });
+    }
+  }catch(error) {
+    console.error('获取用户信息错误:', error);
+    Message.error('获取用户信息失败');
+  }
 });
 
 // 添加登出处理函数
 const handleLogout = () => {
-  Message.success('退出登录成功');
-  router.push('/login');
-  // 这里可以添加登出逻辑
+  if (token) {
+    userLogoutAPI().then(res => {
+      if (res.code === 200) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userInfo');
+        // 显示消息
+        Message.success('退出登录成功');
+        // 延时刷新当前页面
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        Message.error(res.msg || '退出登录失败');
+      }
+    }).catch(error => {
+      Message.error('退出登录失败');
+      console.error('退出登录错误:', error);
+    });
+  } else {
+    Message.warning('您尚未登录');
+  }
 };
+
 </script>
 
 <template>
@@ -94,19 +135,36 @@ const handleLogout = () => {
         </nav>
 
         <div class="header-right">
-          <a-dropdown trigger="hover" position="bottom">
-            <a-avatar :size="40" style="cursor: pointer">
-              <icon-user />
-            </a-avatar>
-            <template #content>
-              <a-doption @click="router.push('/')">
-                <icon-user />个人中心
-              </a-doption>
-              <a-doption @click="handleLogout">
-                <icon-export />退出登录
-              </a-doption>
-            </template>
-          </a-dropdown>
+          <template v-if="token">
+            <a-dropdown trigger="hover" position="bottom">
+              <a-space>
+                <a-avatar :size="40" :image-url="userInfo.userPic || '/src/assets/avatar/default-avatar.png'" style="cursor: pointer">
+                  <template #fallback>
+                    <icon-user />
+                  </template>
+                </a-avatar>
+                <span style="color: white">{{ userInfo.nickname || '用户' }}</span>
+              </a-space>
+              <template #content>
+                <a-doption @click="router.push('/user')">
+                  <icon-user />个人中心
+                </a-doption>
+                <a-doption @click="handleLogout">
+                  <icon-export />退出登录
+                </a-doption>
+              </template>
+            </a-dropdown>
+          </template>
+          <template v-else>
+            <a-space>
+              <a-button type="outline" @click="router.push('/login')">
+                登录
+              </a-button>
+              <a-button type="outline" @click="router.push('/register')">
+                注册
+              </a-button>
+            </a-space>
+          </template>
         </div>
       </div>
 
@@ -204,5 +262,14 @@ const handleLogout = () => {
 
 .header-right :deep(.arco-icon) {
   font-size: 16px;
+}
+.header-right :deep(.arco-btn) {
+  color: white;
+  border-color: white;
+}
+
+.header-right :deep(.arco-btn:hover) {
+  color: #ffd700;
+  border-color: #ffd700;
 }
 </style>
