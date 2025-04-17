@@ -1,5 +1,6 @@
 <script setup>
 import { useRouter } from 'vue-router';
+import Footer from "@/views/web/layout/Footer.vue";
 
 const router = useRouter();
 
@@ -34,6 +35,9 @@ const goBack = () => {
     </div>
     <div class="pattern-overlay"></div>
   </div>
+
+  <Footer class="footer"></Footer>
+
 </template>
 
 <style scoped>
@@ -155,5 +159,15 @@ const goBack = () => {
     font-size: 14px;
     margin-bottom: 30px;
   }
+}
+
+.footer{
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  bottom: 0;
+  z-index: 10;
 }
 </style>
