@@ -32,14 +32,28 @@ public class SecurityConfig {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
+    //使用静态数组
+    private static final String[] PUBLIC_PATHS = {
+            "/auth/**",
+            "/user/getMenu",
+            "/web/**",
+            "/forum/getPosts",
+            "/forum/getTopics"
+    };
+    private static final String[] PUBLIC_Authority = {
+            "user",
+            "admin",
+            "superAdmin"
+    };
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/user/getMenu", "/web/**", "/forum/getPosts", "/forum/getTopics").permitAll()
+                        .requestMatchers(PUBLIC_PATHS).permitAll()
                         .requestMatchers("/sys/**").hasAnyAuthority("admin", "superAdmin")
-                        .requestMatchers("/user/**","/forum/**").hasAnyAuthority("user", "admin","superAdmin")
+                        .requestMatchers("/user/**","/forum/**").hasAnyAuthority(PUBLIC_Authority)
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
