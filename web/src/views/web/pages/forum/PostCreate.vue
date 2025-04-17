@@ -1,82 +1,3 @@
-<template>
-  <div class="create-post-container">
-    <a-page-header @back="goBack" :title="isEdit ? '编辑帖子' : '发布帖子'" class="page-header">
-      <template #default>
-        <span class="header-title">{{ isEdit ? '编辑帖子' : '发布帖子' }}</span>
-      </template>
-    </a-page-header>
-    
-    <a-form
-      ref="postFormRef"
-      :model="postForm"
-      :rules="rules"
-      label-position="top"
-      class="post-form"
-    >
-      <a-form-item label="标题" field="title">
-        <a-input 
-          v-model="postForm.title"
-          placeholder="请输入帖子标题（2-50字）"
-          :maxLength="50"
-          show-word-limit
-        />
-      </a-form-item>
-      
-      <a-form-item label="话题" field="topic">
-        <div class="topic-input-container">
-          <a-select 
-            v-if="!useCustomTopic"
-            v-model="postForm.topic"
-            placeholder="请选择话题分类"
-            class="topic-select"
-            allow-clear
-          >
-            <a-option
-              v-for="topic in topics"
-              :key="topic.id"
-              :label="topic.name"
-              :value="topic.id"
-            />
-            <a-option value="custom" label="自定义话题..."></a-option>
-          </a-select>
-          <a-input 
-            v-else
-            v-model="customTopicName"
-            placeholder="请输入自定义话题（2-20字）"
-            class="custom-topic-input"
-            :maxLength="20"
-            show-word-limit
-          />
-          <a-button 
-            class="toggle-topic-btn" 
-            @click="toggleTopicInputMode"
-            type="outline"
-          >
-            {{ useCustomTopic ? '选择预设话题' : '自定义话题' }}
-          </a-button>
-        </div>
-      </a-form-item>
-      
-      <a-form-item label="内容" field="content">
-        <a-textarea
-          v-model="postForm.content"
-          :rows="10"
-          placeholder="请输入帖子内容（10-2000字）"
-          :maxLength="2000"
-          show-word-limit
-        />
-      </a-form-item>
-      
-      <a-form-item>
-        <a-button type="primary" @click="submitForm" :loading="submitting" class="submit-btn">
-          {{ isEdit ? '保存修改' : '发布帖子' }}
-        </a-button>
-        <a-button @click="goBack" class="cancel-btn">取消</a-button>
-      </a-form-item>
-    </a-form>
-  </div>
-</template>
-
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
@@ -103,32 +24,6 @@ const postForm = reactive({
 const useCustomTopic = ref(false);
 const customTopicName = ref('');
 
-// 切换话题输入模式
-const toggleTopicInputMode = () => {
-  useCustomTopic.value = !useCustomTopic.value;
-  if (!useCustomTopic.value) {
-    postForm.topic = '';
-    customTopicName.value = '';
-  } else {
-    postForm.topic = customTopicName.value;
-  }
-};
-
-// 监听自定义话题变化
-watch(customTopicName, (newVal) => {
-  if (useCustomTopic.value) {
-    postForm.topic = newVal;
-  }
-});
-
-// 监听话题选择
-watch(() => postForm.topic, (newVal) => {
-  if (newVal === 'custom') {
-    useCustomTopic.value = true;
-    postForm.topic = customTopicName.value;
-  }
-});
-
 // 表单校验规则
 const rules = {
   title: [
@@ -148,6 +43,17 @@ const rules = {
 const topics = ref([]);
 const submitting = ref(false);
 const postFormRef = ref(null);
+
+// 切换话题输入模式
+const toggleTopicInputMode = () => {
+  useCustomTopic.value = !useCustomTopic.value;
+  if (!useCustomTopic.value) {
+    postForm.topic = '';
+    customTopicName.value = '';
+  } else {
+    postForm.topic = customTopicName.value;
+  }
+};
 
 // 获取话题列表
 const fetchTopics = async () => {
@@ -294,11 +200,104 @@ const goBack = () => {
   router.push('/forum/list');
 };
 
+// 监听器
+watch(customTopicName, (newVal) => {
+  if (useCustomTopic.value) {
+    postForm.topic = newVal;
+  }
+});
+
+watch(() => postForm.topic, (newVal) => {
+  if (newVal === 'custom') {
+    useCustomTopic.value = true;
+    postForm.topic = customTopicName.value;
+  }
+});
+
 onMounted(() => {
   fetchTopics();
   fetchPostDetail();
 });
 </script>
+
+<template>
+  <div class="create-post-container">
+    <a-page-header @back="goBack" :title="isEdit ? '编辑帖子' : '发布帖子'" class="page-header">
+      <template #default>
+        <span class="header-title">{{ isEdit ? '编辑帖子' : '发布帖子' }}</span>
+      </template>
+    </a-page-header>
+    
+    <a-form
+      ref="postFormRef"
+      :model="postForm"
+      :rules="rules"
+      label-position="top"
+      class="post-form"
+    >
+      <a-form-item label="标题" field="title">
+        <a-input 
+          v-model="postForm.title"
+          placeholder="请输入帖子标题（2-50字）"
+          :maxLength="50"
+          show-word-limit
+        />
+      </a-form-item>
+      
+      <a-form-item label="话题" field="topic">
+        <div class="topic-input-container">
+          <a-select 
+            v-if="!useCustomTopic"
+            v-model="postForm.topic"
+            placeholder="请选择话题分类"
+            class="topic-select"
+            allow-clear
+          >
+            <a-option
+              v-for="topic in topics"
+              :key="topic.id"
+              :label="topic.name"
+              :value="topic.id"
+            />
+            <a-option value="custom" label="自定义话题..."></a-option>
+          </a-select>
+          <a-input 
+            v-else
+            v-model="customTopicName"
+            placeholder="请输入自定义话题（2-20字）"
+            class="custom-topic-input"
+            :maxLength="20"
+            show-word-limit
+          />
+          <a-button 
+            class="toggle-topic-btn" 
+            @click="toggleTopicInputMode"
+            type="outline"
+          >
+            {{ useCustomTopic ? '选择预设话题' : '自定义话题' }}
+          </a-button>
+        </div>
+      </a-form-item>
+      
+      <a-form-item label="内容" field="content">
+        <a-textarea
+          v-model="postForm.content"
+          :rows="10"
+          placeholder="请输入帖子内容（10-2000字）"
+          :maxLength="2000"
+          show-word-limit
+        />
+      </a-form-item>
+      
+      <a-form-item>
+        <a-button type="primary" @click="submitForm" :loading="submitting" class="submit-btn">
+          {{ isEdit ? '保存修改' : '发布帖子' }}
+        </a-button>
+        <a-button @click="goBack" class="cancel-btn">取消</a-button>
+      </a-form-item>
+    </a-form>
+  </div>
+</template>
 
 <style scoped>
 .create-post-container {
@@ -428,4 +427,4 @@ onMounted(() => {
     margin-top: 8px;
   }
 }
-</style> 
+</style>
