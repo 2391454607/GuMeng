@@ -1,4 +1,3 @@
-
 const webRouters = [
     {
         path: "/",
@@ -13,7 +12,34 @@ const webRouters = [
     {
         path: "/forum",
         name: "Forum",
-        component: () => import("@/views/web/pages/forum/Forum.vue")
+        component: () => import("@/views/web/pages/forum/Forum.vue"),
+        children: [
+            {
+                path: "",
+                name: "ForumHome",
+                component: () => import("@/views/web/pages/forum/ForumList.vue"),
+            },
+            {
+                path: "list",
+                name: "ForumList",
+                component: () => import("@/views/web/pages/forum/ForumList.vue"),
+            },
+            {
+                path: "detail/:id",
+                name: "PostDetail",
+                component: () => import("@/views/web/pages/forum/PostDetail.vue"),
+            },
+            {
+                path: "create",
+                name: "CreatePost",
+                component: () => import("@/views/web/pages/forum/PostCreate.vue"),
+            },
+            {
+                path: "edit/:id",
+                name: "EditPost",
+                component: () => import("@/views/web/pages/forum/PostCreate.vue"),
+            }
+        ]
     },
     {
         path: "/interaction",

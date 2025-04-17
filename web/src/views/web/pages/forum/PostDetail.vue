@@ -1,0 +1,1191 @@
+<template>
+  <div class="post-detail-container">
+    <!-- 返回按钮 -->
+    <div class="back-nav">
+      <a-button @click="goBack" class="back-btn">
+        <icon-left />返回论坛
+      </a-button>
+    </div>
+
+    <!-- 加载状态 -->
+    <div v-if="loading" class="loading-container">
+      <a-skeleton :animation="true" :rows="15" />
+    </div>
+
+    <!-- 错误状态 -->
+    <div v-else-if="error" class="error-container">
+      <a-result status="error" title="获取帖子详情失败" subtitle="请稍后重试">
+        <template #extra>
+          <a-button type="primary" @click="fetchPostDetail">重试</a-button>
+        </template>
+      </a-result>
+    </div>
+
+    <!-- 帖子内容 -->
+    <template v-else>
+      <a-card class="post-card">
+        <div class="post-header">
+          <div class="post-topic" v-if="post.topicName">
+            <span class="topic-tag">{{ post.topicName }}</span>
+          </div>
+          <h1 class="post-title">{{ post.title }}</h1>
+          <div class="post-meta">
+            <div class="author-info">
+              <img :src="post.authorAvatar || '@/assets/avatar/default-avatar.png'" alt="作者头像" class="author-avatar">
+              <div class="author-detail">
+                <div class="author-name">{{ post.authorName }}</div>
+                <div class="post-time">{{ formatDate(post.createTime) }}</div>
+              </div>
+            </div>
+            <div class="post-actions" v-if="canDelete">
+              <a-button type="text" size="small" status="danger" @click="showDeleteConfirm = true">
+                <icon-delete />删除
+              </a-button>
+            </div>
+          </div>
+        </div>
+
+        <div class="post-body">
+          <div class="content-text">{{ post.content }}</div>
+          
+          <!-- 图片展示 -->
+          <div v-if="post.images && post.images.length > 0" class="post-images">
+            <a-image-preview-group infinite>
+              <div class="image-grid" :class="'grid-' + Math.min(post.images.length, 4)">
+                <a-image 
+                  v-for="(img, index) in post.images" 
+                  :key="index" 
+                  :src="img" 
+                  :alt="`图片${index+1}`"
+                  fit="cover"
+                  class="post-image"
+                />
+              </div>
+            </a-image-preview-group>
+          </div>
+        </div>
+        
+        <div class="post-footer">
+          <div class="post-stats">
+            <span class="views">
+              <icon-eye />
+              <span>{{ post.viewCount || 0 }} 阅读</span>
+            </span>
+          </div>
+          <div class="interaction-actions">
+            <a-button 
+              :type="post.isLiked ? 'primary' : 'outline'" 
+              @click="handleLike" 
+              class="action-btn" 
+              :class="{ 'liked': post.isLiked }"
+            >
+              <icon-heart-fill v-if="post.isLiked" />
+              <icon-heart v-else />
+              {{ post.likeCount || 0 }} 点赞
+            </a-button>
+            <a-button type="outline" @click="scrollToComment" class="action-btn">
+              <icon-message />
+              {{ post.commentCount || 0 }} 评论
+            </a-button>
+            <a-button type="outline" @click="handleShare" class="action-btn">
+              <icon-share-external />
+              分享
+            </a-button>
+          </div>
+        </div>
+      </a-card>
+
+      <!-- 评论区 -->
+      <div id="comment-section" class="comment-section">
+        <a-card>
+          <template #title>
+            <div class="section-header">
+              <h2 class="section-title">评论区 ({{ comments.length }})</h2>
+            </div>
+          </template>
+          
+          <!-- 评论输入框 -->
+          <div class="comment-form">
+            <div class="input-user">
+              <img :src="userStore.userInfo?.avatar || '@/assets/avatar/default-avatar.png'" alt="头像" class="user-avatar" />
+            </div>
+            <div class="input-area">
+              <a-textarea
+                v-model="commentContent"
+                :placeholder="isLogin ? '写下你的评论...' : '登录后才能发表评论'"
+                :disabled="!isLogin"
+                :auto-size="{ minRows: 3, maxRows: 5 }"
+                class="comment-textarea"
+              />
+              <div class="input-actions">
+                <a-button type="primary" @click="submitComment" :disabled="!commentContent.trim() || !userStore.isLogin">
+                  {{ userStore.isLogin ? '发表评论' : '请先登录' }}
+                </a-button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 评论列表 -->
+          <div v-if="comments.length === 0" class="empty-comments">
+            <a-empty description="暂无评论，快来发表第一条评论吧！" />
+          </div>
+          <div v-else class="comments-list">
+            <div v-for="comment in comments" :key="comment.id" class="comment-item">
+              <div class="comment-content">
+                <div class="comment-author">
+                  <img :src="comment.userPic || '@/assets/avatar/default-avatar.png'" alt="头像" class="comment-avatar" />
+                  <div class="author-info">
+                    <div class="user-name">{{ comment.username }}</div>
+                    <div class="comment-time">{{ formatDate(comment.createTime) }}</div>
+                  </div>
+                </div>
+                <div class="comment-text">
+                  <template v-if="comment.forUsername">
+                    <span class="reply-to">回复 <span class="reply-name">@{{ comment.forUsername }}</span>：</span>
+                  </template>
+                  <span>{{ comment.content }}</span>
+                </div>
+                <div class="comment-actions">
+                  <a-button type="text" size="small" @click="replyToComment(comment)" class="action-link">
+                    <icon-message />回复
+                  </a-button>
+                  <a-button type="text" size="small" @click="handleLikeComment(comment)" class="action-link" :class="{ 'active': comment.isLiked }">
+                    <icon-heart-fill v-if="comment.isLiked" />
+                    <icon-heart v-else />
+                    {{ comment.thumbsUp || 0 }}
+                  </a-button>
+                  <a-button v-if="canDeleteComment(comment)" type="text" size="small" @click="showDeleteCommentConfirm(comment)" class="action-link delete">
+                    <icon-delete />删除
+                  </a-button>
+                </div>
+                
+                <!-- 回复输入框 -->
+                <div v-if="replyingTo && replyingTo.id === comment.id" class="reply-form">
+                  <div class="reply-input-area">
+                    <a-textarea
+                      v-model="replyContent"
+                      placeholder="写下你的回复..."
+                      :auto-size="{ minRows: 2, maxRows: 4 }"
+                      class="reply-textarea"
+                    />
+                    <div class="reply-actions">
+                      <a-button size="small" @click="cancelReply">取消</a-button>
+                      <a-button type="primary" size="small" @click="submitReply" :disabled="!replyContent.trim()">
+                        回复
+                      </a-button>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 子评论 -->
+                <div v-if="comment.children && comment.children.length > 0" class="child-comments">
+                  <div v-for="child in comment.children" :key="child.id" class="child-comment-item">
+                    <div class="comment-author">
+                      <img :src="child.userPic || '@/assets/avatar/default-avatar.png'" alt="头像" class="reply-avatar" />
+                      <div class="author-info">
+                        <div class="user-name">{{ child.username }}</div>
+                        <div class="comment-time">{{ formatDate(child.createTime) }}</div>
+                      </div>
+                    </div>
+                    <div class="comment-text">
+                      <template v-if="child.forUsername">
+                        <span class="reply-to">回复 <span class="reply-name">@{{ child.forUsername }}</span>：</span>
+                      </template>
+                      <span>{{ child.content }}</span>
+                    </div>
+                    <div class="comment-actions">
+                      <a-button type="text" size="small" @click="replyToComment(child, comment)" class="action-link">
+                        <icon-message />回复
+                      </a-button>
+                      <a-button type="text" size="small" @click="handleLikeComment(child)" class="action-link" :class="{ 'active': child.isLiked }">
+                        <icon-heart-fill v-if="child.isLiked" />
+                        <icon-heart v-else />
+                        {{ child.thumbsUp || 0 }}
+                      </a-button>
+                      <a-button v-if="canDeleteComment(child)" type="text" size="small" @click="showDeleteCommentConfirm(child)" class="action-link delete">
+                        <icon-delete />删除
+                      </a-button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 加载更多 -->
+          <div v-if="hasMore" class="load-more">
+            <a-button @click="loadMoreComments">
+              加载更多评论
+            </a-button>
+          </div>
+        </a-card>
+      </div>
+    </template>
+    
+    <!-- 删除帖子确认框 -->
+    <a-modal
+      v-model="deletePostModalVisible"
+      title="确认删除"
+      @cancel="deletePostModalVisible = false"
+      @ok="confirmDeletePost"
+    >
+      <p>确定要删除这篇帖子吗？此操作无法撤销。</p>
+    </a-modal>
+    
+    <!-- 删除评论确认框 -->
+    <a-modal
+      v-model="deleteCommentModalVisible"
+      title="确认删除"
+      @cancel="deleteCommentModalVisible = false"
+      @ok="confirmDeleteComment"
+    >
+      <p>确定要删除这条评论吗？此操作无法撤销。</p>
+    </a-modal>
+    
+    <!-- 分享对话框 -->
+    <a-modal
+      v-model="shareModalVisible"
+      title="分享帖子"
+      @cancel="shareModalVisible = false"
+      :footer="false"
+    >
+      <div class="share-container">
+        <a-input
+          v-model="shareUrl"
+          readonly
+        />
+        <div class="share-buttons">
+          <a-button type="primary" @click="copyShareUrl">
+            <icon-copy />复制链接
+          </a-button>
+        </div>
+      </div>
+    </a-modal>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, nextTick } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import { Message } from '@arco-design/web-vue';
+import { 
+  IconLeft, IconEye, IconHeart, IconHeartFill, IconMessage, 
+  IconShareExternal, IconDelete, IconCopy
+} from '@arco-design/web-vue/es/icon';
+import { 
+  getPostDetailAPI, likePostAPI, unlikePostAPI, deletePostAPI, 
+  getCommentsAPI, addCommentAPI, deleteCommentAPI, 
+  likeCommentAPI, unlikeCommentAPI 
+} from '@/api/forum';
+import { useUserStore } from '@/stores';
+import { formatDate } from '@/utils/format';
+
+const router = useRouter();
+const route = useRoute();
+const userStore = useUserStore();
+
+// 用户登录状态
+const isLogin = computed(() => userStore.isLogin);
+
+// 帖子ID
+const postId = computed(() => route.params.id);
+
+// 帖子详情
+const post = ref({});
+const loading = ref(true);
+const error = ref(false);
+
+// 评论列表
+const comments = ref([]);
+const commentContent = ref('');
+const replyingTo = ref(null);
+const replyContent = ref('');
+const parentComment = ref(null);
+
+// 分页
+const hasMore = ref(false);
+const page = ref(1);
+const pageSize = ref(10);
+
+// 弹窗控制
+const showDeleteConfirm = ref(false);
+const showCommentDeleteConfirm = ref(false);
+const commentToDelete = ref(null);
+const shareModalVisible = ref(false);
+const shareUrl = ref('');
+
+// 是否可以删除帖子
+const canDelete = computed(() => {
+  return userStore.isAdmin || (post.value.authorId === userStore.userInfo?.id);
+});
+
+// 返回上一页
+const goBack = () => {
+  router.push('/forum');
+};
+
+// 获取帖子详情
+const fetchPostDetail = async () => {
+  loading.value = true;
+  error.value = false;
+  
+  try {
+    console.log('获取帖子详情:', postId.value);
+    const res = await getPostDetailAPI(postId.value);
+    console.log('帖子详情响应:', res);
+    
+    if (res.code === 200) {
+      post.value = res.data;
+      // 将图片字符串转为数组
+      if (post.value.images && typeof post.value.images === 'string') {
+        post.value.images = post.value.images.split(',').filter(img => img);
+      } else if (!post.value.images) {
+        post.value.images = [];
+      }
+      
+      // 获取评论列表
+      fetchComments();
+    } else {
+      error.value = true;
+      Message.error(res.msg || '获取帖子详情失败');
+    }
+  } catch (err) {
+    console.error('获取帖子详情出错:', err);
+    error.value = true;
+    Message.error('获取帖子详情失败，请稍后重试');
+  } finally {
+    loading.value = false;
+  }
+};
+
+// 获取评论列表
+const fetchComments = async (loadMore = false) => {
+  try {
+    const currentPage = loadMore ? page.value : 1;
+    
+    const res = await getCommentsAPI({
+      postId: postId.value,
+      pageNum: currentPage,
+      pageSize: pageSize.value
+    });
+    
+    if (res.code === 200) {
+      const newComments = res.data.records || [];
+      
+      if (loadMore) {
+        comments.value = [...comments.value, ...newComments];
+      } else {
+        comments.value = newComments;
+      }
+      
+      hasMore.value = comments.value.length < res.data.total;
+      
+      if (loadMore) {
+        page.value++;
+      } else {
+        page.value = 2; // 下次加载从第2页开始
+      }
+    } else {
+      Message.warning(res.msg || '获取评论失败');
+    }
+  } catch (err) {
+    console.error('获取评论列表出错:', err);
+    Message.warning('获取评论失败，请稍后重试');
+  }
+};
+
+// 加载更多评论
+const loadMoreComments = () => {
+  if (hasMore.value) {
+    fetchComments(true);
+  }
+};
+
+// 点赞/取消点赞
+const handleLike = async () => {
+  if (!userStore.isLogin) {
+    Message.warning('请先登录再进行操作');
+    return;
+  }
+  
+  try {
+    let res;
+    if (post.value.isLiked) {
+      res = await unlikePostAPI(postId.value);
+      if (res.code === 200) {
+        post.value.isLiked = false;
+        post.value.likeCount = Math.max(0, (post.value.likeCount || 1) - 1);
+        Message.success('已取消点赞');
+      }
+    } else {
+      res = await likePostAPI(postId.value);
+      if (res.code === 200) {
+        post.value.isLiked = true;
+        post.value.likeCount = (post.value.likeCount || 0) + 1;
+        Message.success('点赞成功');
+      }
+    }
+    
+    if (res.code !== 200) {
+      Message.error(res.msg || '操作失败');
+    }
+  } catch (err) {
+    console.error('点赞操作出错:', err);
+    Message.error('操作失败，请稍后重试');
+  }
+};
+
+// 删除帖子
+const deletePost = async () => {
+  try {
+    const res = await deletePostAPI(postId.value);
+    if (res.code === 200) {
+      Message.success('删除成功');
+      router.push('/forum');
+    } else {
+      Message.error(res.msg || '删除失败');
+    }
+    showDeleteConfirm.value = false;
+  } catch (err) {
+    console.error('删除帖子出错:', err);
+    Message.error('删除失败，请稍后重试');
+    showDeleteConfirm.value = false;
+  }
+};
+
+// 提交评论
+const submitComment = async () => {
+  if (!userStore.isLogin) {
+    Message.warning('请先登录再进行操作');
+    return;
+  }
+  
+  if (!commentContent.value.trim()) {
+    Message.warning('评论内容不能为空');
+    return;
+  }
+  
+  try {
+    const res = await addCommentAPI({
+      postId: postId.value,
+      pageId: postId.value,  // 同时提供pageId参数，确保后端能正确识别
+      content: commentContent.value.trim(),
+      parentId: 0
+    });
+    
+    if (res.code === 200) {
+      Message.success('评论成功');
+      commentContent.value = '';
+      // 重新获取评论列表
+      fetchComments();
+      // 更新帖子评论数
+      post.value.commentCount = (post.value.commentCount || 0) + 1;
+    } else {
+      Message.error(res.msg || '评论失败');
+    }
+  } catch (err) {
+    console.error('提交评论出错:', err);
+    Message.error('评论失败，请稍后重试');
+  }
+};
+
+// 回复评论
+const replyToComment = (comment, parent = null) => {
+  if (!userStore.isLogin) {
+    Message.warning('请先登录再进行操作');
+    return;
+  }
+  
+  replyingTo.value = comment;
+  parentComment.value = parent || comment;
+  replyContent.value = '';
+  
+  // 滚动到回复框
+  nextTick(() => {
+    const replyBox = document.querySelector(`.reply-form`);
+    if (replyBox) {
+      replyBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+};
+
+// 取消回复
+const cancelReply = () => {
+  replyingTo.value = null;
+  parentComment.value = null;
+  replyContent.value = '';
+};
+
+// 提交回复
+const submitReply = async () => {
+  if (!userStore.isLogin) {
+    Message.warning('请先登录再进行操作');
+    return;
+  }
+  
+  if (!replyContent.value.trim()) {
+    Message.warning('回复内容不能为空');
+    return;
+  }
+  
+  try {
+    const res = await addCommentAPI({
+      postId: postId.value,
+      pageId: postId.value,  // 同时提供pageId参数，确保后端能正确识别
+      content: replyContent.value.trim(),
+      parentId: parentComment.value.id,
+      parent: parentComment.value.id.toString(),  // 确保parent参数正确传递
+      replyToId: replyingTo.value.userId,
+      forUser: replyingTo.value.userId.toString()  // 同时提供forUser参数
+    });
+    
+    if (res.code === 200) {
+      Message.success('回复成功');
+      replyContent.value = '';
+      replyingTo.value = null;
+      parentComment.value = null;
+      // 重新获取评论列表
+      fetchComments();
+      // 更新帖子评论数
+      post.value.commentCount = (post.value.commentCount || 0) + 1;
+    } else {
+      Message.error(res.msg || '回复失败');
+    }
+  } catch (err) {
+    console.error('提交回复出错:', err);
+    Message.error('回复失败，请稍后重试');
+  }
+};
+
+// 判断是否可以删除评论
+const canDeleteComment = (comment) => {
+  return userStore.isAdmin || (comment.userId === userStore.userInfo?.id);
+};
+
+// 显示删除评论确认框
+const showDeleteCommentConfirm = (comment) => {
+  commentToDelete.value = comment;
+  showCommentDeleteConfirm.value = true;
+};
+
+// 删除评论
+const deleteComment = async () => {
+  if (!commentToDelete.value) return;
+  
+  try {
+    const res = await deleteCommentAPI(commentToDelete.value.id);
+    if (res.code === 200) {
+      Message.success('删除成功');
+      // 重新获取评论列表
+      fetchComments();
+      // 更新帖子评论数
+      post.value.commentCount = Math.max((post.value.commentCount || 0) - 1, 0);
+    } else {
+      Message.error(res.msg || '删除失败');
+    }
+    showCommentDeleteConfirm.value = false;
+    commentToDelete.value = null;
+  } catch (err) {
+    console.error('删除评论出错:', err);
+    Message.error('删除失败，请稍后重试');
+    showCommentDeleteConfirm.value = false;
+    commentToDelete.value = null;
+  }
+};
+
+// 评论点赞/取消点赞
+const handleLikeComment = async (comment) => {
+  if (!userStore.isLogin) {
+    Message.warning('请先登录再进行操作');
+    return;
+  }
+  
+  try {
+    let res;
+    if (comment.isLiked) {
+      res = await unlikeCommentAPI(comment.id);
+      if (res.code === 200) {
+        comment.isLiked = false;
+        comment.thumbsUp = Math.max(0, (comment.thumbsUp || 1) - 1);
+      }
+    } else {
+      res = await likeCommentAPI(comment.id);
+      if (res.code === 200) {
+        comment.isLiked = true;
+        comment.thumbsUp = (comment.thumbsUp || 0) + 1;
+      }
+    }
+    
+    if (res.code !== 200) {
+      Message.error(res.msg || '操作失败');
+    }
+  } catch (err) {
+    console.error('评论点赞操作出错:', err);
+    Message.error('操作失败，请稍后重试');
+  }
+};
+
+// 分享帖子
+const handleShare = () => {
+  shareUrl.value = window.location.href;
+  shareModalVisible.value = true;
+};
+
+// 复制分享链接
+const copyShareUrl = () => {
+  navigator.clipboard.writeText(shareUrl.value)
+    .then(() => {
+      Message.success('链接已复制到剪贴板');
+      shareModalVisible.value = false;
+    })
+    .catch(() => {
+      Message.error('复制失败，请手动复制');
+    });
+};
+
+// 滚动到评论区
+const scrollToComment = () => {
+  const commentSection = document.getElementById('comment-section');
+  if (commentSection) {
+    commentSection.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+onMounted(() => {
+  fetchPostDetail();
+});
+</script>
+
+<style scoped>
+.post-detail-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f8f4f4;
+}
+
+.back-nav {
+  margin-bottom: 20px;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #f5f5f5;
+  border-color: #ddd;
+}
+
+.loading-container, .error-container {
+  background-color: #fff;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  margin-bottom: 20px;
+}
+
+/* 帖子内容区域 */
+.post-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background-color: #fff;
+  border: 1px solid #f0f0f0;
+}
+
+.post-header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #fffbfb;
+}
+
+.post-topic {
+  margin-bottom: 16px;
+}
+
+.topic-tag {
+  padding: 4px 12px;
+  background-color: #FFF0F0;
+  color: #901c1c;
+  font-size: 14px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid #ffdddd;
+}
+
+.post-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin: 0 0 16px;
+  line-height: 1.4;
+}
+
+.post-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+}
+
+.author-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.author-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.post-time {
+  font-size: 14px;
+  color: #999;
+}
+
+.post-body {
+  padding: 24px;
+  background-color: #fff;
+}
+
+.content-text {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #333;
+  margin-bottom: 24px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  text-align: justify;
+}
+
+.post-images {
+  margin-bottom: 24px;
+}
+
+.image-grid {
+  display: grid;
+  grid-gap: 16px;
+}
+
+.grid-1 {
+  grid-template-columns: 1fr;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-4 {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+
+.post-image {
+  border-radius: 8px;
+  width: 100%;
+  height: 100%;
+  min-height: 200px;
+  object-fit: cover;
+  cursor: pointer;
+  border: 1px solid #f0f0f0;
+  transition: transform 0.3s ease;
+}
+
+.post-image:hover {
+  transform: scale(1.02);
+}
+
+.post-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fffbfb;
+}
+
+.post-stats {
+  font-size: 14px;
+  color: #999;
+}
+
+.views {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.interaction-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+}
+
+.action-btn.liked {
+  color: #901c1c;
+  background-color: #FFF0F0;
+  border-color: #901c1c;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* 评论区域 */
+.comment-section {
+  margin-bottom: 20px;
+}
+
+.section-header {
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+  position: relative;
+  display: inline-block;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  width: 40px;
+  height: 3px;
+  background-color: #901c1c;
+}
+
+.comment-form {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  background-color: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.input-user {
+  flex-shrink: 0;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.input-area {
+  flex: 1;
+}
+
+.comment-textarea {
+  background-color: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.comment-textarea:hover, .comment-textarea:focus {
+  border-color: #901c1c;
+}
+
+.input-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.empty-comments {
+  text-align: center;
+  padding: 20px 0;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.comment-item {
+  position: relative;
+}
+
+.comment-content {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 3px solid #C2101C;
+  transition: all 0.3s ease;
+}
+
+.comment-content:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.comment-author {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.comment-avatar, .reply-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.reply-avatar {
+  width: 24px;
+  height: 24px;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.comment-time {
+  font-size: 12px;
+  color: #999;
+}
+
+.comment-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 12px;
+  word-break: break-word;
+}
+
+.reply-to {
+  color: #999;
+}
+
+.reply-name {
+  color: #C2101C;
+  font-weight: 500;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.action-link {
+  color: #666;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.action-link:hover {
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+}
+
+.action-link.active {
+  color: #C2101C;
+}
+
+.action-link.delete:hover {
+  color: #C2101C;
+  background-color: #FFF0F0;
+}
+
+.reply-form {
+  margin-top: 16px;
+}
+
+.reply-input-area {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  border: 1px solid #f0f0f0;
+}
+
+.reply-input {
+  background-color: #fff;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.reply-input:hover, .reply-input:focus {
+  border-color: #C2101C;
+}
+
+.reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.child-comments {
+  margin-top: 16px;
+  padding-left: 12px;
+  border-left: 2px solid #f0f0f0;
+}
+
+.child-comment-item {
+  margin-bottom: 16px;
+}
+
+.child-comment-item:last-child {
+  margin-bottom: 0;
+}
+
+.load-more {
+  text-align: center;
+  margin-top: 24px;
+}
+
+/* 分享对话框 */
+.share-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.share-buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+
+:deep(.arco-btn-primary) {
+  background-color: #C2101C;
+  border-color: #C2101C;
+}
+
+:deep(.arco-btn-primary:hover) {
+  background-color: #A50D18;
+  border-color: #A50D18;
+}
+
+:deep(.arco-btn-primary:active) {
+  background-color: #8B0B14;
+  border-color: #8B0B14;
+}
+
+:deep(.arco-tag) {
+  background-color: #FFF0F0;
+  color: #C2101C;
+  border-color: #FFDCDC;
+}
+
+:deep(.arco-textarea-wrapper) {
+  border-radius: 8px;
+}
+
+:deep(.arco-textarea-wrapper:hover),
+:deep(.arco-textarea-wrapper.arco-textarea-focus) {
+  border-color: #C2101C;
+}
+
+:deep(.arco-input-wrapper) {
+  border-radius: 8px;
+}
+
+:deep(.arco-input-wrapper:hover),
+:deep(.arco-input-wrapper.arco-input-focus) {
+  border-color: #C2101C;
+}
+
+:deep(.arco-card) {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+:deep(.arco-card:hover) {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+:deep(.arco-empty) {
+  padding: 24px 0;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .post-detail-container {
+    padding: 12px;
+  }
+  
+  .post-title {
+    font-size: 20px;
+  }
+  
+  .post-meta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .post-footer {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .interaction-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .comment-form {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .input-user {
+    display: none;
+  }
+  
+  .image-grid {
+    grid-gap: 8px;
+  }
+  
+  .post-image {
+    min-height: 150px;
+  }
+}
+</style> 
