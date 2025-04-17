@@ -85,7 +85,7 @@ const handleSubmit = async () => {
         Message.error(res.msg);
       }
     } catch (error) {
-      Message.error(error);
+      Message.error("登录失败，请稍后重试");
     }
   }
   loading.value = false;

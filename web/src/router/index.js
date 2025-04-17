@@ -78,6 +78,15 @@ export const router = createRouter({
             path: "/403",
             name: "403",
             component: () => import("@/views/error/Error403.vue")
+        },
+        /**
+         * @description 404资源不存在
+         * 界面
+         */
+        {
+            path: "/404",
+            name: "404",
+            component: () => import("@/views/error/Error404.vue")
         }
     ]
 })

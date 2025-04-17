@@ -7,7 +7,8 @@ const webRouters = [
     {
         path: "/information",
         name: "Information",
-        component: ()=> import("@/views/web/pages/information/Information.vue")
+        //component: ()=> import("@/views/web/pages/information/Information.vue")
+        component: () => import("@/views/error/Error404.vue")
     },
     {
         path: "/forum",
@@ -44,12 +45,14 @@ const webRouters = [
     {
         path: "/interaction",
         name: "Interaction",
-        component: () => import("@/views/web/pages/interaction/Interaction.vue")
+        //component: () => import("@/views/web/pages/interaction/Interaction.vue")
+        component: () => import("@/views/error/Error404.vue")
     },
     {
         path: "/showroom",
         name: "ShowRoom",
-        component: () => import("@/views/web/pages/showroom/Showroom.vue")
+        //component: () => import("@/views/web/pages/showroom/Showroom.vue")
+        component: () => import("@/views/error/Error404.vue")
     },
     {
         path: "/policy",
@@ -59,7 +62,8 @@ const webRouters = [
     {
         path: "/encyclopedia",
         name: "Encyclopedia",
-        component: () => import("@/views/web/pages/encyclopedia/Encyclopedia.vue")
+        //component: () => import("@/views/web/pages/encyclopedia/Encyclopedia.vue")
+        component: () => import("@/views/error/Error404.vue")
     }
 
 

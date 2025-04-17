@@ -81,7 +81,7 @@ const emailPattern = /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0
 // 添加状态控制变量
 const show3DEffect = ref(true);
 
-// 修改路由跳转和组件卸载逻辑
+// 注册
 const handleSubmit = async () => {
   loading.value = true;
 
@@ -110,6 +110,7 @@ const handleSubmit = async () => {
       const res = await userRegisterAPI(register);
       if (res.code === 200) {
         Message.success(res.msg);
+        // 路由跳转和组件卸载逻辑
         // 先移除 3D 效果
         show3DEffect.value = false;
         // 延迟跳转
@@ -120,7 +121,7 @@ const handleSubmit = async () => {
         Message.error(res.msg);
       }
     } catch (error) {
-      Message.error(error);
+      Message.error("注册失败，请稍后重试");
     }
   }
   loading.value = false;
