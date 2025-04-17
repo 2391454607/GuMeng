@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gumeng.mapper.ForumPostMapper">
+
+    <resultMap id="BaseResultMap" type="com.gumeng.domain.ForumPost">
+        <id property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userId" column="user_id" jdbcType="INTEGER"/>
+        <result property="title" column="title" jdbcType="VARCHAR"/>
+        <result property="content" column="content" jdbcType="VARCHAR"/>
+        <result property="commonNum" column="common_num" jdbcType="INTEGER"/>
+        <result property="thumbsUpNum" column="thumbs_up_num" jdbcType="INTEGER"/>
+        <result property="topic" column="topic" jdbcType="VARCHAR"/>
+        <result property="viewCount" column="view_count" jdbcType="INTEGER"/>
+        <result property="images" column="images" jdbcType="VARCHAR"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="deleted" column="deleted" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,title,content,common_num,thumbs_up_num,topic,
+        view_count,images,create_time,update_time,deleted
+    </sql>
+
+    <!-- 增加评论数 -->
+    <update id="incrementCommentCount">
+        UPDATE forum_post
+        SET common_num = common_num + 1
+        WHERE id = #{postId}
+    </update>
+
+    <!-- 增加点赞数 -->
+    <update id="incrementLikeCount">
+        UPDATE forum_post
+        SET thumbs_up_num = thumbs_up_num + 1
+        WHERE id = #{postId}
+    </update>
+
+    <!-- 减少点赞数 -->
+    <update id="decrementLikeCount">
+        UPDATE forum_post
+        SET thumbs_up_num = thumbs_up_num - 1
+        WHERE id = #{postId} AND thumbs_up_num > 0
+    </update>
+
+    <!-- 增加浏览量 -->
+    <update id="incrementViewCount">
+        UPDATE forum_post
+        SET view_count = view_count + 1
+        WHERE id = #{postId}
+    </update>
+</mapper>

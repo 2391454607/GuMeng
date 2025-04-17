@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gumeng.mapper.ThumbsUpMapper">
+
+    <resultMap id="BaseResultMap" type="com.gumeng.domain.ThumbsUp">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="userId" column="user_id" jdbcType="BIGINT"/>
+        <result property="forType" column="for_type" jdbcType="VARCHAR"/>
+        <result property="forUid" column="for_uid" jdbcType="INTEGER"/>
+        <result property="dateTime" column="date_time" jdbcType="TIMESTAMP"/>
+        <result property="deleted" column="deleted" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,for_type,for_uid,date_time,deleted
+    </sql>
+
+    <!-- 检查用户是否点赞 -->
+    <select id="checkUserLiked" resultType="int">
+        SELECT count(*)
+        FROM thumbs_up
+        WHERE user_id = #{userId}
+          AND for_type = #{forType}
+          AND for_uid = #{forUid}
+          AND deleted = '0'
+    </select>
+</mapper>
