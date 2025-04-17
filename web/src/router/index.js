@@ -4,7 +4,6 @@ import WebHome from "@/views/web/Home.vue";
 import {webRouters} from "@/router/web.js"
 import SysHome from "@/views/manage/Home.vue"
 import {sysRouters} from "@/router/sysIndex.js"
-import {getUserInfoAPI} from "@/api/Auth.js";  // 添加这行导入
 
 /**
  * @description 导出路由配置
