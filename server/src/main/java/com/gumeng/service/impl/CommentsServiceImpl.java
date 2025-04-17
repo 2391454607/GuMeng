@@ -106,6 +106,20 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments>
         userIds.addAll(childComments.stream()
                 .map(Comments::getUserId)
                 .collect(Collectors.toList()));
+                
+        // 添加被回复用户的ID
+        List<String> forUserIds = childComments.stream()
+                .filter(c -> c.getForUser() != null && !c.getForUser().isEmpty())
+                .map(Comments::getForUser)
+                .collect(Collectors.toList());
+                
+        for (String forUserId : forUserIds) {
+            try {
+                userIds.add(Integer.parseInt(forUserId));
+            } catch (NumberFormatException e) {
+                // 忽略转换异常
+            }
+        }
 
         // 查询所有涉及到的用户
         LambdaQueryWrapper<User> userQueryWrapper = new LambdaQueryWrapper<>();
@@ -137,6 +151,13 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments>
 
         // 设置父评论ID
         vo.setParentId(comment.getParent());
+        
+        // 转换点赞数为整数
+        try {
+            vo.setThumbsUp(Integer.parseInt(comment.getThumbsUp()));
+        } catch (NumberFormatException e) {
+            vo.setThumbsUp(0);
+        }
 
         // 设置发表评论用户信息
         User user = userMap.get(comment.getUserId());
@@ -230,16 +251,21 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments>
             
             Integer userId = (Integer) map.get("id");
             Long userIdLong = userId.longValue();
-
-            // 调用点赞服务
-            boolean result = thumbsUpService.addThumbsUp(userIdLong, "comment", commentId);
             
-            if (result) {
+            // 获取评论信息，验证其是否存在
+            Comments comment = this.getById(commentId);
+            if (comment == null || "1".equals(comment.getDelete())) {
+                return false;
+            }
+
+            // 调用点赞服务并增加评论点赞数
+            if (thumbsUpService.addThumbsUp(userIdLong, "comment", commentId)) {
                 // 增加评论点赞数
                 commentsMapper.incrementLikeCount(commentId);
+                return true;
             }
             
-            return result;
+            return false;
         } catch (Exception e) {
             log.error("点赞评论失败: " + e.getMessage(), e);
             return false;
@@ -258,16 +284,25 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments>
             
             Integer userId = (Integer) map.get("id");
             Long userIdLong = userId.longValue();
-
-            // 调用取消点赞服务
-            boolean result = thumbsUpService.removeThumbsUp(userIdLong, "comment", commentId);
             
-            if (result) {
-                // 减少评论点赞数
-                commentsMapper.decrementLikeCount(commentId);
+            // 获取评论信息，验证其是否存在
+            Comments comment = this.getById(commentId);
+            if (comment == null || "1".equals(comment.getDelete())) {
+                return false;
             }
             
-            return result;
+            // 确保用户已点赞
+            if (!thumbsUpService.checkUserLiked(userIdLong, "comment", commentId)) {
+                return true; // 用户没有点赞，直接返回成功
+            }
+
+            // 调用取消点赞服务并减少评论点赞数
+            if (thumbsUpService.removeThumbsUp(userIdLong, "comment", commentId)) {
+                commentsMapper.decrementLikeCount(commentId);
+                return true;
+            }
+            
+            return false;
         } catch (Exception e) {
             log.error("取消点赞评论失败: " + e.getMessage(), e);
             return false;

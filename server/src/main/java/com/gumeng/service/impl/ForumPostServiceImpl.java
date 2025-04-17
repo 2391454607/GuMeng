@@ -65,9 +65,14 @@ public class ForumPostServiceImpl extends ServiceImpl<ForumPostMapper, ForumPost
         post.setDeleted("0");
 
         // 保存帖子
-        this.save(post);
-
-        return post.getId();
+        try {
+            this.save(post);
+            log.info("成功创建帖子，ID: {}, 标题: {}", post.getId(), post.getTitle());
+            return post.getId();
+        } catch (Exception e) {
+            log.error("创建帖子失败: " + e.getMessage(), e);
+            throw e;
+        }
     }
 
     @Override

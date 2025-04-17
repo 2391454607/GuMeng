@@ -18,7 +18,7 @@ public class Comments implements Serializable {
     /**
      * 
      */
-    @TableId(value = "id")
+    @TableId(value = "id", type = com.baomidou.mybatisplus.annotation.IdType.AUTO)
     private Integer id;
 
     /**
@@ -72,7 +72,7 @@ public class Comments implements Serializable {
     /**
      * 逻辑删除
      */
-    @TableField(value = "delete")
+    @TableField(value = "`delete`")
     private String delete;
 
     @TableField(exist = false)

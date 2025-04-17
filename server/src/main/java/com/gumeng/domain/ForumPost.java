@@ -18,7 +18,7 @@ public class ForumPost implements Serializable {
     /**
      * id
      */
-    @TableId(value = "id")
+    @TableId(value = "id", type = com.baomidou.mybatisplus.annotation.IdType.AUTO)
     private Integer id;
 
     /**
