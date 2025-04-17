@@ -42,7 +42,7 @@ export const router = createRouter({
         {
             path: "/login",
             name: "Login",
-            component: () => import("@/views/login/Login.vue"),
+            component: () => import("@/views/auth/Login.vue"),
             meta: { requiresAuth: false } // 不需要登录
         },
         /**
@@ -51,18 +51,35 @@ export const router = createRouter({
         {
             path: "/register",
             name: "Register",
-            component: () => import("@/views/login/Register.vue"),
+            component: () => import("@/views/auth/Register.vue"),
             meta: { requiresAuth: false } // 不需要登录
         },
         /**
-         * @description 401界面
+         * @description 用户个人信息界面
+         */
+        {
+            path: "/userInfo",
+            name: "UserInfo",
+            component: () => import("@/views/auth/UserInfo.vue"),
+            meta: { requiresAuth: true } // 需要登录
+        },
+        /**
+         * @description 401未认证或token无效界面
          */
         {
             path: "/401",
             name: "401",
             component: () => import("@/views/error/Error401.vue")
+        },
+        /**
+         * @description 403权限不足
+         * 界面
+         */
+        {
+            path: "/403",
+            name: "403",
+            component: () => import("@/views/error/Error403.vue")
         }
-
     ]
 })
 
@@ -87,7 +104,7 @@ router.beforeEach(async (to, from, next) => {
     if (to.meta.requiresAuth) {
         if (!token) {
             Message.warning('请先登录');
-            next('/login');
+            next('/401');
             return;
         }
 
@@ -96,17 +113,15 @@ router.beforeEach(async (to, from, next) => {
         if (!decodedToken || !decodedToken.claims) {
             Message.error('无效的用户信息');
             localStorage.removeItem('token');
-            next('/login');
+            next('/401');
             return;
         }
 
         const userRole = decodedToken.claims.role || [];
-        console.log('当前用户角色:', userRole);
-        console.log('需要的角色:', to.meta.roles);
 
         if (to.meta.roles && !to.meta.roles.some(role => userRole.includes(role))) {
             Message.error('权限不足');
-            next('/401');
+            next('/403');
         } else {
             next();
         }

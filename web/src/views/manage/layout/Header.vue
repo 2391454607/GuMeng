@@ -12,20 +12,19 @@ const props = defineProps({
   collapsed: {
     type: Boolean,
     required: true
-  },
-  onClickButton: Function
+  }
 })
 
 // 用户信息
 const userInfo = ref({
-  id:"",
-  naicname:'',
-  userPic:''
+  id: "",
+  nickname: '',
+  userPic: ''
 });
-const token = localStorage.getItem('token');
 
 onMounted(() => {
   try {
+    const token = localStorage.getItem('token');
     if (token){
       getUserInfoAPI().then(res => {
         console.log(res.data);
@@ -46,6 +45,7 @@ onMounted(() => {
 
 // 退出登录
 const handleLogout = () => {
+  const token = localStorage.getItem('token');
   if (token) {
     userLogoutAPI().then(res => {
       if (res.code === 200) {
@@ -92,7 +92,7 @@ const handleLogout = () => {
           <span>{{ userInfo.nickname || '用户' }}</span>
         </a-space>
         <template #content>
-          <a-doption>
+          <a-doption @click="router.push('/userInfo')">
             <IconUser />个人信息
           </a-doption>
           <a-doption @click="handleLogout">

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { router } from "@/router/index.js";
-import { Message, Avatar, Dropdown, Doption } from "@arco-design/web-vue";
+import { Message } from "@arco-design/web-vue";
 import { IconUser, IconExport } from '@arco-design/web-vue/es/icon';
 import {getUserInfoAPI, userLogoutAPI} from "@/api/Auth.js";
 
@@ -29,17 +29,9 @@ const onClickMenuItem = (menuItems) => {
   }
 };
 
-const handleMouseOver = (event) => {
-  end = event.target.offsetLeft;
-};
-
-const handleMouseDown = (event) => {
-  beginX = event.target.offsetLeft;
-};
-
-const handleMouseOut = () => {
-  end = beginX;
-};
+const handleMouseOver = (event) => end = event.target.offsetLeft;
+const handleMouseDown = (event) => beginX = event.target.offsetLeft;
+const handleMouseOut = () => end = beginX;
 
 const token = localStorage.getItem('token');
 // 存储用户信息
@@ -66,6 +58,7 @@ onMounted(() => {
   }, 10);
   //获取用户登录信息
   try {
+    const token = localStorage.getItem('token');
     if (token){
       getUserInfoAPI().then(res => {
         console.log(res.data);
@@ -84,14 +77,14 @@ onMounted(() => {
   }
 });
 
-// 添加登出处理函数
+// 退出登录
 const handleLogout = () => {
+  const token = localStorage.getItem('token');
   if (token) {
     userLogoutAPI().then(res => {
       if (res.code === 200) {
         localStorage.removeItem('token');
         localStorage.removeItem('userInfo');
-        // 显示消息
         Message.success('退出登录成功');
         // 延时刷新当前页面
         setTimeout(() => {
@@ -106,6 +99,7 @@ const handleLogout = () => {
     });
   } else {
     Message.warning('您尚未登录');
+    router.push('/login');
   }
 };
 
@@ -138,7 +132,7 @@ const handleLogout = () => {
           <template v-if="token">
             <a-dropdown trigger="hover" position="bottom">
               <a-space>
-                <a-avatar :size="40" :image-url="userInfo.userPic || '/src/assets/avatar/default-avatar.png'" style="cursor: pointer">
+                <a-avatar :size="40" :image-url="userInfo.userPic || '/src/assets/image/gumeng.png'" style="cursor: pointer">
                   <template #fallback>
                     <icon-user />
                   </template>
@@ -146,7 +140,7 @@ const handleLogout = () => {
                 <span style="color: white">{{ userInfo.nickname || '用户' }}</span>
               </a-space>
               <template #content>
-                <a-doption @click="router.push('/user')">
+                <a-doption @click="router.push('/userInfo')">
                   <icon-user />个人中心
                 </a-doption>
                 <a-doption @click="handleLogout">

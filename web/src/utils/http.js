@@ -43,7 +43,7 @@ request.interceptors.response.use(
     },
     (error) => {
         if (error.response && error.response.status === 401) {
-            // token 过期或无效，清除本地存储并跳转到登录页
+            // token 过期或无效，清除本地存储并跳转到401页面
             localStorage.removeItem('token');
             localStorage.removeItem('userInfo');
             window.location.href = '/401';
