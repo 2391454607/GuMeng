@@ -110,11 +110,11 @@
                   <span class="stat-item" @click.stop="handleLikePost(post)" :class="{ 'liked': post.isLiked }">
                     <icon-heart-fill v-if="post.isLiked" />
                     <icon-heart v-else />
-                    {{ post.likeCount || 0 }}
+                    {{ post.thumbsUpNum || 0 }}
                   </span>
                   <span class="stat-item">
                     <icon-message />
-                    {{ post.commentCount || 0 }}
+                    {{ post.commonNum || 0 }}
                   </span>
                 </div>
               </div>
@@ -168,6 +168,9 @@ const hasMore = computed(() => posts.value.length < total.value);
 // 数据
 const posts = ref([]);
 const topics = ref([]);
+
+// 点赞防抖控制 - 防止重复点击
+const likingPosts = ref(new Set());
 
 // 调试信息
 const showDebugInfo = ref(false); // 控制是否显示调试信息
@@ -227,13 +230,17 @@ const fetchPosts = async () => {
     if (res.code === 200) {
       const newPosts = res.data.records || [];
       
-      // 处理图片字段
+      // 处理图片字段和确保评论数正确
       newPosts.forEach(post => {
         if (post.images && typeof post.images === 'string') {
           post.images = post.images.split(',').filter(img => img);
         } else {
           post.images = [];
         }
+        
+        // 确保点赞数和评论数不为空
+        post.thumbsUpNum = post.thumbsUpNum || 0;
+        post.commonNum = post.commonNum || 0;
       });
       
       if (pageNum.value === 1) {
@@ -298,20 +305,27 @@ const handleLikePost = async (post) => {
     return;
   }
   
+  // 防止重复点击
+  if (likingPosts.value.has(post.id)) {
+    return;
+  }
+  
+  likingPosts.value.add(post.id);
+  
   try {
     let res;
     if (post.isLiked) {
       res = await unlikePostAPI(post.id);
       if (res.code === 200) {
         post.isLiked = false;
-        post.likeCount = Math.max(0, (post.likeCount || 1) - 1);
+        post.thumbsUpNum = Math.max(0, (post.thumbsUpNum || 1) - 1);
         Message.success('已取消点赞');
       }
     } else {
       res = await likePostAPI(post.id);
       if (res.code === 200) {
         post.isLiked = true;
-        post.likeCount = (post.likeCount || 0) + 1;
+        post.thumbsUpNum = (post.thumbsUpNum || 0) + 1;
         Message.success('点赞成功');
       }
     }
@@ -322,6 +336,9 @@ const handleLikePost = async (post) => {
   } catch (err) {
     console.error('点赞操作出错:', err);
     Message.error('操作失败，请稍后重试');
+  } finally {
+    // 无论成功失败，都移除锁定状态
+    likingPosts.value.delete(post.id);
   }
 };
 

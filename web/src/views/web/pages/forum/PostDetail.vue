@@ -81,15 +81,11 @@
             >
               <icon-heart-fill v-if="post.isLiked" />
               <icon-heart v-else />
-              {{ post.likeCount || 0 }} 点赞
+              {{ post.thumbsUpNum || 0 }} 点赞
             </a-button>
-            <a-button type="outline" @click="scrollToComment" class="action-btn">
-              <icon-message />
-              {{ post.commentCount || 0 }} 评论
-            </a-button>
-            <a-button type="outline" @click="handleShare" class="action-btn">
-              <icon-share-external />
-              分享
+            <a-button type="outline" @click="showDeleteConfirm = true" class="action-btn" v-if="canDelete">
+              <icon-delete />
+              删除
             </a-button>
           </div>
         </div>
@@ -100,7 +96,7 @@
         <a-card>
           <template #title>
             <div class="section-header">
-              <h2 class="section-title">评论区 ({{ comments.length }})</h2>
+              <h2 class="section-title">评论区 ({{ totalCommentCount }})</h2>
             </div>
           </template>
           
@@ -224,10 +220,10 @@
     
     <!-- 删除帖子确认框 -->
     <a-modal
-      v-model="deletePostModalVisible"
+      v-model="showDeleteConfirm"
       title="确认删除"
-      @cancel="deletePostModalVisible = false"
-      @ok="confirmDeletePost"
+      @cancel="showDeleteConfirm = false"
+      @ok="deletePost"
     >
       <p>确定要删除这篇帖子吗？此操作无法撤销。</p>
     </a-modal>
@@ -241,26 +237,6 @@
     >
       <p>确定要删除这条评论吗？此操作无法撤销。</p>
     </a-modal>
-    
-    <!-- 分享对话框 -->
-    <a-modal
-      v-model="shareModalVisible"
-      title="分享帖子"
-      @cancel="shareModalVisible = false"
-      :footer="false"
-    >
-      <div class="share-container">
-        <a-input
-          v-model="shareUrl"
-          readonly
-        />
-        <div class="share-buttons">
-          <a-button type="primary" @click="copyShareUrl">
-            <icon-copy />复制链接
-          </a-button>
-        </div>
-      </div>
-    </a-modal>
   </div>
 </template>
 
@@ -270,7 +246,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import { 
   IconLeft, IconEye, IconHeart, IconHeartFill, IconMessage, 
-  IconShareExternal, IconDelete, IconCopy
+  IconDelete
 } from '@arco-design/web-vue/es/icon';
 import { 
   getPostDetailAPI, likePostAPI, unlikePostAPI, deletePostAPI, 
@@ -302,6 +278,18 @@ const replyingTo = ref(null);
 const replyContent = ref('');
 const parentComment = ref(null);
 
+// 计算评论总数（包括所有回复）
+const totalCommentCount = computed(() => {
+  let count = comments.value.length;
+  // 加上所有子评论
+  comments.value.forEach(comment => {
+    if (comment.children && comment.children.length > 0) {
+      count += comment.children.length;
+    }
+  });
+  return count;
+});
+
 // 分页
 const hasMore = ref(false);
 const page = ref(1);
@@ -310,9 +298,8 @@ const pageSize = ref(10);
 // 弹窗控制
 const showDeleteConfirm = ref(false);
 const showCommentDeleteConfirm = ref(false);
+const deleteCommentModalVisible = ref(false);
 const commentToDelete = ref(null);
-const shareModalVisible = ref(false);
-const shareUrl = ref('');
 
 // 是否可以删除帖子
 const canDelete = computed(() => {
@@ -361,6 +348,7 @@ const fetchPostDetail = async () => {
 // 获取评论列表
 const fetchComments = async (loadMore = false) => {
   try {
+    console.log('获取评论列表, 帖子ID:', postId.value);
     const currentPage = loadMore ? page.value : 1;
     
     const res = await getCommentsAPI({
@@ -369,8 +357,18 @@ const fetchComments = async (loadMore = false) => {
       pageSize: pageSize.value
     });
     
+    console.log('评论列表响应:', res);
+    
     if (res.code === 200) {
-      const newComments = res.data.records || [];
+      // 确保返回的数据是数组
+      let newComments = res.data || [];
+      
+      // 如果返回的是分页对象，则取records属性
+      if (res.data && res.data.records) {
+        newComments = res.data.records;
+      }
+      
+      console.log('处理后的评论数据:', newComments);
       
       if (loadMore) {
         comments.value = [...comments.value, ...newComments];
@@ -378,7 +376,10 @@ const fetchComments = async (loadMore = false) => {
         comments.value = newComments;
       }
       
-      hasMore.value = comments.value.length < res.data.total;
+      // 判断是否还有更多评论
+      hasMore.value = res.data && res.data.total ? 
+        comments.value.length < res.data.total : 
+        false;
       
       if (loadMore) {
         page.value++;
@@ -414,14 +415,14 @@ const handleLike = async () => {
       res = await unlikePostAPI(postId.value);
       if (res.code === 200) {
         post.value.isLiked = false;
-        post.value.likeCount = Math.max(0, (post.value.likeCount || 1) - 1);
+        post.value.thumbsUpNum = Math.max(0, (post.value.thumbsUpNum || 1) - 1);
         Message.success('已取消点赞');
       }
     } else {
       res = await likePostAPI(postId.value);
       if (res.code === 200) {
         post.value.isLiked = true;
-        post.value.likeCount = (post.value.likeCount || 0) + 1;
+        post.value.thumbsUpNum = (post.value.thumbsUpNum || 0) + 1;
         Message.success('点赞成功');
       }
     }
@@ -559,17 +560,17 @@ const submitReply = async () => {
 
 // 判断是否可以删除评论
 const canDeleteComment = (comment) => {
-  return userStore.isAdmin || (comment.userId === userStore.userInfo?.id);
+  return userStore.isAdmin || (comment.userId && comment.userId.toString() === userStore.userInfo?.id?.toString());
 };
 
 // 显示删除评论确认框
 const showDeleteCommentConfirm = (comment) => {
   commentToDelete.value = comment;
-  showCommentDeleteConfirm.value = true;
+  deleteCommentModalVisible.value = true;
 };
 
 // 删除评论
-const deleteComment = async () => {
+const confirmDeleteComment = async () => {
   if (!commentToDelete.value) return;
   
   try {
@@ -583,12 +584,12 @@ const deleteComment = async () => {
     } else {
       Message.error(res.msg || '删除失败');
     }
-    showCommentDeleteConfirm.value = false;
+    deleteCommentModalVisible.value = false;
     commentToDelete.value = null;
   } catch (err) {
     console.error('删除评论出错:', err);
     Message.error('删除失败，请稍后重试');
-    showCommentDeleteConfirm.value = false;
+    deleteCommentModalVisible.value = false;
     commentToDelete.value = null;
   }
 };
@@ -622,32 +623,6 @@ const handleLikeComment = async (comment) => {
   } catch (err) {
     console.error('评论点赞操作出错:', err);
     Message.error('操作失败，请稍后重试');
-  }
-};
-
-// 分享帖子
-const handleShare = () => {
-  shareUrl.value = window.location.href;
-  shareModalVisible.value = true;
-};
-
-// 复制分享链接
-const copyShareUrl = () => {
-  navigator.clipboard.writeText(shareUrl.value)
-    .then(() => {
-      Message.success('链接已复制到剪贴板');
-      shareModalVisible.value = false;
-    })
-    .catch(() => {
-      Message.error('复制失败，请手动复制');
-    });
-};
-
-// 滚动到评论区
-const scrollToComment = () => {
-  const commentSection = document.getElementById('comment-section');
-  if (commentSection) {
-    commentSection.scrollIntoView({ behavior: 'smooth' });
   }
 };
 
@@ -1078,71 +1053,6 @@ onMounted(() => {
 .load-more {
   text-align: center;
   margin-top: 24px;
-}
-
-/* 分享对话框 */
-.share-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.share-buttons {
-  display: flex;
-  justify-content: flex-end;
-}
-
-:deep(.arco-btn-primary) {
-  background-color: #C2101C;
-  border-color: #C2101C;
-}
-
-:deep(.arco-btn-primary:hover) {
-  background-color: #A50D18;
-  border-color: #A50D18;
-}
-
-:deep(.arco-btn-primary:active) {
-  background-color: #8B0B14;
-  border-color: #8B0B14;
-}
-
-:deep(.arco-tag) {
-  background-color: #FFF0F0;
-  color: #C2101C;
-  border-color: #FFDCDC;
-}
-
-:deep(.arco-textarea-wrapper) {
-  border-radius: 8px;
-}
-
-:deep(.arco-textarea-wrapper:hover),
-:deep(.arco-textarea-wrapper.arco-textarea-focus) {
-  border-color: #C2101C;
-}
-
-:deep(.arco-input-wrapper) {
-  border-radius: 8px;
-}
-
-:deep(.arco-input-wrapper:hover),
-:deep(.arco-input-wrapper.arco-input-focus) {
-  border-color: #C2101C;
-}
-
-:deep(.arco-card) {
-  border-radius: 8px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-:deep(.arco-card:hover) {
-  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
-}
-
-:deep(.arco-empty) {
-  padding: 24px 0;
 }
 
 /* 响应式设计 */
