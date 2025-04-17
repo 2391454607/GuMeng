@@ -50,7 +50,7 @@ public class ForumController {
     /**
      * 获取帖子列表
      */
-    @GetMapping("/getPosts")
+    @GetMapping("/posts")
     public HttpResponse getPosts(
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size,
@@ -79,7 +79,7 @@ public class ForumController {
     /**
      * 创建帖子
      */
-    @PostMapping("/addPosts")
+    @PostMapping("/posts")
     public HttpResponse createPost(@RequestBody @Valid ForumPostDTO postDTO) {
         Integer postId = forumPostService.createPost(postDTO);
         return HttpResponse.success(postId);
