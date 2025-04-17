@@ -2,26 +2,16 @@
 import { ref, computed, onMounted, nextTick } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
-import { 
-  IconLeft, 
-  IconEye, 
-  IconHeart, 
-  IconHeartFill, 
-  IconMessage, 
-  IconDelete 
+import {
+  IconLeft, IconEye, IconHeart, IconHeartFill, IconMessage,
+  IconShareExternal, IconDelete, IconCopy
 } from '@arco-design/web-vue/es/icon';
-import { 
-  getPostDetailAPI, 
-  likePostAPI, 
-  unlikePostAPI, 
-  deletePostAPI, 
-  getCommentsAPI, 
-  addCommentAPI, 
-  deleteCommentAPI, 
-  likeCommentAPI, 
-  unlikeCommentAPI 
-} from '@/api/forum';
-import { useUserStore } from '@/stores';
+// import {
+//   getPostDetailAPI, likePostAPI, unlikePostAPI, deletePostAPI,
+//   getCommentsAPI, addCommentAPI, deleteCommentAPI,
+//   likeCommentAPI, unlikeCommentAPI
+// } from '@/api/forum';
+import { useUserStore } from '@/stores/UserStore.js';
 import { formatDate } from '@/utils/format';
 
 const router = useRouter();
@@ -54,20 +44,9 @@ const pageSize = ref(10);
 // 弹窗控制
 const showDeleteConfirm = ref(false);
 const showCommentDeleteConfirm = ref(false);
-const deleteCommentModalVisible = ref(false);
 const commentToDelete = ref(null);
-
-// 计算评论总数（包括所有回复）
-const totalCommentCount = computed(() => {
-  let count = comments.value.length;
-  // 加上所有子评论
-  comments.value.forEach(comment => {
-    if (comment.children && comment.children.length > 0) {
-      count += comment.children.length;
-    }
-  });
-  return count;
-});
+const shareModalVisible = ref(false);
+const shareUrl = ref('');
 
 // 是否可以删除帖子
 const canDelete = computed(() => {
@@ -83,12 +62,12 @@ const goBack = () => {
 const fetchPostDetail = async () => {
   loading.value = true;
   error.value = false;
-  
+
   try {
     console.log('获取帖子详情:', postId.value);
     const res = await getPostDetailAPI(postId.value);
     console.log('帖子详情响应:', res);
-    
+
     if (res.code === 200) {
       post.value = res.data;
       // 将图片字符串转为数组
@@ -97,7 +76,7 @@ const fetchPostDetail = async () => {
       } else if (!post.value.images) {
         post.value.images = [];
       }
-      
+
       // 获取评论列表
       fetchComments();
     } else {
@@ -116,39 +95,25 @@ const fetchPostDetail = async () => {
 // 获取评论列表
 const fetchComments = async (loadMore = false) => {
   try {
-    console.log('获取评论列表, 帖子ID:', postId.value);
     const currentPage = loadMore ? page.value : 1;
-    
+
     const res = await getCommentsAPI({
       postId: postId.value,
       pageNum: currentPage,
       pageSize: pageSize.value
     });
-    
-    console.log('评论列表响应:', res);
-    
+
     if (res.code === 200) {
-      // 确保返回的数据是数组
-      let newComments = res.data || [];
-      
-      // 如果返回的是分页对象，则取records属性
-      if (res.data && res.data.records) {
-        newComments = res.data.records;
-      }
-      
-      console.log('处理后的评论数据:', newComments);
-      
+      const newComments = res.data.records || [];
+
       if (loadMore) {
         comments.value = [...comments.value, ...newComments];
       } else {
         comments.value = newComments;
       }
-      
-      // 判断是否还有更多评论
-      hasMore.value = res.data && res.data.total ? 
-        comments.value.length < res.data.total : 
-        false;
-      
+
+      hasMore.value = comments.value.length < res.data.total;
+
       if (loadMore) {
         page.value++;
       } else {
@@ -176,25 +141,25 @@ const handleLike = async () => {
     Message.warning('请先登录再进行操作');
     return;
   }
-  
+
   try {
     let res;
     if (post.value.isLiked) {
       res = await unlikePostAPI(postId.value);
       if (res.code === 200) {
         post.value.isLiked = false;
-        post.value.thumbsUpNum = Math.max(0, (post.value.thumbsUpNum || 1) - 1);
+        post.value.likeCount = Math.max(0, (post.value.likeCount || 1) - 1);
         Message.success('已取消点赞');
       }
     } else {
       res = await likePostAPI(postId.value);
       if (res.code === 200) {
         post.value.isLiked = true;
-        post.value.thumbsUpNum = (post.value.thumbsUpNum || 0) + 1;
+        post.value.likeCount = (post.value.likeCount || 0) + 1;
         Message.success('点赞成功');
       }
     }
-    
+
     if (res.code !== 200) {
       Message.error(res.msg || '操作失败');
     }
@@ -228,12 +193,12 @@ const submitComment = async () => {
     Message.warning('请先登录再进行操作');
     return;
   }
-  
+
   if (!commentContent.value.trim()) {
     Message.warning('评论内容不能为空');
     return;
   }
-  
+
   try {
     const res = await addCommentAPI({
       postId: postId.value,
@@ -241,7 +206,7 @@ const submitComment = async () => {
       content: commentContent.value.trim(),
       parentId: 0
     });
-    
+
     if (res.code === 200) {
       Message.success('评论成功');
       commentContent.value = '';
@@ -264,11 +229,11 @@ const replyToComment = (comment, parent = null) => {
     Message.warning('请先登录再进行操作');
     return;
   }
-  
+
   replyingTo.value = comment;
   parentComment.value = parent || comment;
   replyContent.value = '';
-  
+
   // 滚动到回复框
   nextTick(() => {
     const replyBox = document.querySelector(`.reply-form`);
@@ -291,12 +256,12 @@ const submitReply = async () => {
     Message.warning('请先登录再进行操作');
     return;
   }
-  
+
   if (!replyContent.value.trim()) {
     Message.warning('回复内容不能为空');
     return;
   }
-  
+
   try {
     const res = await addCommentAPI({
       postId: postId.value,
@@ -307,7 +272,7 @@ const submitReply = async () => {
       replyToId: replyingTo.value.userId,
       forUser: replyingTo.value.userId.toString()  // 同时提供forUser参数
     });
-    
+
     if (res.code === 200) {
       Message.success('回复成功');
       replyContent.value = '';
@@ -328,19 +293,19 @@ const submitReply = async () => {
 
 // 判断是否可以删除评论
 const canDeleteComment = (comment) => {
-  return userStore.isAdmin || (comment.userId && comment.userId.toString() === userStore.userInfo?.id?.toString());
+  return userStore.isAdmin || (comment.userId === userStore.userInfo?.id);
 };
 
 // 显示删除评论确认框
 const showDeleteCommentConfirm = (comment) => {
   commentToDelete.value = comment;
-  deleteCommentModalVisible.value = true;
+  showCommentDeleteConfirm.value = true;
 };
 
 // 删除评论
-const confirmDeleteComment = async () => {
+const deleteComment = async () => {
   if (!commentToDelete.value) return;
-  
+
   try {
     const res = await deleteCommentAPI(commentToDelete.value.id);
     if (res.code === 200) {
@@ -352,12 +317,12 @@ const confirmDeleteComment = async () => {
     } else {
       Message.error(res.msg || '删除失败');
     }
-    deleteCommentModalVisible.value = false;
+    showCommentDeleteConfirm.value = false;
     commentToDelete.value = null;
   } catch (err) {
     console.error('删除评论出错:', err);
     Message.error('删除失败，请稍后重试');
-    deleteCommentModalVisible.value = false;
+    showCommentDeleteConfirm.value = false;
     commentToDelete.value = null;
   }
 };
@@ -368,7 +333,7 @@ const handleLikeComment = async (comment) => {
     Message.warning('请先登录再进行操作');
     return;
   }
-  
+
   try {
     let res;
     if (comment.isLiked) {
@@ -384,13 +349,39 @@ const handleLikeComment = async (comment) => {
         comment.thumbsUp = (comment.thumbsUp || 0) + 1;
       }
     }
-    
+
     if (res.code !== 200) {
       Message.error(res.msg || '操作失败');
     }
   } catch (err) {
     console.error('评论点赞操作出错:', err);
     Message.error('操作失败，请稍后重试');
+  }
+};
+
+// 分享帖子
+const handleShare = () => {
+  shareUrl.value = window.location.href;
+  shareModalVisible.value = true;
+};
+
+// 复制分享链接
+const copyShareUrl = () => {
+  navigator.clipboard.writeText(shareUrl.value)
+      .then(() => {
+        Message.success('链接已复制到剪贴板');
+        shareModalVisible.value = false;
+      })
+      .catch(() => {
+        Message.error('复制失败，请手动复制');
+      });
+};
+
+// 滚动到评论区
+const scrollToComment = () => {
+  const commentSection = document.getElementById('comment-section');
+  if (commentSection) {
+    commentSection.scrollIntoView({ behavior: 'smooth' });
   }
 };
 
@@ -482,11 +473,15 @@ onMounted(() => {
             >
               <icon-heart-fill v-if="post.isLiked" />
               <icon-heart v-else />
-              {{ post.thumbsUpNum || 0 }} 点赞
+              {{ post.likeCount || 0 }} 点赞
             </a-button>
-            <a-button type="outline" @click="showDeleteConfirm = true" class="action-btn" v-if="canDelete">
-              <icon-delete />
-              删除
+            <a-button type="outline" @click="scrollToComment" class="action-btn">
+              <icon-message />
+              {{ post.commentCount || 0 }} 评论
+            </a-button>
+            <a-button type="outline" @click="handleShare" class="action-btn">
+              <icon-share-external />
+              分享
             </a-button>
           </div>
         </div>
@@ -497,7 +492,7 @@ onMounted(() => {
         <a-card>
           <template #title>
             <div class="section-header">
-              <h2 class="section-title">评论区 ({{ totalCommentCount }})</h2>
+              <h2 class="section-title">评论区 ({{ comments.length }})</h2>
             </div>
           </template>
           
@@ -621,10 +616,10 @@ onMounted(() => {
     
     <!-- 删除帖子确认框 -->
     <a-modal
-      v-model="showDeleteConfirm"
+      v-model="deletePostModalVisible"
       title="确认删除"
-      @cancel="showDeleteConfirm = false"
-      @ok="deletePost"
+      @cancel="deletePostModalVisible = false"
+      @ok="confirmDeletePost"
     >
       <p>确定要删除这篇帖子吗？此操作无法撤销。</p>
     </a-modal>
@@ -638,8 +633,29 @@ onMounted(() => {
     >
       <p>确定要删除这条评论吗？此操作无法撤销。</p>
     </a-modal>
+    
+    <!-- 分享对话框 -->
+    <a-modal
+      v-model="shareModalVisible"
+      title="分享帖子"
+      @cancel="shareModalVisible = false"
+      :footer="false"
+    >
+      <div class="share-container">
+        <a-input
+          v-model="shareUrl"
+          readonly
+        />
+        <div class="share-buttons">
+          <a-button type="primary" @click="copyShareUrl">
+            <icon-copy />复制链接
+          </a-button>
+        </div>
+      </div>
+    </a-modal>
   </div>
 </template>
+
 
 <style scoped>
 .post-detail-container {
@@ -1065,6 +1081,71 @@ onMounted(() => {
   margin-top: 24px;
 }
 
+/* 分享对话框 */
+.share-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.share-buttons {
+  display: flex;
+  justify-content: flex-end;
+}
+
+:deep(.arco-btn-primary) {
+  background-color: #C2101C;
+  border-color: #C2101C;
+}
+
+:deep(.arco-btn-primary:hover) {
+  background-color: #A50D18;
+  border-color: #A50D18;
+}
+
+:deep(.arco-btn-primary:active) {
+  background-color: #8B0B14;
+  border-color: #8B0B14;
+}
+
+:deep(.arco-tag) {
+  background-color: #FFF0F0;
+  color: #C2101C;
+  border-color: #FFDCDC;
+}
+
+:deep(.arco-textarea-wrapper) {
+  border-radius: 8px;
+}
+
+:deep(.arco-textarea-wrapper:hover),
+:deep(.arco-textarea-wrapper.arco-textarea-focus) {
+  border-color: #C2101C;
+}
+
+:deep(.arco-input-wrapper) {
+  border-radius: 8px;
+}
+
+:deep(.arco-input-wrapper:hover),
+:deep(.arco-input-wrapper.arco-input-focus) {
+  border-color: #C2101C;
+}
+
+:deep(.arco-card) {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+:deep(.arco-card:hover) {
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+}
+
+:deep(.arco-empty) {
+  padding: 24px 0;
+}
+
 /* 响应式设计 */
 @media screen and (max-width: 768px) {
   .post-detail-container {
@@ -1108,4 +1189,4 @@ onMounted(() => {
     min-height: 150px;
   }
 }
-</style>
+</style> 

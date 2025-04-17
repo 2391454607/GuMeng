@@ -1,18 +1,12 @@
 <script setup>
-// 导入API和工具
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import { IconSearch, IconEye, IconPlus, IconHeart, IconMessage, IconHeartFill } from '@arco-design/web-vue/es/icon';
-import { getPostListAPI as getPostsAPI, getTopicsAPI, likePostAPI, unlikePostAPI } from '@/api/forum';
-import { useUserStore } from '@/stores';
 import { formatDate } from '@/utils/format';
+import { getPostsListAPI, getPostsTopicListAPI } from "@/api/web/Web.js";
 
 const router = useRouter();
-const userStore = useUserStore();
-
-// 用户登录状态
-const isLogin = computed(() => userStore.isLogin);
 
 // 搜索和筛选
 const searchText = ref('');
@@ -20,201 +14,46 @@ const activeTab = ref('all');
 
 // 数据加载
 const loading = ref(true);
-const loadingMore = ref(false);
-const pageNum = ref(1);
-const pageSize = ref(10);
-const total = ref(0);
-const hasMore = computed(() => posts.value.length < total.value);
 
-// 数据
-const posts = ref([]);
-const topics = ref([]);
-
-// 点赞防抖控制 - 防止重复点击
-const likingPosts = ref(new Set());
-
-// 调试信息
-const showDebugInfo = ref(false); // 控制是否显示调试信息
-const toggleDebugInfo = () => {
-  showDebugInfo.value = !showDebugInfo.value;
-};
-
-// 测试后端API
-const testBackendConnection = async () => {
-  try {
-    console.log('测试后端连接...');
-    const res = await http.get('/forum/debug/token');
-    console.log('后端连接测试结果:', res);
-    Message.success('后端连接成功');
-  } catch (err) {
-    console.error('后端连接测试失败:', err);
-    Message.error('后端连接失败');
-  }
-};
-
-// 处理搜索
-const handleSearch = () => {
-  pageNum.value = 1;
-  posts.value = [];
-  fetchPosts();
-};
-
-// 切换话题
-const switchTopic = (topicId) => {
-  activeTab.value = topicId;
-  pageNum.value = 1;
-  posts.value = [];
-  fetchPosts();
-};
-
-// 获取帖子列表
-const fetchPosts = async () => {
-  if (pageNum.value === 1) {
-    loading.value = true;
-  } else {
-    loadingMore.value = true;
-  }
-  
-  try {
-    const params = {
-      pageNum: pageNum.value,
-      pageSize: pageSize.value,
-      keyword: searchText.value,
-    };
-    
-    // 添加话题筛选
-    if (activeTab.value !== 'all') {
-      params.topicId = activeTab.value;
-    }
-    
-    const res = await getPostsAPI(params);
-    if (res.code === 200) {
-      const newPosts = res.data.records || [];
-      
-      // 处理图片字段和确保评论数正确
-      newPosts.forEach(post => {
-        if (post.images && typeof post.images === 'string') {
-          post.images = post.images.split(',').filter(img => img);
-        } else {
-          post.images = [];
-        }
-        
-        // 确保点赞数和评论数不为空
-        post.thumbsUpNum = post.thumbsUpNum || 0;
-        post.commonNum = post.commonNum || 0;
-      });
-      
-      if (pageNum.value === 1) {
-        posts.value = newPosts;
-      } else {
-        posts.value = [...posts.value, ...newPosts];
-      }
-      
-      total.value = res.data.total || 0;
-    } else {
-      Message.warning(res.msg || '获取帖子列表失败');
-    }
-  } catch (err) {
-    console.error('获取帖子列表出错:', err);
-    Message.warning('获取帖子列表失败，请稍后重试');
-  } finally {
-    loading.value = false;
-    loadingMore.value = false;
-  }
-};
-
-// 获取话题列表
-const fetchTopics = async () => {
-  try {
-    const res = await getTopicsAPI();
-    if (res.code === 200) {
-      topics.value = res.data || [];
-    }
-  } catch (err) {
-    console.error('获取话题列表出错:', err);
-  }
-};
-
-// 加载更多
-const loadMore = () => {
-  if (hasMore.value && !loadingMore.value) {
-    pageNum.value++;
-    fetchPosts();
-  }
-};
-
-// 跳转到帖子详情
-const goToDetail = (id) => {
-  console.log('跳转到帖子详情:', id);
-  router.push(`/forum/detail/${id}`);
-};
-
-// 创建新帖子
-const createPost = () => {
-  console.log('创建帖子, 登录状态:', isLogin.value);
-  if (!isLogin.value) {
-    Message.warning('请先登录再发布帖子');
-    return;
-  }
-  router.push('/forum/create');
-};
-
-// 处理帖子点赞
-const handleLikePost = async (post) => {
-  if (!isLogin.value) {
-    Message.warning('请先登录再进行操作');
-    return;
-  }
-  
-  // 防止重复点击
-  if (likingPosts.value.has(post.id)) {
-    return;
-  }
-  
-  likingPosts.value.add(post.id);
-  
-  try {
-    let res;
-    if (post.isLiked) {
-      res = await unlikePostAPI(post.id);
-      if (res.code === 200) {
-        post.isLiked = false;
-        post.thumbsUpNum = Math.max(0, (post.thumbsUpNum || 1) - 1);
-        Message.success('已取消点赞');
-      }
-    } else {
-      res = await likePostAPI(post.id);
-      if (res.code === 200) {
-        post.isLiked = true;
-        post.thumbsUpNum = (post.thumbsUpNum || 0) + 1;
-        Message.success('点赞成功');
-      }
-    }
-    
-    if (res.code !== 200) {
-      Message.error(res.msg || '操作失败');
-    }
-  } catch (err) {
-    console.error('点赞操作出错:', err);
-    Message.error('操作失败，请稍后重试');
-  } finally {
-    // 无论成功失败，都移除锁定状态
-    likingPosts.value.delete(post.id);
-  }
-};
-
-// 监听搜索文本变化
-watch(searchText, (newVal, oldVal) => {
-  if (oldVal && !newVal) {
-    // 清空搜索时重新加载
-    handleSearch();
-  }
+// 存储数据列表
+const postsTopicList = ref();
+const postsList = ref({
+  id: "",
+  title: "",
+  content: " ",
+  topic: "",
+  images: "",
+  commonNum: "",
+  thumbsUpNum: "",
+  viewCount: "",
+  createTime: "",
+  userId: "",
+  username: "",
+  avatar: "",
+  isLiked: ""
 });
 
+//初始化数据
 onMounted(() => {
-  fetchTopics();
-  fetchPosts();
+  //获取帖子话题列表
+  getPostsTopicListAPI().then((res)=>{
+    if (res.code === 200) {
+      postsTopicList.value = res.data;
+    }
+  })
+  //获取帖子列表
+  getPostsListAPI().then((res)=>{
+    if (res.code === 200) {
+      postsList.value = res.data.records;
+    }
+    console.log(res.data.records);
+  })
+
+  loading.value = false;
 });
+
+//处理点赞
+
 </script>
 
 <template>
@@ -231,17 +70,16 @@ onMounted(() => {
             v-model="searchText"
             placeholder="搜索帖子..."
             allow-clear
-            @press-enter="handleSearch"
           >
             <template #prefix>
               <icon-search />
             </template>
           </a-input>
-          <a-button type="primary" @click="handleSearch" class="search-btn">
+          <a-button type="primary" class="search-btn">
             搜索
           </a-button>
         </div>
-        <a-button type="primary" @click="createPost" class="post-btn">
+        <a-button type="primary" class="post-btn">
           <icon-plus />
           发布帖子
         </a-button>
@@ -257,16 +95,14 @@ onMounted(() => {
           <div 
             class="topic-item" 
             :class="{ active: activeTab === 'all' }"
-            @click="switchTopic('all')"
           >
             全部话题
           </div>
           <div 
-            v-for="topic in topics" 
+            v-for="topic in postsTopicList"
             :key="topic.id"
             class="topic-item"
             :class="{ active: activeTab === topic.id }"
-            @click="switchTopic(topic.id)"
           >
             {{ topic.name }}
           </div>
@@ -279,83 +115,67 @@ onMounted(() => {
         <div v-if="loading" class="loading-container">
           <a-skeleton :rows="10" animation />
         </div>
-        
-        <!-- 空状态 -->
-        <div v-else-if="posts.length === 0" class="empty-container">
-          <a-empty description="暂无帖子">
-            <template #extra>
-              <a-button type="primary" @click="createPost">立即发布</a-button>
-            </template>
-          </a-empty>
-        </div>
-        
+
         <!-- 帖子列表 -->
         <div v-else class="post-list">
-          <div v-for="post in posts" :key="post.id" class="post-item" @click="goToDetail(post.id)">
+          <div v-for="records in postsList" :key="records.id" class="post-item">
             <!-- 帖子内容 -->
             <div class="post-info">
               <div class="post-author">
-                <img :src="post.authorAvatar || '@/assets/avatar/default-avatar.png'" alt="头像" class="author-avatar" />
-                <span class="author-name">{{ post.authorName }}</span>
-                <span class="post-time">{{ formatDate(post.createTime) }}</span>
+                <img :src="records.avatar || 'src/assets/image/gumeng.png'" alt="头像" class="author-avatar" />
+                <span class="author-name">{{ records.username }}</span>
+                <span class="post-time">{{ formatDate(records.createTime) }}</span>
               </div>
-              <h3 class="post-title">{{ post.title }}</h3>
-              <p class="post-content">{{ post.content }}</p>
-              
+
+              <h3 class="post-title">{{ records.title }}</h3>
+              <p class="post-content">{{ records.content }}</p>
+
               <!-- 帖子图片 -->
-              <div v-if="post.images && post.images.length > 0" class="post-images">
-                <div 
-                  v-for="(image, index) in post.images.slice(0, 3)" 
-                  :key="index" 
+              <div v-if="records.images && records.images.length > 0" class="post-images">
+                <div
+                  v-for="(image, index) in records.images.slice(0, 3)"
+                  :key="index"
                   class="post-image-wrapper"
                 >
                   <img :src="image" :alt="`图片${index+1}`" class="post-image" />
                 </div>
-                <div v-if="post.images.length > 3" class="post-image-more">
-                  +{{ post.images.length - 3 }}
+                <div v-if="records.images.length > 3" class="post-image-more">
+                  +{{ records.images.length - 3 }}
                 </div>
               </div>
-              
+
               <!-- 帖子底部信息 -->
               <div class="post-footer">
-                <div class="post-topic" v-if="post.topicName">
-                  <span class="topic-tag">{{ post.topicName }}</span>
+                <div class="post-topic" v-if="records.topic">
+                  <span class="topic-tag">{{ records.topic }}</span>
                 </div>
                 <div class="post-stats">
                   <span class="stat-item">
                     <icon-eye />
-                    {{ post.viewCount || 0 }}
+                    {{ records.viewCount || 0 }}
                   </span>
-                  <span class="stat-item" @click.stop="handleLikePost(post)" :class="{ 'liked': post.isLiked }">
-                    <icon-heart-fill v-if="post.isLiked" />
+                  <span class="stat-item"  :class="{ 'liked': records.isLiked }">
+                    <icon-heart-fill v-if="records.isLiked" />
                     <icon-heart v-else />
-                    {{ post.thumbsUpNum || 0 }}
+                    {{ records.thumbsUpNum || 0 }}
                   </span>
                   <span class="stat-item">
                     <icon-message />
-                    {{ post.commonNum || 0 }}
+                    {{ records.commonNum || 0 }}
                   </span>
                 </div>
               </div>
             </div>
           </div>
-          
-          <!-- 加载更多 -->
-          <div class="more-button" v-if="hasMore">
-            <a-button @click="loadMore" :loading="loadingMore">
-              加载更多
-            </a-button>
-          </div>
+
         </div>
       </div>
     </div>
 
-    <!-- 调试按钮 -->
-    <div class="debug-button" v-if="showDebugInfo" @click="toggleDebugInfo">
-      {{ showDebugInfo ? '隐藏调试信息' : '显示调试信息' }}
-    </div>
   </div>
 </template>
+
+
 
 <style scoped>
 /* 主容器 */
@@ -529,6 +349,8 @@ onMounted(() => {
 }
 
 .post-time {
+  position: absolute;
+  right: 120px;
   font-size: 12px;
   color: #999;
 }
@@ -715,4 +537,4 @@ onMounted(() => {
 .debug-button:hover {
   background-color: #A50E18;
 }
-</style>
+</style> 

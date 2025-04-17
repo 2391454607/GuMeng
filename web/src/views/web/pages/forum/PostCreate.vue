@@ -2,8 +2,8 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
-import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI } from '@/api/forum';
-import { useUserStore } from '@/stores';
+// import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI } from '@/api/forum';
+import { useUserStore } from '@/stores/UserStore.js';
 
 const router = useRouter();
 const route = useRoute();
@@ -23,6 +23,32 @@ const postForm = reactive({
 // 自定义话题相关
 const useCustomTopic = ref(false);
 const customTopicName = ref('');
+
+// 切换话题输入模式
+const toggleTopicInputMode = () => {
+  useCustomTopic.value = !useCustomTopic.value;
+  if (!useCustomTopic.value) {
+    postForm.topic = '';
+    customTopicName.value = '';
+  } else {
+    postForm.topic = customTopicName.value;
+  }
+};
+
+// 监听自定义话题变化
+watch(customTopicName, (newVal) => {
+  if (useCustomTopic.value) {
+    postForm.topic = newVal;
+  }
+});
+
+// 监听话题选择
+watch(() => postForm.topic, (newVal) => {
+  if (newVal === 'custom') {
+    useCustomTopic.value = true;
+    postForm.topic = customTopicName.value;
+  }
+});
 
 // 表单校验规则
 const rules = {
@@ -44,17 +70,6 @@ const topics = ref([]);
 const submitting = ref(false);
 const postFormRef = ref(null);
 
-// 切换话题输入模式
-const toggleTopicInputMode = () => {
-  useCustomTopic.value = !useCustomTopic.value;
-  if (!useCustomTopic.value) {
-    postForm.topic = '';
-    customTopicName.value = '';
-  } else {
-    postForm.topic = customTopicName.value;
-  }
-};
-
 // 获取话题列表
 const fetchTopics = async () => {
   try {
@@ -73,14 +88,14 @@ const fetchTopics = async () => {
 // 如果是编辑模式，获取帖子详情
 const fetchPostDetail = async () => {
   if (!isEdit.value) return;
-  
+
   try {
     const res = await getPostDetailAPI(postId.value);
     if (res.code === 200) {
       const post = res.data;
-      
+
       postForm.title = post.title;
-      
+
       // 检查是否是预设话题
       const foundTopic = topics.value.find(t => t.id == post.topicId);
       if (foundTopic) {
@@ -92,7 +107,7 @@ const fetchPostDetail = async () => {
         postForm.topic = post.topic || '';
         useCustomTopic.value = true;
       }
-      
+
       postForm.content = post.content;
     } else {
       Message.error(res.msg || '获取帖子详情失败');
@@ -111,25 +126,25 @@ const submitForm = async () => {
     Message.warning('请先登录再发布帖子');
     return;
   }
-  
+
   // 表单验证
   if (!postFormRef.value) {
     Message.warning('表单引用不存在');
     return;
   }
-  
+
   submitting.value = true;
-  
+
   try {
     // 手动验证表单，避免使用validate()方法可能导致的问题
     let isValid = true;
-    
+
     // 手动验证标题
     if (!postForm.title || postForm.title.length < 2 || postForm.title.length > 50) {
       isValid = false;
       Message.error('标题长度在2到50个字符之间');
     }
-    
+
     // 手动验证话题
     if (useCustomTopic.value) {
       if (!customTopicName.value || customTopicName.value.trim().length < 2) {
@@ -140,18 +155,18 @@ const submitForm = async () => {
       isValid = false;
       Message.error('请选择话题');
     }
-    
+
     // 手动验证内容
     if (!postForm.content || postForm.content.length < 10 || postForm.content.length > 2000) {
       isValid = false;
       Message.error('内容长度在10到2000个字符之间');
     }
-    
+
     if (!isValid) {
       submitting.value = false;
       return;
     }
-    
+
     // 准备提交数据前确保话题数据正确
     let topicValue;
     if (useCustomTopic.value) {
@@ -159,23 +174,23 @@ const submitForm = async () => {
     } else {
       topicValue = postForm.topic;
     }
-    
+
     const formData = {
       title: postForm.title,
       content: postForm.content,
       topic: topicValue
     };
-    
+
     console.log('提交表单数据:', formData);
-    
+
     let res;
-    
+
     if (isEdit.value) {
       res = await updatePostAPI(postId.value, formData);
     } else {
       res = await createPostAPI(formData);
     }
-    
+
     if (res.code === 200) {
       Message.success(isEdit.value ? '帖子更新成功' : '帖子发布成功');
       // 跳转到详情页或列表页
@@ -199,20 +214,6 @@ const submitForm = async () => {
 const goBack = () => {
   router.push('/forum/list');
 };
-
-// 监听器
-watch(customTopicName, (newVal) => {
-  if (useCustomTopic.value) {
-    postForm.topic = newVal;
-  }
-});
-
-watch(() => postForm.topic, (newVal) => {
-  if (newVal === 'custom') {
-    useCustomTopic.value = true;
-    postForm.topic = customTopicName.value;
-  }
-});
 
 onMounted(() => {
   fetchTopics();
@@ -427,4 +428,4 @@ onMounted(() => {
     margin-top: 8px;
   }
 }
-</style>
+</style> 
