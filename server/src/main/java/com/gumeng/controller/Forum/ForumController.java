@@ -50,7 +50,7 @@ public class ForumController {
     /**
      * 获取帖子列表
      */
-    @GetMapping("/posts")
+    @GetMapping("/getPosts")
     public HttpResponse getPosts(
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size,
@@ -115,7 +115,7 @@ public class ForumController {
     /**
      * 获取话题列表
      */
-    @GetMapping("/topics")
+    @GetMapping("/getTopics")
     public HttpResponse getTopics() {
         return HttpResponse.success(forumTopicService.getTopicList());
     }

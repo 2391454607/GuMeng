@@ -11,7 +11,7 @@ export function getPostListAPI(params) {
   };
   
   console.log('API调用参数:', convertedParams);
-  return http.get('/forum/posts', convertedParams);
+  return http.get('/forum/getPosts', convertedParams);
 }
 
 // 获取帖子详情
@@ -115,7 +115,7 @@ export function getMyLikedPostsAPI(params) {
 
 // 获取话题列表
 export function getTopicsAPI() {
-  return http.get('/forum/topics');
+  return http.get('/forum/getTopics');
 }
 
 // 上传图片
