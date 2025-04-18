@@ -703,7 +703,7 @@ onMounted(() => {
     
     <!-- 删除评论确认框 -->
     <a-modal
-      v-model="deleteCommentModalVisible"
+      v-model:visible="deleteCommentModalVisible"
       title="确认删除"
       @cancel="deleteCommentModalVisible = false"
       @ok="confirmDeleteComment"
