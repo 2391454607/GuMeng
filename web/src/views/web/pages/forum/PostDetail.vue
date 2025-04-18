@@ -342,21 +342,68 @@ const submitReply = async () => {
 
 // 判断是否可以删除评论
 const canDeleteComment = (comment) => {
-  return userStore.isAdmin || (comment.userId && comment.userId.toString() === userStore.userInfo?.id?.toString());
+  // 检查用户是否登录
+  if (!userStore.userInfo) {
+    console.log('用户未登录，无法删除评论');
+    return false;
+  }
+  
+  // 检查评论是否有用户ID
+  if (!comment.userId) {
+    console.log('评论缺少用户ID，无法删除');
+    return false;
+  }
+  
+  // 管理员可以删除任何评论
+  if (userStore.isAdmin) {
+    console.log('管理员权限，可以删除评论');
+    return true;
+  }
+  
+  // 确保ID是字符串格式进行比较
+  const currentUserId = String(userStore.userInfo.id);
+  const commentUserId = String(comment.userId);
+  
+  console.log('删除评论权限检查:');
+  console.log('- 当前用户ID:', currentUserId, '类型:', typeof userStore.userInfo.id);
+  console.log('- 评论用户ID:', commentUserId, '类型:', typeof comment.userId);
+  console.log('- 是否相等:', currentUserId === commentUserId);
+  
+  return currentUserId === commentUserId;
 };
 
 // 显示删除评论确认框
 const showDeleteCommentConfirm = (comment) => {
-  commentToDelete.value = comment;
-  deleteCommentModalVisible.value = true;
+  console.log('准备删除评论:', comment);
+  console.log('评论ID:', comment.id);
+  console.log('评论用户ID:', comment.userId);
+  console.log('当前用户ID:', userStore.userInfo?.id);
+  
+  const canDelete = canDeleteComment(comment);
+  console.log('是否可以删除:', canDelete);
+  
+  if (canDelete) {
+    commentToDelete.value = comment;
+    deleteCommentModalVisible.value = true;
+    console.log('显示删除确认框，状态:', deleteCommentModalVisible.value);
+  } else {
+    Message.warning('您没有权限删除此评论');
+  }
 };
 
 // 删除评论
 const confirmDeleteComment = async () => {
-  if (!commentToDelete.value) return;
+  console.log('开始执行删除操作');
+  if (!commentToDelete.value) {
+    console.log('没有要删除的评论');
+    return;
+  }
   
   try {
+    console.log('删除评论ID:', commentToDelete.value.id);
     const res = await deleteCommentAPI(commentToDelete.value.id);
+    console.log('删除评论响应:', res);
+    
     if (res.code === 200) {
       Message.success('删除成功');
       // 重新获取评论列表
@@ -365,6 +412,7 @@ const confirmDeleteComment = async () => {
       post.value.commentCount = Math.max((post.value.commentCount || 0) - 1, 0);
     } else {
       Message.error(res.msg || '删除失败');
+      console.error('删除评论失败，返回:', res);
     }
     deleteCommentModalVisible.value = false;
     commentToDelete.value = null;
