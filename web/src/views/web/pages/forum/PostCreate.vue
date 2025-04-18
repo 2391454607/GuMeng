@@ -87,7 +87,7 @@ const fetchPostDetail = async () => {
         postForm.topic = post.topicId;
         useCustomTopic.value = false;
       } else {
-        // 可能是自定义话题
+        // 自定义话题
         customTopicName.value = post.topic || '';
         postForm.topic = post.topic || '';
         useCustomTopic.value = true;
@@ -222,11 +222,12 @@ onMounted(() => {
 
 <template>
   <div class="create-post-container">
-    <a-page-header @back="goBack" :title="isEdit ? '编辑帖子' : '发布帖子'" class="page-header">
-      <template #default>
-        <span class="header-title">{{ isEdit ? '编辑帖子' : '发布帖子' }}</span>
-      </template>
-    </a-page-header>
+    <div class="page-header">
+      <a-button @click="goBack" class="back-btn">
+        <i class="iconfont icon-arrow-left"></i> 返回
+      </a-button>
+      <div class="header-title">{{ isEdit ? '编辑帖子' : '发布帖子' }}</div>
+    </div>
     
     <a-form
       ref="postFormRef"
@@ -241,6 +242,7 @@ onMounted(() => {
           placeholder="请输入帖子标题（2-50字）"
           :maxLength="50"
           show-word-limit
+          class="custom-input"
         />
       </a-form-item>
       
@@ -250,7 +252,7 @@ onMounted(() => {
             v-if="!useCustomTopic"
             v-model="postForm.topic"
             placeholder="请选择话题分类"
-            class="topic-select"
+            class="topic-select custom-select"
             allow-clear
           >
             <a-option
@@ -265,7 +267,7 @@ onMounted(() => {
             v-else
             v-model="customTopicName"
             placeholder="请输入自定义话题（2-20字）"
-            class="custom-topic-input"
+            class="custom-topic-input custom-input"
             :maxLength="20"
             show-word-limit
           />
@@ -286,14 +288,17 @@ onMounted(() => {
           placeholder="请输入帖子内容（10-2000字）"
           :maxLength="2000"
           show-word-limit
+          class="custom-textarea"
         />
       </a-form-item>
       
       <a-form-item>
-        <a-button type="primary" @click="submitForm" :loading="submitting" class="submit-btn">
-          {{ isEdit ? '保存修改' : '发布帖子' }}
-        </a-button>
-        <a-button @click="goBack" class="cancel-btn">取消</a-button>
+        <div class="action-buttons">
+          <a-button type="primary" @click="submitForm" :loading="submitting" class="submit-btn">
+            {{ isEdit ? '保存修改' : '发布帖子' }}
+          </a-button>
+          <a-button @click="goBack" class="cancel-btn">取消</a-button>
+        </div>
       </a-form-item>
     </a-form>
   </div>
@@ -304,31 +309,47 @@ onMounted(() => {
   max-width: 800px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #f7f8fa;
+  background-color: #F9F3E9; /* 米色纸张质感背景 */
+  font-family: "SimSun", "宋体", serif; /* 使用宋体增加复古感 */
 }
 
 .page-header {
   margin-bottom: 20px;
-  background-color: #fff;
+  background-color: #8C1F28; /* 暗红色 */
   padding: 16px 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   display: flex;
   align-items: center;
+  color: #F9F3E9;
+  position: relative;
+}
+
+.back-btn {
+  margin-right: 16px;
+  background-color: transparent;
+  border: 1px solid #F9F3E9;
+  color: #F9F3E9;
+}
+
+.back-btn:hover {
+  background-color: rgba(249, 243, 233, 0.1);
 }
 
 .header-title {
   font-size: 20px;
-  font-weight: 600;
-  color: #1d2129;
-  margin-left: 10px;
+  font-weight: bold;
+  flex: 1;
+  text-align: center;
+  letter-spacing: 2px;
 }
 
 .post-form {
-  background-color: #fff;
+  background-color: #FFFBF0; /* 浅米色 */
   padding: 30px;
-  border-radius: 10px;
+  border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #D6C6AF; /* 棕边框 */
 }
 
 .topic-input-container {
@@ -343,72 +364,93 @@ onMounted(() => {
 
 .toggle-topic-btn {
   flex-shrink: 0;
-  background-color: #f2f3f5;
-  color: #4e5969;
-  border: 1px solid #e5e6eb;
+  background-color: #D4A373; /* 木色 */
+  color: #582F0E; /* 深棕色 */
+  border: 1px solid #A77E58;
 }
 
 .toggle-topic-btn:hover {
-  background-color: #e5e6eb;
-  color: #1d2129;
+  background-color: #C68B59; /* 深木色 */
+  color: #F9F3E9;
 }
 
-/* Arco组件样式覆盖 */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* 自定义输入框样式 */
+.custom-input, .custom-textarea, .custom-select {
+  border: 1px solid #D6C6AF !important;
+  background-color: #FFFDF7 !important;
+  color: #582F0E !important;
+  border-radius: 4px !important;
+  font-family: "SimSun", "宋体", serif !important;
+}
+
+.custom-input:focus, .custom-textarea:focus, .custom-select:focus {
+  border-color: #8C1F28 !important;
+  box-shadow: 0 0 0 2px rgba(140, 31, 40, 0.1) !important;
+}
+
+/* 表单标签样式 */
 .post-form :deep(.arco-form-item-label) {
   font-weight: 500;
-  color: #1d2129;
-  font-size: 15px;
+  color: #582F0E;
+  font-size: 16px;
   margin-bottom: 8px;
+  font-family: "STKaiti", "楷体", serif;
 }
 
-.post-form :deep(.arco-input),
-.post-form :deep(.arco-textarea),
-.post-form :deep(.arco-select-view) {
-  border-radius: 6px;
-  border-color: #e5e6eb;
-  transition: all 0.2s;
-  padding: 8px 12px;
-}
-
-.post-form :deep(.arco-input:focus),
-.post-form :deep(.arco-textarea:focus),
-.post-form :deep(.arco-select-view:focus) {
-  border-color: #165dff;
-  box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
-}
-
+/* 按钮样式 */
 .submit-btn {
-  background-color: #165dff;
-  border-color: #165dff;
-  border-radius: 6px;
-  padding: 0 20px;
+  background-color: #8C1F28 !important;
+  border-color: #8C1F28 !important;
+  border-radius: 4px;
+  padding: 0 30px;
   height: 40px;
-  transition: all 0.2s;
   font-size: 16px;
   font-weight: 500;
-  margin-right: 10px;
+  letter-spacing: 1px;
 }
 
 .submit-btn:hover {
-  background-color: #3c7eff;
-  border-color: #3c7eff;
+  background-color: #A52A2A !important;
+  border-color: #A52A2A !important;
 }
 
 .cancel-btn {
-  border-radius: 6px;
-  padding: 0 20px;
+  border-radius: 4px;
+  padding: 0 30px;
   height: 40px;
   font-size: 16px;
-  border: 1px solid #e5e6eb;
-  color: #4e5969;
+  border: 1px solid #D6C6AF;
+  color: #582F0E;
+  background-color: #F9F3E9;
 }
 
 .cancel-btn:hover {
-  border-color: #c9cdd4;
-  color: #1d2129;
-  background-color: #f7f8fa;
+  border-color: #8C1F28;
+  color: #8C1F28;
+  background-color: #FFFBF0;
 }
 
+/* 复古纸张质感效果 */
+.post-form::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23D6C6AF' fill-opacity='0.1'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z'/%3E%3C/g%3E%3C/svg%3E");
+  z-index: -1;
+  opacity: 0.3;
+}
+
+/* 响应式设计 */
 @media screen and (max-width: 768px) {
   .create-post-container {
     padding: 10px;
@@ -425,6 +467,15 @@ onMounted(() => {
   
   .toggle-topic-btn {
     margin-top: 8px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .submit-btn, .cancel-btn {
+    width: 100%;
   }
 }
 </style>
