@@ -339,8 +339,9 @@ onMounted(() => {
               
               <!-- 帖子底部信息 -->
               <div class="post-footer">
-                <div class="post-topic" v-if="post.topicName">
-                  <span class="topic-tag">{{ post.topicName }}</span>
+                <div class="post-topics">
+                  <span class="topic-tag" v-if="post.topicName">{{ post.topicName }}</span>
+                  <span class="topic-tag custom" v-if="post.customTopic">{{ post.customTopic }}</span>
                 </div>
                 <div class="post-stats">
                   <span class="stat-item">
@@ -411,7 +412,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='150' height='150' viewBox='0 0 150 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23FFF' fill-opacity='0.05' d='M15 5h58v10h15v10h-15v10h15v10h-15v10h15v10h-15v10h15v10h-15v10h58v-10h15v-10h-15v-10h15v-10h-15v-10h15v-10h-15v-10h15v-10h-15V5h-58V0H5v5h10v58H5v10H0v-73h15v10zm63 10h10v10h-10V15zm0 20h10v10h-10V35zm0 20h10v10h-10V55zm0 20h10v10h-10V75zm0 20h10v10h-10V95zM5 15h10v10H5V15zm0 20h10v10H5V35zm0 20h10v10H5V55zm0 20h10v10H5V75zm0 20h10v10H5V95zM121 5h-10v10h10V5zm0 20h-10v10h10V25zm0 20h-10v10h10V45zm0 20h-10v10h10V65zm0 20h-10v10h10V85z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='150' height='150' viewBox='0 0 150 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23FFF' fill-opacity='0.05' d='M15 5h58v10h15v10h-15v10h15v10h-15v10h15v10h-15v10h15v10h-15v10h15v10h-15v10h58v-10h15v-10h-15v-10h15v-10h-15v-10h15v-10h-15v-10h-15v-10h15v-10h-15V5h-58V0H5v5h10v58H5v10H0v-73h15v10zm63 10h10v10h-10V15zm0 20h10v10h-10V35zm0 20h10v10h-10V55zm0 20h10v10h-10V75zm0 20h10v10h-10V95zM5 15h10v10H5V15zm0 20h10v10H5V35zm0 20h10v10H5V55zm0 20h10v10H5V75zm0 20h10v10H5V95zM121 5h-10v10h10V5zm0 20h-10v10h10V25zm0 20h-10v10h10V45zm0 20h-10v10h10V65zm0 20h-10v10h10V85z'/%3E%3C/svg%3E");
   z-index: 0;
 }
 
@@ -696,6 +697,12 @@ onMounted(() => {
   align-items: center;
 }
 
+.post-topics {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .topic-tag {
   padding: 4px 8px;
   background-color: #FBF0E9;
@@ -703,6 +710,12 @@ onMounted(() => {
   font-size: 12px;
   border-radius: 4px;
   border: 1px solid #E4D9C3;
+}
+
+.topic-tag.custom {
+  background-color: #E8F4F8;
+  color: #2C6E8C;
+  border-color: #B8D8E6;
 }
 
 .post-stats {
