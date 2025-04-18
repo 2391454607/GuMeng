@@ -46,6 +46,10 @@ const replyingTo = ref(null);
 const replyContent = ref('');
 const parentComment = ref(null);
 
+// 点赞防抖控制 - 防止重复点击
+const likingPostId = ref(null);
+const likingCommentIds = ref(new Set());
+
 // 分页
 const hasMore = ref(false);
 const page = ref(1);
@@ -177,6 +181,13 @@ const handleLike = async () => {
     return;
   }
   
+  // 防止重复点击
+  if (likingPostId.value === postId.value) {
+    return;
+  }
+  
+  likingPostId.value = postId.value;
+  
   try {
     let res;
     if (post.value.isLiked) {
@@ -201,6 +212,9 @@ const handleLike = async () => {
   } catch (err) {
     console.error('点赞操作出错:', err);
     Message.error('操作失败，请稍后重试');
+  } finally {
+    // 无论成功失败，都移除锁定状态
+    likingPostId.value = null;
   }
 };
 
@@ -369,6 +383,13 @@ const handleLikeComment = async (comment) => {
     return;
   }
   
+  // 防止重复点击
+  if (likingCommentIds.value.has(comment.id)) {
+    return;
+  }
+  
+  likingCommentIds.value.add(comment.id);
+  
   try {
     let res;
     if (comment.isLiked) {
@@ -391,6 +412,9 @@ const handleLikeComment = async (comment) => {
   } catch (err) {
     console.error('评论点赞操作出错:', err);
     Message.error('操作失败，请稍后重试');
+  } finally {
+    // 无论成功失败，都移除锁定状态
+    likingCommentIds.value.delete(comment.id);
   }
 };
 
