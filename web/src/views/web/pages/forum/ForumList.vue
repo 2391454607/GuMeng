@@ -394,26 +394,18 @@ onMounted(() => {
   background-color: #8C1F28;
   padding: 20px;
   border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-image: linear-gradient(to right, #8C1F28, #99322F, #8C1F28);
+  color: #F9F3E9;
   position: relative;
-  overflow: hidden;
 }
 
 /* 模拟中国传统纹饰 */
 .forum-header::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='150' height='150' viewBox='0 0 150 150' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill='%23FFF' fill-opacity='0.05' d='M15 5h58v10h15v10h-15v10h15v10h-15v10h15v10h-15v10h15v10h-15v10h15v10h-15v10h58v-10h15v-10h-15v-10h15v-10h-15v-10h15v-10h-15v-10h-15v-10h15v-10h-15V5h-58V0H5v5h10v58H5v10H0v-73h15v10zm63 10h10v10h-10V15zm0 20h10v10h-10V35zm0 20h10v10h-10V55zm0 20h10v10h-10V75zm0 20h10v10h-10V95zM5 15h10v10H5V15zm0 20h10v10H5V35zm0 20h10v10H5V55zm0 20h10v10H5V75zm0 20h10v10H5V95zM121 5h-10v10h10V5zm0 20h-10v10h10V25zm0 20h-10v10h10V45zm0 20h-10v10h10V65zm0 20h-10v10h10V85z'/%3E%3C/svg%3E");
-  z-index: 0;
+  content: none;
 }
 
 .forum-title {
