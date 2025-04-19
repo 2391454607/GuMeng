@@ -306,7 +306,7 @@ onMounted(() => {
 
 <style scoped>
 .create-post-container {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   background-color: #F9F3E9; /* 米色纸张质感背景 */
@@ -350,6 +350,8 @@ onMounted(() => {
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 1px solid #D6C6AF; /* 棕边框 */
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .topic-input-container {
