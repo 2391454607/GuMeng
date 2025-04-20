@@ -10,10 +10,23 @@ export const userRegisterAPI = async ( data ) => {
     return http.post('/auth/register', data)
 }
 
-//用户登录接口
-export const userLoginAPI = async ({username: username,password: password}) => {
-    return http.post('/auth/login',{username: username,password: password})
+//获取滑动验证码
+export const getCaptchaAPI = async ( data ) => {
+    return http.post('/auth/captcha/get', data)
 }
+
+//验证滑动验证码
+export const checkCaptchaAPI = async ( data ) => {
+    return http.post('/auth/captcha/check', data)
+}
+
+//用户登录接口
+export const userLoginAPI = async ( data ) => {
+    return http.post('/auth/login',data)
+}
+
+//忘记密码
+
 
 //用户登录获取用户信息接口
 export const getUserInfoAPI = async () => {

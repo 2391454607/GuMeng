@@ -30,7 +30,7 @@ spring:
     host: smtp.qq.com  #发送邮件的服务器地址
     port: 465  # 使用465端口
     username: 2391454607@qq.com  # 邮箱账号
-    password: elihqgrnadevechh  #开启 IMAP/SMTP 服务 授权码
+    password:   #开启 IMAP/SMTP 服务 授权码
     default-encoding: UTF-8
     protocol: smtps  # 使用smtps协议
     properties:
@@ -49,7 +49,7 @@ spring:
       port: 6379            # Redis 服务器端口
       password:    # Redis 密码（如果没有密码，可以省略）
       database: 0           # 使用的数据库索引（默认是 0）
-      timeout: 2000         # 连接超时时间（单位：毫秒）
+      timeout: 5000         # 连接超时时间（单位：毫秒）
       lettuce:
         pool:
           max-active: 8     # 连接池最大连接数
@@ -75,6 +75,34 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
     banner: false
+
+aj:
+  captcha:
+    cache-type: local
+    # cache-number: 1000  # local缓存的阈值,达到这个值，清除缓存
+    # timing-clear: 180   # local定时清除过期缓存(单位秒),设置为0代表不执行
+
+    type: default         # 验证码类型default两种都实例化。
+    water-mark: "\u6211\u7684\u6C34\u5370"  # 右下角水印文字(我的水印)
+    # water-font: WenQuanZhengHei.ttf  # 右下角水印字体
+    # font-type: WenQuanZhengHei.ttf   # 点选文字验证码的文字字体
+    slip-offset: 5        # 校验滑动拼图允许误差偏移量(默认5像素)
+    aes-status: true      # aes加密坐标开启或者禁用(true|false)
+    interference-options: 2  # 滑动干扰项(0/1/2)
+
+    font-style: 1         # 点选字体样式 默认Font.BOLD
+    font-size: 25         # 点选字体字体大小
+    # click-word-count: 4  # 点选文字个数,存在问题，暂不支持修改
+
+    history-data-clear-enable: false
+
+    # 接口请求次数一分钟限制是否开启 true|false
+    req-frequency-limit-enable: false
+    req-get-lock-limit: 5      # 验证失败5次，get接口锁定
+    req-get-lock-seconds: 360  # 验证失败后，锁定时间间隔,s
+    req-get-minute-limit: 30   # get接口一分钟内请求数限制
+    req-check-minute-limit: 60 # check接口一分钟内请求数限制
+    req-verify-minute-limit: 60 # verify接口一分钟内请求数限制
 
 
 

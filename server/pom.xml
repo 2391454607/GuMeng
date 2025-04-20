@@ -76,6 +76,13 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
+        <!-- AJ-Captcha滑动验证码 -->
+        <dependency>
+            <groupId>com.anji-plus</groupId>
+            <artifactId>spring-boot-starter-captcha</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+
         <!-- validation依赖，调整参数合法性 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

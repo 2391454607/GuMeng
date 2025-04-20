@@ -1,8 +1,31 @@
 <script setup>
-import {onMounted, onBeforeUnmount, reactive, ref} from 'vue';
+import {onMounted, onBeforeUnmount, reactive, ref, computed} from 'vue';
 import {Message} from '@arco-design/web-vue';
-import {useRouter} from 'vue-router';
 import {userLoginAPI} from "@/api/Auth.js";
+import { IconCheck } from '@arco-design/web-vue/es/icon';
+
+//引入组件
+import Verify from "@/components/verifition/Verify.vue";
+
+// 添加验证相关的响应式引用
+const verify = ref(null);
+
+// 添加验证状态
+const isVerified = ref(false);
+const verifyData = ref(null);
+
+// 验证成功回调
+const success = (params) => {
+  console.log('验证成功:', params);
+  isVerified.value = true;
+  verifyData.value = params;
+};
+
+// 显示验证组件
+const useVerify = () => {
+  verify.value.show();
+};
+
 //引入3D文本组件
 import {St3DText, St3DTiltContainer, StDynamicBorder1, StGhostText,} from "st-common-ui-vue3";
 
@@ -51,17 +74,36 @@ const rules = {
 // 添加状态控制变量
 const show3DEffect = ref(true);
 
+const canVerify = computed(() => {
+  return login.username.length >= 5 && login.password.length >= 6;
+});
+
 const handleSubmit = async () => {
+
   loading.value = true;
 
   if (!login.username || !login.password) {
     Message.error("用户名或密码不能为空！")
     loading.value = false;
-    return
+    return;
   }
+
+  if (!isVerified.value) {
+    Message.warning("请先完成验证");
+    loading.value = false;
+    return;
+  }
+
+
   if (login.username.length >= 5 && login.password.length >= 6) {
     try {
-      const res = await userLoginAPI(login);
+      // 将验证数据添加到登录请求中
+      const loginParams = {
+        ...login,
+        captchaVerification: verifyData.value.captchaVerification
+      };
+      
+      const res = await userLoginAPI(loginParams);
       if (res.code === 200) {
         // 存储 token
         localStorage.setItem('token', res.data);
@@ -83,9 +125,15 @@ const handleSubmit = async () => {
         }, 500);
       } else {
         Message.error(res.msg);
+        // 重置验证状态
+        isVerified.value = false;
+        verifyData.value = null;
       }
     } catch (error) {
       Message.error("登录失败，请稍后重试");
+      // 登录失败时重置验证状态
+      isVerified.value = false;
+      verifyData.value = null;
     }
   }
   loading.value = false;
@@ -146,7 +194,7 @@ onBeforeUnmount(() => {
               layout="vertical"
               @submit="handleSubmit"
           >
-            <a-form-item field="username" label="用户名">
+            <a-form-item field="username" label="用户名" validate-trigger="input">
               <a-input
                   v-model="login.username"
                   :max-length="20"
@@ -159,7 +207,7 @@ onBeforeUnmount(() => {
               </a-input>
             </a-form-item>
 
-            <a-form-item field="password" label="密码">
+            <a-form-item field="password" label="密码" validate-trigger="input">
               <a-input-password
                   v-model="login.password"
                   allow-clear
@@ -172,9 +220,34 @@ onBeforeUnmount(() => {
             </a-form-item>
 
             <a-form-item>
+              <Verify
+                  @success="success"
+                  :mode="'pop'"
+                  :captchaType="'blockPuzzle'"
+                  :imgSize="{ width: '330px', height: '155px' }"
+                  ref="verify"
+              ></Verify>
+              <a-button 
+                  @click.prevent="useVerify" 
+                  long
+                  :disabled="isVerified || !canVerify"
+                  type="outline"
+                  class="verify-button"
+                  :status="isVerified ? 'success' : 'normal'"
+              >
+                <template v-if="isVerified">
+                  <icon-check /> 验证成功
+                </template>
+                <template v-else>
+                  {{ canVerify ? '点击进行验证' : '请先输入用户名和密码' }}
+                </template>
+              </a-button>
+            </a-form-item>
+
+            <a-form-item>
               <div class="login-options">
                 <a-checkbox v-model="login.rememberMe">记住我</a-checkbox>
-                <a-link>忘记密码？</a-link>
+                <a-link href="/forget">忘记密码？</a-link>
               </div>
             </a-form-item>
 
@@ -327,5 +400,14 @@ section:nth-child(2) {
   justify-content: center;
   width: 30px;  /* 设置固定宽度 */
   height: 100%;
+}
+
+.verify-button {
+  border-color: #165DFF;
+  color: #165DFF;
+}
+
+.verify-button:not(:disabled):hover {
+  background-color: rgba(22, 93, 255, 0.1);
 }
 </style>

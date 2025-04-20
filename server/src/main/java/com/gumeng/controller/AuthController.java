@@ -1,5 +1,8 @@
 package com.gumeng.controller;
 
+import com.anji.captcha.model.common.ResponseModel;
+import com.anji.captcha.model.vo.CaptchaVO;
+import com.anji.captcha.service.CaptchaService;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.User;
 import com.gumeng.entity.DTO.UserRegisterDTO;
@@ -44,6 +47,9 @@ public class AuthController {
 
     @Autowired
     private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private CaptchaService captchaService;
 
     //发送邮箱验证码
     @PostMapping("/sendCode")
@@ -115,15 +121,33 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/captcha/get")
+    public HttpResponse getCaptcha(@RequestBody CaptchaVO captchaVO) {
+        return HttpResponse.success(captchaService.get(captchaVO));
+    }
+
+    // 校验验证码
+    @PostMapping("/captcha/check")
+    public HttpResponse checkCaptcha(@RequestBody CaptchaVO captchaVO) {
+        return HttpResponse.success(captchaService.check(captchaVO));
+    }
+
     //用户登录
     @PostMapping("/login")
     public HttpResponse login(@RequestBody Map<String,String> loginRequest) {
+        // 验证滑动验证码
+        CaptchaVO captchaVO = new CaptchaVO();
+        captchaVO.setCaptchaVerification(loginRequest.get("captchaVerification"));
+        ResponseModel response = captchaService.verification(captchaVO);
+        if (!response.isSuccess()) {
+            return HttpResponse.error("请完成滑动验证");
+        }
 
         try {
             // 获取用户凭证
             String username = loginRequest.get("username");
             String password = loginRequest.get("password");
-
+            
             // 使用 Spring Security 进行认证
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(username, password)
