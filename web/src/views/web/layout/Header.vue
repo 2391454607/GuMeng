@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { router } from "@/router/index.js";
-import { Message } from "@arco-design/web-vue";
-import { IconUser, IconExport } from '@arco-design/web-vue/es/icon';
+import {ref, onMounted} from 'vue';
+import {router} from "@/router/index.js";
+import {Message} from "@arco-design/web-vue";
+import {IconUser, IconExport} from '@arco-design/web-vue/es/icon';
 import {getUserInfoAPI, userLogoutAPI} from "@/api/Auth.js";
 
 const position = ref(0);
@@ -11,13 +11,13 @@ let end = 0;
 let beginX = 0;
 
 const menuItems = [
-  { name: '首页', url: '/' },
-  { name: '资讯', url: '/information' },
-  { name: '非遗论坛', url: '/forum'},
-  { name: '非遗互动', url: '/interaction'},
-  { name: '虚拟展厅', url: '/showroom'},
-  { name: '政策', url: '/policy'},
-  { name: '百科', url: '/encyclopedia'},
+  {name: '首页', url: '/'},
+  {name: '资讯', url: '/information'},
+  {name: '非遗论坛', url: '/forum'},
+  {name: '非遗互动', url: '/interaction'},
+  {name: '虚拟展厅', url: '/showroom'},
+  {name: '政策', url: '/policy'},
+  {name: '百科', url: '/encyclopedia'},
 ];
 
 // 点击菜单项
@@ -36,6 +36,8 @@ const handleMouseOut = () => end = beginX;
 const token = localStorage.getItem('token');
 // 存储用户信息
 const userInfo = ref({});
+
+const isAdmin = ref(false);
 
 onMounted(() => {
   // 获取当前路由对应的菜单项
@@ -59,19 +61,24 @@ onMounted(() => {
   //获取用户登录信息
   try {
     const token = localStorage.getItem('token');
-    if (token){
+    if (token) {
+      // 从 token 中解析用户角色
+      const tokenParts = token.split('.');
+      const claims = JSON.parse(atob(tokenParts[1]));
+      isAdmin.value = claims.claims.role.includes('superAdmin') || claims.claims.role.includes('admin');
+
       getUserInfoAPI().then(res => {
         console.log(res.data);
         if (res.code === 200) {
           userInfo.value = res.data;
           // 更新本地存储的用户信息
           localStorage.setItem('userInfo', JSON.stringify(res.data));
-        }else {
+        } else {
           Message.error('获取用户信息失败');
         }
       });
     }
-  }catch(error) {
+  } catch (error) {
     console.error('获取用户信息错误:', error);
     Message.error('获取用户信息失败');
   }
@@ -108,65 +115,72 @@ const handleLogout = () => {
 <template>
   <a-layout-header class="header">
 
-      <div class="container">
-        <div class="header-left">
-          故梦阑珊
-        </div>
-
-        <nav class="nav">
-          <span class="t-mall" :style="{ left: position + 'px' }"></span>
-          <ul>
-            <li v-for="(item, index) in menuItems"
-                :key="index"
-                :class="{ active: $route.path === item.url }"
-                @mouseover="handleMouseOver"
-                @mousedown="handleMouseDown"
-                @mouseout="handleMouseOut"
-                @click="onClickMenuItem(item)">
-              {{ item.name }}
-            </li>
-          </ul>
-        </nav>
-
-        <div class="header-right">
-          <template v-if="token">
-            <a-dropdown trigger="hover" position="bottom">
-              <a-space>
-                <a-avatar :size="40" :image-url="userInfo.userPic || '/src/assets/image/gumeng.png'" style="cursor: pointer">
-                  <template #fallback>
-                    <icon-user />
-                  </template>
-                </a-avatar>
-                <span style="color: white">{{ userInfo.nickname || '用户' }}</span>
-              </a-space>
-              <template #content>
-                <a-doption @click="router.push('/userInfo')">
-                  <icon-user />个人中心
-                </a-doption>
-                <a-doption @click="handleLogout">
-                  <icon-export />退出登录
-                </a-doption>
-              </template>
-            </a-dropdown>
-          </template>
-          <template v-else>
-            <a-space>
-              <a-button type="outline" @click="router.push('/login')">
-                登录
-              </a-button>
-              <a-button type="outline" @click="router.push('/register')">
-                注册
-              </a-button>
-            </a-space>
-          </template>
-        </div>
+    <div class="container">
+      <div class="header-left">
+        故梦阑珊
       </div>
+
+      <nav class="nav">
+        <span :style="{ left: position + 'px' }" class="t-mall"></span>
+        <ul>
+          <li v-for="(item, index) in menuItems"
+              :key="index"
+              :class="{ active: $route.path === item.url }"
+              @click="onClickMenuItem(item)"
+              @mousedown="handleMouseDown"
+              @mouseout="handleMouseOut"
+              @mouseover="handleMouseOver">
+            {{ item.name }}
+          </li>
+        </ul>
+      </nav>
+
+      <div class="header-right">
+        <template v-if="token">
+          <a-dropdown position="bottom" trigger="hover">
+            <a-space>
+              <a-avatar :image-url="userInfo.userPic || '/src/assets/image/gumeng.png'" :size="40"
+                        style="cursor: pointer">
+                <template #fallback>
+                  <icon-user/>
+                </template>
+              </a-avatar>
+              <span style="color: white">{{ userInfo.nickname || '用户' }}</span>
+            </a-space>
+            <template #content>
+              <a-doption @click="router.push('/userInfo')">
+                <icon-user/>
+                个人中心
+              </a-doption>
+              <a-doption v-if="isAdmin" @click="router.push('/sys')">
+                <icon-settings/>
+                管理系统
+              </a-doption>
+              <a-doption @click="handleLogout">
+                <icon-export/>
+                退出登录
+              </a-doption>
+            </template>
+          </a-dropdown>
+        </template>
+        <template v-else>
+          <a-space>
+            <a-button type="outline" @click="router.push('/login')">
+              登录
+            </a-button>
+            <a-button type="outline" @click="router.push('/register')">
+              注册
+            </a-button>
+          </a-space>
+        </template>
+      </div>
+    </div>
 
   </a-layout-header>
 </template>
 
 <style scoped>
-.header{
+.header {
   background: #C2101C;
 }
 
@@ -179,32 +193,32 @@ const handleLogout = () => {
   position: relative; /* 相对定位 */
 }
 
-.header-left{
+.header-left {
   position: absolute;
-  left: 24px;  /* 增加左边距 */
+  left: 24px; /* 增加左边距 */
   display: flex;
-  align-items: center;  /* 垂直居中 */
+  align-items: center; /* 垂直居中 */
   color: white;
   height: 64px;
-  font-size: 24px;  /* 设置字体大小 */
-  font-weight: bold;  /* 加粗 */
-  letter-spacing: 2px;  /* 字间距 */
+  font-size: 24px; /* 设置字体大小 */
+  font-weight: bold; /* 加粗 */
+  letter-spacing: 2px; /* 字间距 */
   font-family: 'Courier New', Courier, monospace; /* 设置字体 */
-  border: none;  /* 移除边框 */
+  border: none; /* 移除边框 */
 }
 
-.header-right{
+.header-right {
   position: absolute;
-  right: 24px;  /* 增加右边距 */
+  right: 24px; /* 增加右边距 */
   display: flex;
-  align-items: center;  /* 垂直居中 */
+  align-items: center; /* 垂直居中 */
   color: white;
   height: 64px;
-  font-size: 24px;  /* 设置字体大小 */
-  font-weight: bold;  /* 加粗 */
-  letter-spacing: 2px;  /* 字间距 */
+  font-size: 24px; /* 设置字体大小 */
+  font-weight: bold; /* 加粗 */
+  letter-spacing: 2px; /* 字间距 */
   font-family: 'Courier New', Courier, monospace; /* 设置字体 */
-  border: none;  /* 移除边框 */
+  border: none; /* 移除边框 */
 }
 
 .nav {
@@ -230,10 +244,12 @@ const handleLogout = () => {
   list-style: none;
   transition: color 0.3s; /* 添加颜色过渡效果 */
 }
+
 .nav ul li:hover {
   color: #ffd700; /* 添加悬停效果 */
   font-weight: bold;
 }
+
 .nav ul li.active {
   color: #ffd700;
   font-weight: bold;
@@ -247,6 +263,7 @@ const handleLogout = () => {
   position: absolute;
   transition: left 0.1s ease;
 }
+
 .header-right :deep(.arco-dropdown-item) {
   display: flex;
   align-items: center;
@@ -257,6 +274,7 @@ const handleLogout = () => {
 .header-right :deep(.arco-icon) {
   font-size: 16px;
 }
+
 .header-right :deep(.arco-btn) {
   color: white;
   border-color: white;

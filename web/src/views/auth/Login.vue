@@ -117,7 +117,7 @@ const handleSubmit = async () => {
         
         setTimeout(() => {
           // 根据解析出的角色信息决定跳转路径
-          if (claims.claims.role.includes('superAdmin') || claims.claims.role.includes('ROLE_ADMIN')) {
+          if (claims.claims.role.includes('superAdmin') || claims.claims.role.includes('admin')) {
             window.location.href = '/sys';
           } else {
             window.location.href = '/';
