@@ -232,6 +232,7 @@ onMounted(() => {
             placeholder="搜索帖子..."
             allow-clear
             @press-enter="handleSearch"
+            class="custom-input"
           >
             <template #prefix>
               <icon-search />
@@ -248,9 +249,29 @@ onMounted(() => {
       </div>
     </div>
 
+    <!-- 话题导航 -->
+    <div class="topics-nav">
+      <div 
+        class="topic-item" 
+        :class="{ active: activeTab === 'all' }"
+        @click="switchTopic('all')"
+      >
+        全部话题
+      </div>
+      <div 
+        v-for="topic in topics" 
+        :key="topic.id"
+        class="topic-item"
+        :class="{ active: activeTab === topic.id }"
+        @click="switchTopic(topic.id)"
+      >
+        {{ topic.name }}
+      </div>
+    </div>
+
     <!-- 主体区域 -->
     <div class="forum-body">
-      <!-- 左侧话题栏 -->
+      <!-- 左侧话题栏 - 平板和电脑端显示 -->
       <div class="forum-sidebar">
         <div class="topic-header">话题分类</div>
         <div class="topic-list">
@@ -295,7 +316,7 @@ onMounted(() => {
             <!-- 帖子内容 -->
             <div class="post-info">
               <div class="post-author">
-                <img :src="post.authorAvatar || '@/assets/avatar/default-avatar.png'" alt="头像" class="author-avatar" />
+                <img :src="post.authorAvatar || '/avatar/default-avatar.png'" alt="头像" class="author-avatar" />
                 <span class="author-name">{{ post.authorName }}</span>
                 <span class="post-time">{{ formatDate(post.createTime) }}</span>
               </div>
@@ -318,8 +339,9 @@ onMounted(() => {
               
               <!-- 帖子底部信息 -->
               <div class="post-footer">
-                <div class="post-topic" v-if="post.topicName">
-                  <span class="topic-tag">{{ post.topicName }}</span>
+                <div class="post-topics">
+                  <span class="topic-tag" v-if="post.topicName">{{ post.topicName }}</span>
+                  <span class="topic-tag custom" v-if="post.customTopic">{{ post.customTopic }}</span>
                 </div>
                 <div class="post-stats">
                   <span class="stat-item">
@@ -363,41 +385,57 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  font-family: "Microsoft YaHei", sans-serif;
+  font-family: "SimSun", "宋体", serif;
+  background-color: #F9F3E9;
 }
 
 /* 顶部区域 */
 .forum-header {
-  background-color: #fff;
+  background-color: #8C1F28;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  color: #F9F3E9;
+  position: relative;
+}
+
+/* 模拟中国传统纹饰 */
+.forum-header::before {
+  content: none;
 }
 
 .forum-title {
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 .main-title {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: bold;
-  color: #333;
+  color: #FFFBF0;
   margin-bottom: 8px;
+  letter-spacing: 3px;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+  font-family: "STKaiti", "楷体", serif;
 }
 
 .sub-title {
   font-size: 14px;
-  color: #666;
+  color: #F9F3E9;
+  letter-spacing: 1px;
 }
 
 .forum-search-post {
   display: flex;
   gap: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .search-box {
@@ -405,24 +443,53 @@ onMounted(() => {
   width: 300px;
 }
 
+.custom-input {
+  background-color: rgba(249, 243, 233, 0.9) !important;
+  border: 1px solid #D6C6AF !important;
+  border-radius: 4px 0 0 4px !important;
+  color: #582F0E !important;
+}
+
 .search-btn {
   margin-left: -1px;
   border-radius: 0 4px 4px 0;
-  background-color: #C2101C;
-  border-color: #C2101C;
+  background-color: #582F0E;
+  border-color: #582F0E;
+  color: #F9F3E9;
 }
 
 .post-btn {
-  background-color: #C2101C;
-  border-color: #C2101C;
+  background-color: #582F0E;
+  border-color: #582F0E;
   display: flex;
   align-items: center;
   gap: 8px;
+  color: #F9F3E9;
+  border-radius: 4px;
 }
 
 .post-btn:hover, .search-btn:hover {
-  background-color: #A50E18;
-  border-color: #A50E18;
+  background-color: #7F4F24;
+  border-color: #7F4F24;
+  color: #F9F3E9;
+}
+
+/* 话题导航 - 移动端 */
+.topics-nav {
+  display: none;
+  background-color: #F1EDDA;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  border: 1px solid #D6C6AF;
+}
+
+.topics-nav::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 /* 主体区域 */
@@ -434,19 +501,23 @@ onMounted(() => {
 /* 左侧话题栏 */
 .forum-sidebar {
   width: 200px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background-color: #FFF7E9;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  border: 1px solid #D6C6AF;
 }
 
 .topic-header {
   padding: 15px;
   font-size: 16px;
   font-weight: bold;
-  color: #333;
-  border-bottom: 1px solid #f0f0f0;
-  background-color: #f9f9f9;
+  color: #582F0E;
+  border-bottom: 1px solid #D6C6AF;
+  background-color: #F1EDDA;
+  text-align: center;
+  letter-spacing: 1px;
+  font-family: "STKaiti", "楷体", serif;
 }
 
 .topic-list {
@@ -456,31 +527,32 @@ onMounted(() => {
 .topic-item {
   padding: 12px 15px;
   font-size: 14px;
-  color: #333;
+  color: #582F0E;
   cursor: pointer;
   transition: all 0.3s;
   border-left: 3px solid transparent;
 }
 
 .topic-item:hover {
-  background-color: #f9f9f9;
-  color: #C2101C;
+  background-color: #F9F5EB;
+  color: #8C1F28;
 }
 
 .topic-item.active {
-  background-color: #FFF0F0;
-  color: #C2101C;
-  border-left-color: #C2101C;
+  background-color: #FFF0E5;
+  color: #8C1F28;
+  border-left-color: #8C1F28;
   font-weight: bold;
 }
 
 /* 右侧帖子列表 */
 .forum-content {
   flex: 1;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  background-color: #FFFBF0;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  border: 1px solid #D6C6AF;
 }
 
 .loading-container, .empty-container {
@@ -494,17 +566,34 @@ onMounted(() => {
 
 .post-item {
   padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #E4D9C3;
   cursor: pointer;
   transition: background-color 0.3s;
+  position: relative;
 }
 
 .post-item:hover {
-  background-color: #f9f9f9;
+  background-color: #FFF7E9;
+}
+
+/* 仿古纸张样式 */
+.post-item::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23D6C6AF' fill-opacity='0.06'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z'/%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.1;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .post-info {
   flex: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .post-author {
@@ -519,31 +608,33 @@ onMounted(() => {
   border-radius: 50%;
   object-fit: cover;
   margin-right: 10px;
+  border: 2px solid #E4D9C3;
 }
 
 .author-name {
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: #582F0E;
   margin-right: 10px;
 }
 
 .post-time {
   font-size: 12px;
-  color: #999;
+  color: #7F4F24;
 }
 
 .post-title {
   font-size: 18px;
   font-weight: bold;
-  color: #333;
+  color: #582F0E;
   margin: 0 0 12px;
   line-height: 1.5;
+  font-family: "STKaiti", "楷体", serif;
 }
 
 .post-content {
   font-size: 14px;
-  color: #666;
+  color: #6B4F2E;
   margin: 0 0 15px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -562,9 +653,10 @@ onMounted(() => {
 .post-image-wrapper {
   width: 120px;
   height: 120px;
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   position: relative;
+  border: 2px solid #E4D9C3;
 }
 
 .post-image {
@@ -584,10 +676,11 @@ onMounted(() => {
   justify-content: center;
   width: 120px;
   height: 120px;
-  background-color: rgba(0, 0, 0, 0.5);
-  color: #fff;
+  background-color: rgba(88, 47, 14, 0.6);
+  color: #FFF7E9;
   font-size: 18px;
-  border-radius: 8px;
+  border-radius: 4px;
+  border: 2px solid #E4D9C3;
 }
 
 .post-footer {
@@ -596,12 +689,25 @@ onMounted(() => {
   align-items: center;
 }
 
+.post-topics {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .topic-tag {
   padding: 4px 8px;
-  background-color: #FFF0F0;
-  color: #C2101C;
+  background-color: #FBF0E9;
+  color: #8C1F28;
   font-size: 12px;
   border-radius: 4px;
+  border: 1px solid #E4D9C3;
+}
+
+.topic-tag.custom {
+  background-color: #E8F4F8;
+  color: #2C6E8C;
+  border-color: #B8D8E6;
 }
 
 .post-stats {
@@ -612,18 +718,18 @@ onMounted(() => {
 .stat-item {
   display: flex;
   align-items: center;
-  color: #999;
+  color: #7F4F24;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .stat-item:hover {
-  color: #C2101C;
+  color: #8C1F28;
 }
 
 .stat-item.liked {
-  color: #C2101C;
+  color: #8C1F28;
 }
 
 .stat-item svg {
@@ -633,6 +739,29 @@ onMounted(() => {
 .more-button {
   padding: 20px;
   text-align: center;
+}
+
+.more-button a-button {
+  background-color: #8C1F28;
+  border-color: #8C1F28;
+  color: #F9F3E9;
+}
+
+/* 调试按钮 */
+.debug-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  background-color: #8C1F28;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.debug-button:hover {
+  background-color: #A52A2A;
 }
 
 /* 响应式设计 */
@@ -645,6 +774,7 @@ onMounted(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+    padding: 15px;
   }
   
   .forum-search-post {
@@ -654,34 +784,21 @@ onMounted(() => {
   
   .search-box {
     width: 100%;
+    margin-bottom: 10px;
   }
   
-  .forum-body {
-    flex-direction: column;
-  }
-  
-  .forum-sidebar {
+  .post-btn {
     width: 100%;
-    margin-bottom: 16px;
   }
   
-  .topic-list {
+  /* 显示水平话题导航，隐藏侧边栏 */
+  .topics-nav {
     display: flex;
-    flex-wrap: wrap;
-    padding: 10px;
     gap: 10px;
   }
   
-  .topic-item {
-    padding: 8px 12px;
-    border-left: none;
-    background-color: #f9f9f9;
-    border-radius: the 4px;
-  }
-  
-  .topic-item.active {
-    background-color: #FFF0F0;
-    border-left: none;
+  .forum-sidebar {
+    display: none;
   }
   
   .post-images {
@@ -697,22 +814,5 @@ onMounted(() => {
     width: calc(33.333% - 7px);
     height: 100px;
   }
-}
-
-/* 调试按钮 */
-.debug-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  padding: 10px 20px;
-  background-color: #C2101C;
-  color: #fff;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.debug-button:hover {
-  background-color: #A50E18;
 }
 </style>

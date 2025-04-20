@@ -46,6 +46,10 @@ const replyingTo = ref(null);
 const replyContent = ref('');
 const parentComment = ref(null);
 
+// 点赞防抖控制 - 防止重复点击
+const likingPostId = ref(null);
+const likingCommentIds = ref(new Set());
+
 // 分页
 const hasMore = ref(false);
 const page = ref(1);
@@ -177,6 +181,13 @@ const handleLike = async () => {
     return;
   }
   
+  // 防止重复点击
+  if (likingPostId.value === postId.value) {
+    return;
+  }
+  
+  likingPostId.value = postId.value;
+  
   try {
     let res;
     if (post.value.isLiked) {
@@ -201,6 +212,9 @@ const handleLike = async () => {
   } catch (err) {
     console.error('点赞操作出错:', err);
     Message.error('操作失败，请稍后重试');
+  } finally {
+    // 无论成功失败，都移除锁定状态
+    likingPostId.value = null;
   }
 };
 
@@ -328,21 +342,68 @@ const submitReply = async () => {
 
 // 判断是否可以删除评论
 const canDeleteComment = (comment) => {
-  return userStore.isAdmin || (comment.userId && comment.userId.toString() === userStore.userInfo?.id?.toString());
+  // 检查用户是否登录
+  if (!userStore.userInfo) {
+    console.log('用户未登录，无法删除评论');
+    return false;
+  }
+  
+  // 检查评论是否有用户ID
+  if (!comment.userId) {
+    console.log('评论缺少用户ID，无法删除');
+    return false;
+  }
+  
+  // 管理员可以删除任何评论
+  if (userStore.isAdmin) {
+    console.log('管理员权限，可以删除评论');
+    return true;
+  }
+  
+  // 确保ID是字符串格式进行比较
+  const currentUserId = String(userStore.userInfo.id);
+  const commentUserId = String(comment.userId);
+  
+  console.log('删除评论权限检查:');
+  console.log('- 当前用户ID:', currentUserId, '类型:', typeof userStore.userInfo.id);
+  console.log('- 评论用户ID:', commentUserId, '类型:', typeof comment.userId);
+  console.log('- 是否相等:', currentUserId === commentUserId);
+  
+  return currentUserId === commentUserId;
 };
 
 // 显示删除评论确认框
 const showDeleteCommentConfirm = (comment) => {
-  commentToDelete.value = comment;
-  deleteCommentModalVisible.value = true;
+  console.log('准备删除评论:', comment);
+  console.log('评论ID:', comment.id);
+  console.log('评论用户ID:', comment.userId);
+  console.log('当前用户ID:', userStore.userInfo?.id);
+  
+  const canDelete = canDeleteComment(comment);
+  console.log('是否可以删除:', canDelete);
+  
+  if (canDelete) {
+    commentToDelete.value = comment;
+    deleteCommentModalVisible.value = true;
+    console.log('显示删除确认框，状态:', deleteCommentModalVisible.value);
+  } else {
+    Message.warning('您没有权限删除此评论');
+  }
 };
 
 // 删除评论
 const confirmDeleteComment = async () => {
-  if (!commentToDelete.value) return;
+  console.log('开始执行删除操作');
+  if (!commentToDelete.value) {
+    console.log('没有要删除的评论');
+    return;
+  }
   
   try {
+    console.log('删除评论ID:', commentToDelete.value.id);
     const res = await deleteCommentAPI(commentToDelete.value.id);
+    console.log('删除评论响应:', res);
+    
     if (res.code === 200) {
       Message.success('删除成功');
       // 重新获取评论列表
@@ -351,6 +412,7 @@ const confirmDeleteComment = async () => {
       post.value.commentCount = Math.max((post.value.commentCount || 0) - 1, 0);
     } else {
       Message.error(res.msg || '删除失败');
+      console.error('删除评论失败，返回:', res);
     }
     deleteCommentModalVisible.value = false;
     commentToDelete.value = null;
@@ -368,6 +430,13 @@ const handleLikeComment = async (comment) => {
     Message.warning('请先登录再进行操作');
     return;
   }
+  
+  // 防止重复点击
+  if (likingCommentIds.value.has(comment.id)) {
+    return;
+  }
+  
+  likingCommentIds.value.add(comment.id);
   
   try {
     let res;
@@ -391,6 +460,9 @@ const handleLikeComment = async (comment) => {
   } catch (err) {
     console.error('评论点赞操作出错:', err);
     Message.error('操作失败，请稍后重试');
+  } finally {
+    // 无论成功失败，都移除锁定状态
+    likingCommentIds.value.delete(comment.id);
   }
 };
 
@@ -631,7 +703,7 @@ onMounted(() => {
     
     <!-- 删除评论确认框 -->
     <a-modal
-      v-model="deleteCommentModalVisible"
+      v-model:visible="deleteCommentModalVisible"
       title="确认删除"
       @cancel="deleteCommentModalVisible = false"
       @ok="confirmDeleteComment"
@@ -646,7 +718,8 @@ onMounted(() => {
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #f8f4f4;
+  background-color: #F9F3E9;
+  font-family: "SimSun", "宋体", serif;
 }
 
 .back-nav {
@@ -657,16 +730,24 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #f5f5f5;
-  border-color: #ddd;
+  background-color: #8C1F28;
+  border-color: #8C1F28;
+  color: #FFFBF0;
+}
+
+.back-btn:hover {
+  background-color: #A52A2A;
+  border-color: #A52A2A;
+  color: #FFFBF0;
 }
 
 .loading-container, .error-container {
-  background-color: #fff;
+  background-color: #FFF7E9;
   padding: 40px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
+  border: 1px solid #D6C6AF;
 }
 
 /* 帖子内容区域 */
@@ -675,42 +756,59 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  background-color: #fff;
-  border: 1px solid #f0f0f0;
+  background-color: #FFFBF0;
+  border: 1px solid #D6C6AF;
 }
 
 .post-header {
   padding: 24px 24px 16px;
-  border-bottom: 1px solid #f0f0f0;
-  background-color: #fffbfb;
+  border-bottom: 1px solid #E4D9C3;
+  background-color: #8C1F28;
+  color: #F9F3E9;
+  position: relative;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.post-header::before {
+  content: none;
 }
 
 .post-topic {
   margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .topic-tag {
   padding: 4px 12px;
-  background-color: #FFF0F0;
-  color: #901c1c;
+  background-color: rgba(255, 251, 240, 0.2);
+  color: #FFFBF0;
   font-size: 14px;
   border-radius: 4px;
   display: inline-block;
-  border: 1px solid #ffdddd;
+  border: 1px solid rgba(255, 251, 240, 0.3);
 }
 
 .post-title {
   font-size: 24px;
   font-weight: bold;
-  color: #333;
+  color: #FFFBF0;
   margin: 0 0 16px;
   line-height: 1.4;
+  font-family: "STKaiti", "楷体", serif;
+  position: relative;
+  z-index: 1;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
 }
 
 .post-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .author-info {
@@ -724,8 +822,8 @@ onMounted(() => {
   border-radius: 50%;
   object-fit: cover;
   margin-right: 12px;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  border: 2px solid rgba(255, 251, 240, 0.7);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .author-detail {
@@ -736,24 +834,29 @@ onMounted(() => {
 .author-name {
   font-size: 16px;
   font-weight: 500;
-  color: #333;
+  color: #FFFBF0;
   margin-bottom: 4px;
 }
 
 .post-time {
   font-size: 14px;
-  color: #999;
+  color: rgba(255, 251, 240, 0.8);
+}
+
+.post-actions button {
+  color: #FFFBF0;
+  border-color: rgba(255, 251, 240, 0.3);
 }
 
 .post-body {
   padding: 24px;
-  background-color: #fff;
+  background-color: #FFF7E9;
 }
 
 .content-text {
   font-size: 16px;
   line-height: 1.8;
-  color: #333;
+  color: #582F0E;
   margin-bottom: 24px;
   white-space: pre-wrap;
   word-break: break-word;
@@ -793,7 +896,7 @@ onMounted(() => {
   min-height: 200px;
   object-fit: cover;
   cursor: pointer;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #E4D9C3;
   transition: transform 0.3s ease;
 }
 
@@ -803,16 +906,16 @@ onMounted(() => {
 
 .post-footer {
   padding: 16px 24px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid #E4D9C3;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #fffbfb;
+  background-color: #FFFBF0;
 }
 
 .post-stats {
   font-size: 14px;
-  color: #999;
+  color: #7F4F24;
 }
 
 .views {
@@ -831,16 +934,22 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
+  color: #582F0E;
+  border-color: #D6C6AF;
+  background-color: #FFFBF0;
 }
 
 .action-btn.liked {
-  color: #901c1c;
-  background-color: #FFF0F0;
-  border-color: #901c1c;
+  color: #FFFBF0;
+  background-color: #8C1F28;
+  border-color: #8C1F28;
 }
 
 .action-btn:hover {
   transform: translateY(-2px);
+  background-color: #8C1F28;
+  color: #FFFBF0;
+  border-color: #8C1F28;
 }
 
 /* 评论区域 */
@@ -853,11 +962,13 @@ onMounted(() => {
 }
 
 .section-title {
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
-  color: #333;
+  color: #582F0E;
   position: relative;
   display: inline-block;
+  font-family: "STKaiti", "楷体", serif;
+  letter-spacing: 1px;
 }
 
 .section-title::after {
@@ -867,16 +978,17 @@ onMounted(() => {
   bottom: -8px;
   width: 40px;
   height: 3px;
-  background-color: #901c1c;
+  background-color: #8C1F28;
 }
 
 .comment-form {
   display: flex;
   gap: 16px;
   margin-bottom: 24px;
-  background-color: #f9f9f9;
+  background-color: #FFFBF0;
   padding: 16px;
   border-radius: 8px;
+  border: 1px solid #D6C6AF;
 }
 
 .input-user {
@@ -888,7 +1000,7 @@ onMounted(() => {
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #fff;
+  border: 2px solid #E4D9C3;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
@@ -897,14 +1009,15 @@ onMounted(() => {
 }
 
 .comment-textarea {
-  background-color: #fff;
-  border: 1px solid #e8e8e8;
+  background-color: #FFFDF7;
+  border: 1px solid #D6C6AF;
   border-radius: 4px;
   transition: all 0.3s ease;
+  color: #582F0E;
 }
 
 .comment-textarea:hover, .comment-textarea:focus {
-  border-color: #901c1c;
+  border-color: #8C1F28;
 }
 
 .input-actions {
@@ -913,11 +1026,22 @@ onMounted(() => {
   margin-top: 16px;
 }
 
+.input-actions :deep(.arco-btn-primary) {
+  background-color: #8C1F28;
+  border-color: #8C1F28;
+}
+
+.input-actions :deep(.arco-btn-primary:hover) {
+  background-color: #A52A2A;
+  border-color: #A52A2A;
+}
+
 .empty-comments {
   text-align: center;
   padding: 20px 0;
-  background-color: #f9f9f9;
+  background-color: #FFF7E9;
   border-radius: 8px;
+  border: 1px solid #D6C6AF;
 }
 
 .comments-list {
@@ -931,11 +1055,12 @@ onMounted(() => {
 }
 
 .comment-content {
-  background-color: #f9f9f9;
+  background-color: #FFF7E9;
   border-radius: 8px;
   padding: 16px;
-  border-left: 3px solid #C2101C;
+  border-left: 3px solid #8C1F28;
   transition: all 0.3s ease;
+  border: 1px solid #D6C6AF;
 }
 
 .comment-content:hover {
@@ -954,7 +1079,7 @@ onMounted(() => {
   border-radius: 50%;
   object-fit: cover;
   margin-right: 12px;
-  border: 2px solid #fff;
+  border: 2px solid #E4D9C3;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
@@ -965,29 +1090,29 @@ onMounted(() => {
 
 .user-name {
   font-weight: 600;
-  color: #333;
+  color: #582F0E;
   margin-bottom: 4px;
 }
 
 .comment-time {
   font-size: 12px;
-  color: #999;
+  color: #7F4F24;
 }
 
 .comment-text {
   font-size: 15px;
   line-height: 1.6;
-  color: #333;
+  color: #582F0E;
   margin-bottom: 12px;
   word-break: break-word;
 }
 
 .reply-to {
-  color: #999;
+  color: #7F4F24;
 }
 
 .reply-name {
-  color: #C2101C;
+  color: #8C1F28;
   font-weight: 500;
 }
 
@@ -997,24 +1122,25 @@ onMounted(() => {
 }
 
 .action-link {
-  color: #666;
+  color: #582F0E;
   padding: 4px 8px;
   border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 .action-link:hover {
-  background-color: #f0f0f0;
+  background-color: #8C1F28;
   transform: translateY(-1px);
+  color: #FFFBF0;
 }
 
 .action-link.active {
-  color: #C2101C;
+  color: #8C1F28;
 }
 
 .action-link.delete:hover {
-  color: #C2101C;
-  background-color: #FFF0F0;
+  color: #FFFBF0;
+  background-color: #8C1F28;
 }
 
 .reply-form {
@@ -1022,21 +1148,22 @@ onMounted(() => {
 }
 
 .reply-input-area {
-  background-color: #fff;
+  background-color: #FFFDF7;
   border-radius: 8px;
   padding: 12px;
-  border: 1px solid #f0f0f0;
+  border: 1px solid #D6C6AF;
 }
 
-.reply-input {
-  background-color: #fff;
-  border: 1px solid #e8e8e8;
+.reply-textarea {
+  background-color: #FFFDF7;
+  border: 1px solid #D6C6AF;
   border-radius: 4px;
   transition: all 0.3s ease;
+  color: #582F0E;
 }
 
-.reply-input:hover, .reply-input:focus {
-  border-color: #C2101C;
+.reply-textarea:hover, .reply-textarea:focus {
+  border-color: #8C1F28;
 }
 
 .reply-actions {
@@ -1046,10 +1173,20 @@ onMounted(() => {
   margin-top: 12px;
 }
 
+.reply-actions :deep(.arco-btn-primary) {
+  background-color: #8C1F28;
+  border-color: #8C1F28;
+}
+
+.reply-actions :deep(.arco-btn-primary:hover) {
+  background-color: #A52A2A;
+  border-color: #A52A2A;
+}
+
 .child-comments {
   margin-top: 16px;
   padding-left: 12px;
-  border-left: 2px solid #f0f0f0;
+  border-left: 2px solid #E4D9C3;
 }
 
 .child-comment-item {
@@ -1063,6 +1200,17 @@ onMounted(() => {
 .load-more {
   text-align: center;
   margin-top: 24px;
+}
+
+.load-more :deep(.arco-btn) {
+  background-color: #8C1F28;
+  border-color: #8C1F28;
+  color: #FFFBF0;
+}
+
+.load-more :deep(.arco-btn:hover) {
+  background-color: #A52A2A;
+  border-color: #A52A2A;
 }
 
 /* 响应式设计 */
