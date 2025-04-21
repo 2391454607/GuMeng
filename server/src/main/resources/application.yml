@@ -104,5 +104,10 @@ aj:
     req-check-minute-limit: 60 # check接口一分钟内请求数限制
     req-verify-minute-limit: 60 # verify接口一分钟内请求数限制
 
+# 添加敏感词配置
+custom:
+  sensitive-word:
+    path: sensitive_word/sensitive-words.txt
+
 
 

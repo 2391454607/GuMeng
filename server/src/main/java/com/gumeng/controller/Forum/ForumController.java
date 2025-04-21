@@ -6,12 +6,15 @@ import com.gumeng.entity.DTO.ForumPostDTO;
 import com.gumeng.entity.vo.ForumPostVO;
 import com.gumeng.service.ForumPostService;
 import com.gumeng.service.ForumTopicService;
+import com.gumeng.utils.SensitiveWordFilter;
 import com.gumeng.utils.ThreadLocalUtil;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -126,5 +129,36 @@ public class ForumController {
     @GetMapping("/getTopics")
     public HttpResponse getTopics() {
         return HttpResponse.success(forumTopicService.getTopicList());
+    }
+
+    /**
+     * 检测文本是否包含敏感词
+     */
+    @PostMapping("/checkSensitiveWords")
+    public HttpResponse checkSensitiveWords(@RequestBody Map<String, String> params) {
+        String text = params.get("text");
+        
+        if (text == null || text.isEmpty()) {
+            return HttpResponse.error("文本内容不能为空");
+        }
+        
+        // 获取敏感词过滤器实例
+        SensitiveWordFilter filter = SensitiveWordFilter.getInstance();
+        
+        // 检查文本是否包含敏感词
+        boolean containsSensitiveWords = filter.containsSensitiveWord(text);
+        
+        // 如果包含敏感词，获取敏感词列表
+        List<String> sensitiveWords = null;
+        if (containsSensitiveWords) {
+            sensitiveWords = SensitiveWordFilter.getSensitiveWords(text);
+        }
+        
+        // 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("containsSensitiveWords", containsSensitiveWords);
+        result.put("sensitiveWords", sensitiveWords);
+        
+        return HttpResponse.success(result);
     }
 }
