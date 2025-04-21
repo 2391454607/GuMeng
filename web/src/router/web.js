@@ -1,3 +1,5 @@
+import * as path from "node:path";
+
 const webRouters = [
     {
         path: "/",
@@ -51,8 +53,7 @@ const webRouters = [
     {
         path: "/showroom",
         name: "ShowRoom",
-        //component: () => import("@/views/web/pages/showroom/Showroom.vue")
-        component: () => import("@/views/error/Error404.vue")
+        component: () => import("@/views/web/pages/showroom/Showroom.vue"),
     },
     {
         path: "/policy",
