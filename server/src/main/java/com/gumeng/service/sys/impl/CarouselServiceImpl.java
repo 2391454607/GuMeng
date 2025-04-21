@@ -1,9 +1,9 @@
-package com.gumeng.service.impl;
+package com.gumeng.service.sys.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.pages.Carousel;
-import com.gumeng.service.CarouselService;
-import com.gumeng.mapper.CarouselMapper;
+import com.gumeng.service.sys.CarouselService;
+import com.gumeng.mapper.sys.CarouselMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

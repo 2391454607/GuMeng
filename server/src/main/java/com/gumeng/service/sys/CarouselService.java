@@ -1,4 +1,4 @@
-package com.gumeng.service;
+package com.gumeng.service.sys;
 
 import com.gumeng.domain.pages.Carousel;
 import com.baomidou.mybatisplus.extension.service.IService;

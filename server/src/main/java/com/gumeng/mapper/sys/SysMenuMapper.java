@@ -1,4 +1,4 @@
-package com.gumeng.mapper;
+package com.gumeng.mapper.sys;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.gumeng.domain.menu.SysMenu;

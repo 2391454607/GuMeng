@@ -1,4 +1,4 @@
-package com.gumeng.mapper;
+package com.gumeng.mapper.sys;
 
 import com.gumeng.domain.pages.Carousel;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;

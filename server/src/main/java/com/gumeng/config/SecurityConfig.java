@@ -35,7 +35,6 @@ public class SecurityConfig {
     //使用静态数组
     private static final String[] PUBLIC_PATHS = {
             "/auth/**",
-            "/user/getMenu",
             "/web/**",
             "/forum/getPosts",
             "/forum/getTopics"

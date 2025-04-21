@@ -2,7 +2,7 @@ package com.gumeng.controller.sys;
 
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.pages.Carousel;
-import com.gumeng.service.CarouselService;
+import com.gumeng.service.sys.CarouselService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

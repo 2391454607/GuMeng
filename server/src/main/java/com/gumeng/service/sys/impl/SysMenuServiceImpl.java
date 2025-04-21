@@ -1,9 +1,9 @@
-package com.gumeng.service.impl;
+package com.gumeng.service.sys.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.menu.SysMenu;
-import com.gumeng.service.SysMenuService;
-import com.gumeng.mapper.SysMenuMapper;
+import com.gumeng.service.sys.SysMenuService;
+import com.gumeng.mapper.sys.SysMenuMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

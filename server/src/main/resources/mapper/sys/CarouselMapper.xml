@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.gumeng.mapper.CarouselMapper">
+<mapper namespace="com.gumeng.mapper.sys.CarouselMapper">
 
     <resultMap id="BaseResultMap" type="com.gumeng.domain.pages.Carousel">
             <id property="id" column="id" jdbcType="INTEGER"/>
