@@ -101,6 +101,11 @@ const fetchPostDetail = async () => {
     
     if (res.code === 200) {
       post.value = res.data;
+      
+      // 确保用户名和头像字段正确
+      post.value.username = post.value.username || post.value.authorName || '匿名用户';
+      post.value.avatar = post.value.avatar || post.value.userPic || '/avatar/default-avatar.png';
+      
       // 将图片字符串转为数组
       if (post.value.images && typeof post.value.images === 'string') {
         post.value.images = post.value.images.split(',').filter(img => img);
@@ -504,15 +509,15 @@ onMounted(() => {
     <template v-else>
       <a-card class="post-card">
         <div class="post-header">
-          <div class="post-topic" v-if="post.topicName">
-            <span class="topic-tag">{{ post.topicName }}</span>
+          <div class="post-topic" v-if="post.topic">
+            <span class="topic-tag">{{ post.topic }}</span>
           </div>
           <h1 class="post-title">{{ post.title }}</h1>
           <div class="post-meta">
             <div class="author-info">
-              <img :src="post.authorAvatar || '@/assets/avatar/default-avatar.png'" alt="作者头像" class="author-avatar">
+              <img :src="post.avatar || '/avatar/default-avatar.png'" alt="作者头像" class="author-avatar">
               <div class="author-detail">
-                <div class="author-name">{{ post.authorName }}</div>
+                <div class="author-name">{{ post.username }}</div>
                 <div class="post-time">{{ formatDate(post.createTime) }}</div>
               </div>
             </div>
@@ -931,6 +936,16 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.topic-tag-footer {
+  padding: 4px 12px;
+  background-color: #FBF0E9;
+  color: #8C1F28;
+  font-size: 12px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid #E4D9C3;
 }
 
 .interaction-actions {
