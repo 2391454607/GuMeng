@@ -219,9 +219,17 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments>
             return false;
         }
 
+        // 获取帖子ID
+        Integer postId = comment.getPageId();
+
         // 逻辑删除评论
         comment.setDelete("1");
         boolean updated = this.updateById(comment);
+
+        // 减少帖子评论数
+        if (updated && postId != null) {
+            forumPostMapper.decrementCommentCount(postId);
+        }
 
         // 查找所有子评论并删除
         LambdaQueryWrapper<Comments> queryWrapper = new LambdaQueryWrapper<>();
@@ -233,6 +241,11 @@ public class CommentsServiceImpl extends ServiceImpl<CommentsMapper, Comments>
             for (Comments child : children) {
                 child.setDelete("1");
                 this.updateById(child);
+                
+                // 为每个删除的子评论减少帖子评论数
+                if (postId != null) {
+                    forumPostMapper.decrementCommentCount(postId);
+                }
             }
         }
 

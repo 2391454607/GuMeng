@@ -18,6 +18,11 @@ public interface ForumPostMapper extends BaseMapper<ForumPost> {
     void incrementCommentCount(Integer postId);
 
     /**
+     * 减少评论数
+     */
+    void decrementCommentCount(Integer postId);
+
+    /**
      * 增加点赞数
      */
     void incrementLikeCount(Integer postId);
