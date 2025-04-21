@@ -157,7 +157,9 @@ const submitForm = async () => {
     if (useCustomTopic.value) {
       topicValue = customTopicName.value.trim();
     } else {
-      topicValue = postForm.topic;
+      // 查找选定话题的名称而不是传递ID
+      const selectedTopic = topics.value.find(t => t.id === postForm.topic);
+      topicValue = selectedTopic ? selectedTopic.name : postForm.topic;
     }
     
     const formData = {
