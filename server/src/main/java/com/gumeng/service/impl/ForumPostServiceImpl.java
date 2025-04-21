@@ -1,5 +1,6 @@
 package com.gumeng.service.impl;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -77,13 +78,29 @@ public class ForumPostServiceImpl extends ServiceImpl<ForumPostMapper, ForumPost
 
     @Override
     public Page<ForumPostVO> getPostList(Integer page, Integer size, String topic) {
+        // 调用带关键词的方法，传入null作为关键词
+        return getPostList(page, size, topic, null);
+    }
+
+    @Override
+    public Page<ForumPostVO> getPostList(Integer page, Integer size, String topic, String keyword) {
+        log.info("获取帖子列表 - 页码: {}, 大小: {}, 话题: {}, 关键词: {}", page, size, topic, keyword);
+        
         // 构建查询条件
         LambdaQueryWrapper<ForumPost> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ForumPost::getDeleted, "0");
 
         // 如果指定了话题，则按话题筛选
-        if (topic != null && !topic.isEmpty()) {
+        if (StrUtil.isNotBlank(topic)) {
             queryWrapper.eq(ForumPost::getTopic, topic);
+        }
+
+        // 如果指定了关键词，则进行模糊搜索（标题或内容包含关键词）
+        if (StrUtil.isNotBlank(keyword)) {
+            queryWrapper.and(wrapper -> wrapper
+                    .like(ForumPost::getTitle, keyword)
+                    .or()
+                    .like(ForumPost::getContent, keyword));
         }
 
         // 按时间倒序排序
@@ -94,11 +111,19 @@ public class ForumPostServiceImpl extends ServiceImpl<ForumPostMapper, ForumPost
         Page<ForumPost> result = this.page(postPage, queryWrapper);
 
         // 转换为VO对象
+        return convertToPostVOPage(result);
+    }
+    
+    /**
+     * 将ForumPost分页结果转换为ForumPostVO分页结果
+     */
+    private Page<ForumPostVO> convertToPostVOPage(Page<ForumPost> postPage) {
+        // 创建VO分页对象
         Page<ForumPostVO> voPage = new Page<>();
-        BeanUtils.copyProperties(result, voPage, "records");
+        BeanUtils.copyProperties(postPage, voPage, "records");
 
         // 获取用户ID列表
-        List<Integer> userIds = result.getRecords().stream()
+        List<Integer> userIds = postPage.getRecords().stream()
                 .map(ForumPost::getUserId)
                 .collect(Collectors.toList());
 
@@ -109,7 +134,7 @@ public class ForumPostServiceImpl extends ServiceImpl<ForumPostMapper, ForumPost
 
         // 用户ID到用户信息的映射
         Map<Integer, User> userMap = users.stream()
-                .collect(Collectors.toMap(User::getId, user -> user));
+                .collect(Collectors.toMap(User::getId, user -> user, (k1, k2) -> k1));
 
         // 获取当前用户ID
         Map<String, Object> threadLocalMap = ThreadLocalUtil.get();
@@ -123,7 +148,7 @@ public class ForumPostServiceImpl extends ServiceImpl<ForumPostMapper, ForumPost
 
         // 填充VO对象列表
         final Long finalCurrentUserId = currentUserId;
-        List<ForumPostVO> voList = result.getRecords().stream().map(post -> {
+        List<ForumPostVO> voList = postPage.getRecords().stream().map(post -> {
             ForumPostVO vo = new ForumPostVO();
             BeanUtils.copyProperties(post, vo);
 
@@ -145,7 +170,6 @@ public class ForumPostServiceImpl extends ServiceImpl<ForumPostMapper, ForumPost
         }).collect(Collectors.toList());
 
         voPage.setRecords(voList);
-
         return voPage;
     }
 
