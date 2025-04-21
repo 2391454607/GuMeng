@@ -628,20 +628,24 @@ onMounted(() => {
                 
                 <!-- 回复输入框 -->
                 <div v-if="replyingTo && replyingTo.id === comment.id" class="reply-form">
-                  <div class="reply-input-area">
-                    <a-textarea
-                      v-model="replyContent"
-                      placeholder="写下你的回复..."
-                      :auto-size="{ minRows: 2, maxRows: 4 }"
-                      class="reply-textarea"
-                    />
-                    <div class="reply-actions">
-                      <a-button size="small" @click="cancelReply">取消</a-button>
-                      <a-button type="primary" size="small" @click="submitReply" :disabled="!replyContent.trim()">
-                        回复
-                      </a-button>
-                    </div>
-                  </div>
+                  <a-textarea
+                    v-model="replyContent"
+                    placeholder="输入您想回复的内容"
+                    :auto-size="{ minRows: 2, maxRows: 4 }"
+                    class="reply-textarea"
+                  />
+                  <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
+                    取消
+                  </a-button>
+                  <a-button 
+                    type="primary" 
+                    size="small" 
+                    @click="submitReply" 
+                    :disabled="!replyContent.trim()" 
+                    class="reply-submit-btn"
+                  >
+                    回复
+                  </a-button>
                 </div>
                 
                 <!-- 子评论 -->
@@ -1123,14 +1127,9 @@ onMounted(() => {
 }
 
 .reply-form {
+  position: relative;
   margin-top: 16px;
-}
-
-.reply-input-area {
-  background-color: #FFFDF7;
-  border-radius: 8px;
-  padding: 12px;
-  border: 1px solid #D6C6AF;
+  margin-bottom: 10px;
 }
 
 .reply-textarea {
@@ -1139,25 +1138,34 @@ onMounted(() => {
   border-radius: 4px;
   transition: all 0.3s ease;
   color: #582F0E;
+  resize: none;
+  width: 100%;
+  padding-right: 160px;
+  padding-bottom: 15px;
 }
 
 .reply-textarea:hover, .reply-textarea:focus {
   border-color: #8C1F28;
 }
 
-.reply-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.reply-actions :deep(.arco-btn-primary) {
+.reply-submit-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
   background-color: #8C1F28;
   border-color: #8C1F28;
+  color: #FFFBF0;
+  z-index: 2;
 }
 
-.reply-actions :deep(.arco-btn-primary:hover) {
+.reply-cancel-btn {
+  position: absolute;
+  right: 70px;
+  bottom: 10px;
+  z-index: 2;
+}
+
+.reply-submit-btn:hover {
   background-color: #A52A2A;
   border-color: #A52A2A;
 }
