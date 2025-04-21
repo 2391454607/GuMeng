@@ -38,13 +38,13 @@ public class CarouselServiceImpl extends ServiceImpl<CarouselMapper, Carousel>
     }
 
     @Override
-    public void updateCarousel(Integer id, String imageUrl) {
-        carouselMapper.updateCarousel(id, imageUrl);
+    public void updateCarousel(Carousel carousel) {
+        carouselMapper.updateCarousel(carousel);
     }
 
     @Override
-    public void deleteCarousel(Integer id) {
-        carouselMapper.deleteCarousel(id);
+    public void deleteCarousel(Carousel carousel) {
+        carouselMapper.deleteCarousel(carousel);
     }
 
 
