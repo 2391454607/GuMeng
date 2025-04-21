@@ -574,24 +574,22 @@ onMounted(() => {
           </template>
           
           <!-- 评论输入框 -->
-          <div class="comment-form">
-            <div class="input-user">
-              <img :src="userStore.userInfo?.avatar || '@/assets/avatar/default-avatar.png'" alt="头像" class="user-avatar" />
-            </div>
-            <div class="input-area">
-              <a-textarea
-                v-model="commentContent"
-                :placeholder="isLogin ? '写下你的评论...' : '登录后才能发表评论'"
-                :disabled="!isLogin"
-                :auto-size="{ minRows: 3, maxRows: 5 }"
-                class="comment-textarea"
-              />
-              <div class="input-actions">
-                <a-button type="primary" @click="submitComment" :disabled="!commentContent.trim() || !userStore.isLogin">
-                  {{ userStore.isLogin ? '发表评论' : '请先登录' }}
-                </a-button>
-              </div>
-            </div>
+          <div class="comment-container">
+            <a-textarea
+              v-model="commentContent"
+              placeholder="留下你的精彩评论吧"
+              :disabled="!isLogin"
+              :auto-size="{ minRows: 3, maxRows: 5 }"
+              class="comment-textarea"
+            />
+            <a-button 
+              type="primary" 
+              @click="submitComment" 
+              :disabled="!commentContent.trim() || !userStore.isLogin" 
+              class="comment-submit-btn"
+            >
+              {{ userStore.isLogin ? '发表评论' : '请先登录' }}
+            </a-button>
           </div>
           
           <!-- 评论列表 -->
@@ -703,7 +701,7 @@ onMounted(() => {
     
     <!-- 删除评论确认框 -->
     <a-modal
-      v-model:visible="deleteCommentModalVisible"
+      v-model="deleteCommentModalVisible"
       title="确认删除"
       @cancel="deleteCommentModalVisible = false"
       @ok="confirmDeleteComment"
@@ -981,31 +979,9 @@ onMounted(() => {
   background-color: #8C1F28;
 }
 
-.comment-form {
-  display: flex;
-  gap: 16px;
+.comment-container {
+  position: relative;
   margin-bottom: 24px;
-  background-color: #FFFBF0;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #D6C6AF;
-}
-
-.input-user {
-  flex-shrink: 0;
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #E4D9C3;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.input-area {
-  flex: 1;
 }
 
 .comment-textarea {
@@ -1014,24 +990,27 @@ onMounted(() => {
   border-radius: 4px;
   transition: all 0.3s ease;
   color: #582F0E;
+  resize: none;
+  width: 100%;
+  padding-right: 100px;
+  padding-bottom: 15px;
 }
 
 .comment-textarea:hover, .comment-textarea:focus {
   border-color: #8C1F28;
 }
 
-.input-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-}
-
-.input-actions :deep(.arco-btn-primary) {
+.comment-submit-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
   background-color: #8C1F28;
   border-color: #8C1F28;
+  color: #FFFBF0;
+  z-index: 2;
 }
 
-.input-actions :deep(.arco-btn-primary:hover) {
+.comment-submit-btn:hover {
   background-color: #A52A2A;
   border-color: #A52A2A;
 }
@@ -1239,12 +1218,12 @@ onMounted(() => {
     justify-content: space-between;
   }
   
-  .comment-form {
+  .comment-container {
     flex-direction: column;
     gap: 12px;
   }
   
-  .input-user {
+  .input-area {
     display: none;
   }
   
