@@ -75,7 +75,13 @@ const totalCommentCount = computed(() => {
 
 // 是否可以删除帖子
 const canDelete = computed(() => {
-  return userStore.isAdmin || (post.value.authorId === userStore.userInfo?.id);
+  console.log('删除帖子权限检查:');
+  console.log('- 是否管理员:', userStore.isAdmin);
+  console.log('- 当前用户ID:', userStore.userInfo?.id);
+  console.log('- 帖子用户ID字段:', post.value.userId);
+  console.log('- 帖子作者ID:', post.value.userId);
+  
+  return userStore.isAdmin || (post.value.userId === userStore.userInfo?.id);
 });
 
 // 返回上一页
@@ -510,11 +516,6 @@ onMounted(() => {
                 <div class="post-time">{{ formatDate(post.createTime) }}</div>
               </div>
             </div>
-            <div class="post-actions" v-if="canDelete">
-              <a-button type="text" size="small" status="danger" @click="showDeleteConfirm = true">
-                <icon-delete />删除
-              </a-button>
-            </div>
           </div>
         </div>
 
@@ -546,6 +547,10 @@ onMounted(() => {
             </span>
           </div>
           <div class="interaction-actions">
+            <a-button type="outline" @click="showDeleteConfirm = true" class="action-btn" v-if="canDelete">
+              <icon-delete />
+              删除
+            </a-button>
             <a-button 
               :type="post.isLiked ? 'primary' : 'outline'" 
               @click="handleLike" 
@@ -555,10 +560,6 @@ onMounted(() => {
               <icon-heart-fill v-if="post.isLiked" />
               <icon-heart v-else />
               {{ post.thumbsUpNum || 0 }} 点赞
-            </a-button>
-            <a-button type="outline" @click="showDeleteConfirm = true" class="action-btn" v-if="canDelete">
-              <icon-delete />
-              删除
             </a-button>
           </div>
         </div>
@@ -574,24 +575,22 @@ onMounted(() => {
           </template>
           
           <!-- 评论输入框 -->
-          <div class="comment-form">
-            <div class="input-user">
-              <img :src="userStore.userInfo?.avatar || '@/assets/avatar/default-avatar.png'" alt="头像" class="user-avatar" />
-            </div>
-            <div class="input-area">
-              <a-textarea
-                v-model="commentContent"
-                :placeholder="isLogin ? '写下你的评论...' : '登录后才能发表评论'"
-                :disabled="!isLogin"
-                :auto-size="{ minRows: 3, maxRows: 5 }"
-                class="comment-textarea"
-              />
-              <div class="input-actions">
-                <a-button type="primary" @click="submitComment" :disabled="!commentContent.trim() || !userStore.isLogin">
-                  {{ userStore.isLogin ? '发表评论' : '请先登录' }}
-                </a-button>
-              </div>
-            </div>
+          <div class="comment-container">
+            <a-textarea
+              v-model="commentContent"
+              placeholder="留下你的精彩评论吧"
+              :disabled="!isLogin"
+              :auto-size="{ minRows: 3, maxRows: 5 }"
+              class="comment-textarea"
+            />
+            <a-button 
+              type="primary" 
+              @click="submitComment" 
+              :disabled="!commentContent.trim() || !userStore.isLogin" 
+              class="comment-submit-btn"
+            >
+              {{ userStore.isLogin ? '发表评论' : '请先登录' }}
+            </a-button>
           </div>
           
           <!-- 评论列表 -->
@@ -630,20 +629,24 @@ onMounted(() => {
                 
                 <!-- 回复输入框 -->
                 <div v-if="replyingTo && replyingTo.id === comment.id" class="reply-form">
-                  <div class="reply-input-area">
-                    <a-textarea
-                      v-model="replyContent"
-                      placeholder="写下你的回复..."
-                      :auto-size="{ minRows: 2, maxRows: 4 }"
-                      class="reply-textarea"
-                    />
-                    <div class="reply-actions">
-                      <a-button size="small" @click="cancelReply">取消</a-button>
-                      <a-button type="primary" size="small" @click="submitReply" :disabled="!replyContent.trim()">
-                        回复
-                      </a-button>
-                    </div>
-                  </div>
+                  <a-textarea
+                    v-model="replyContent"
+                    placeholder="输入您想回复的内容"
+                    :auto-size="{ minRows: 2, maxRows: 4 }"
+                    class="reply-textarea"
+                  />
+                  <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
+                    取消
+                  </a-button>
+                  <a-button 
+                    type="primary" 
+                    size="small" 
+                    @click="submitReply" 
+                    :disabled="!replyContent.trim()" 
+                    class="reply-submit-btn"
+                  >
+                    回复
+                  </a-button>
                 </div>
                 
                 <!-- 子评论 -->
@@ -691,24 +694,30 @@ onMounted(() => {
       </div>
     </template>
     
-    <!-- 删除帖子确认框 -->
-    <a-modal
-      v-model="showDeleteConfirm"
-      title="确认删除"
-      @cancel="showDeleteConfirm = false"
-      @ok="deletePost"
-    >
-      <p>确定要删除这篇帖子吗？此操作无法撤销。</p>
-    </a-modal>
-    
     <!-- 删除评论确认框 -->
     <a-modal
-      v-model:visible="deleteCommentModalVisible"
+      :visible="deleteCommentModalVisible"
+      @before-ok="confirmDeleteComment"
+      @before-cancel="() => { deleteCommentModalVisible = false }"
+      @close="deleteCommentModalVisible = false"
       title="确认删除"
-      @cancel="deleteCommentModalVisible = false"
-      @ok="confirmDeleteComment"
+      simple
+      :width="350"
     >
-      <p>确定要删除这条评论吗？此操作无法撤销。</p>
+      <p style="margin: 0; padding: 5px 0;">确定要删除这条评论吗？此操作无法撤销。</p>
+    </a-modal>
+    
+    <!-- 删除帖子确认框 -->
+    <a-modal
+      :visible="showDeleteConfirm"
+      @before-ok="deletePost"
+      @before-cancel="() => { showDeleteConfirm = false }"
+      @close="showDeleteConfirm = false"
+      title="确认删除"
+      simple
+      :width="350"
+    >
+      <p style="margin: 0; padding: 5px 0;">确定要删除这篇帖子吗？此操作无法撤销。</p>
     </a-modal>
   </div>
 </template>
@@ -981,31 +990,9 @@ onMounted(() => {
   background-color: #8C1F28;
 }
 
-.comment-form {
-  display: flex;
-  gap: 16px;
+.comment-container {
+  position: relative;
   margin-bottom: 24px;
-  background-color: #FFFBF0;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #D6C6AF;
-}
-
-.input-user {
-  flex-shrink: 0;
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #E4D9C3;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.input-area {
-  flex: 1;
 }
 
 .comment-textarea {
@@ -1014,24 +1001,27 @@ onMounted(() => {
   border-radius: 4px;
   transition: all 0.3s ease;
   color: #582F0E;
+  resize: none;
+  width: 100%;
+  padding-right: 100px;
+  padding-bottom: 15px;
 }
 
 .comment-textarea:hover, .comment-textarea:focus {
   border-color: #8C1F28;
 }
 
-.input-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 16px;
-}
-
-.input-actions :deep(.arco-btn-primary) {
+.comment-submit-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
   background-color: #8C1F28;
   border-color: #8C1F28;
+  color: #FFFBF0;
+  z-index: 2;
 }
 
-.input-actions :deep(.arco-btn-primary:hover) {
+.comment-submit-btn:hover {
   background-color: #A52A2A;
   border-color: #A52A2A;
 }
@@ -1144,14 +1134,9 @@ onMounted(() => {
 }
 
 .reply-form {
+  position: relative;
   margin-top: 16px;
-}
-
-.reply-input-area {
-  background-color: #FFFDF7;
-  border-radius: 8px;
-  padding: 12px;
-  border: 1px solid #D6C6AF;
+  margin-bottom: 10px;
 }
 
 .reply-textarea {
@@ -1160,25 +1145,34 @@ onMounted(() => {
   border-radius: 4px;
   transition: all 0.3s ease;
   color: #582F0E;
+  resize: none;
+  width: 100%;
+  padding-right: 160px;
+  padding-bottom: 15px;
 }
 
 .reply-textarea:hover, .reply-textarea:focus {
   border-color: #8C1F28;
 }
 
-.reply-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.reply-actions :deep(.arco-btn-primary) {
+.reply-submit-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
   background-color: #8C1F28;
   border-color: #8C1F28;
+  color: #FFFBF0;
+  z-index: 2;
 }
 
-.reply-actions :deep(.arco-btn-primary:hover) {
+.reply-cancel-btn {
+  position: absolute;
+  right: 70px;
+  bottom: 10px;
+  z-index: 2;
+}
+
+.reply-submit-btn:hover {
   background-color: #A52A2A;
   border-color: #A52A2A;
 }
@@ -1239,12 +1233,12 @@ onMounted(() => {
     justify-content: space-between;
   }
   
-  .comment-form {
+  .comment-container {
     flex-direction: column;
     gap: 12px;
   }
   
-  .input-user {
+  .input-area {
     display: none;
   }
   

@@ -54,13 +54,21 @@ public class ForumController {
     public HttpResponse getPosts(
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size,
-            @RequestParam(value = "topic", required = false) String topic) {
+            @RequestParam(value = "topic", required = false) String topic,
+            @RequestParam(value = "keyword", required = false) String keyword) {
         
         // 记录用户信息和请求
         Map<String, Object> userInfo = ThreadLocalUtil.get();
-        log.info("获取帖子列表 - 用户信息: {}, 页码: {}, 大小: {}, 话题: {}", userInfo, page, size, topic);
+        log.info("获取帖子列表 - 用户信息: {}, 页码: {}, 大小: {}, 话题: {}, 关键词: {}", 
+                 userInfo, page, size, topic, keyword);
         
-        Page<ForumPostVO> posts = forumPostService.getPostList(page, size, topic);
+        Page<ForumPostVO> posts;
+        if (keyword != null && !keyword.isEmpty()) {
+            posts = forumPostService.getPostList(page, size, topic, keyword);
+        } else {
+            posts = forumPostService.getPostList(page, size, topic);
+        }
+        
         return HttpResponse.success(posts);
     }
 

@@ -23,6 +23,11 @@ public interface ForumPostService extends IService<ForumPost> {
     Page<ForumPostVO> getPostList(Integer page, Integer size, String topic);
 
     /**
+     * 获取帖子列表(带关键词搜索)
+     */
+    Page<ForumPostVO> getPostList(Integer page, Integer size, String topic, String keyword);
+
+    /**
      * 获取帖子详情
      */
     ForumPostVO getPostDetail(Integer id);

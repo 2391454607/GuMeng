@@ -31,6 +31,13 @@
         WHERE id = #{postId}
     </update>
 
+    <!-- 减少评论数 -->
+    <update id="decrementCommentCount">
+        UPDATE forum_post
+        SET common_num = common_num - 1
+        WHERE id = #{postId} AND common_num > 0
+    </update>
+
     <!-- 增加点赞数 -->
     <update id="incrementLikeCount">
         UPDATE forum_post
