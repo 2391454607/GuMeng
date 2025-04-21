@@ -75,7 +75,13 @@ const totalCommentCount = computed(() => {
 
 // 是否可以删除帖子
 const canDelete = computed(() => {
-  return userStore.isAdmin || (post.value.authorId === userStore.userInfo?.id);
+  console.log('删除帖子权限检查:');
+  console.log('- 是否管理员:', userStore.isAdmin);
+  console.log('- 当前用户ID:', userStore.userInfo?.id);
+  console.log('- 帖子用户ID字段:', post.value.userId);
+  console.log('- 帖子作者ID:', post.value.userId);
+  
+  return userStore.isAdmin || (post.value.userId === userStore.userInfo?.id);
 });
 
 // 返回上一页
@@ -510,11 +516,6 @@ onMounted(() => {
                 <div class="post-time">{{ formatDate(post.createTime) }}</div>
               </div>
             </div>
-            <div class="post-actions" v-if="canDelete">
-              <a-button type="text" size="small" status="danger" @click="showDeleteConfirm = true">
-                <icon-delete />删除
-              </a-button>
-            </div>
           </div>
         </div>
 
@@ -546,6 +547,10 @@ onMounted(() => {
             </span>
           </div>
           <div class="interaction-actions">
+            <a-button type="outline" @click="showDeleteConfirm = true" class="action-btn" v-if="canDelete">
+              <icon-delete />
+              删除
+            </a-button>
             <a-button 
               :type="post.isLiked ? 'primary' : 'outline'" 
               @click="handleLike" 
@@ -555,10 +560,6 @@ onMounted(() => {
               <icon-heart-fill v-if="post.isLiked" />
               <icon-heart v-else />
               {{ post.thumbsUpNum || 0 }} 点赞
-            </a-button>
-            <a-button type="outline" @click="showDeleteConfirm = true" class="action-btn" v-if="canDelete">
-              <icon-delete />
-              删除
             </a-button>
           </div>
         </div>
