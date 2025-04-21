@@ -693,24 +693,30 @@ onMounted(() => {
       </div>
     </template>
     
-    <!-- 删除帖子确认框 -->
-    <a-modal
-      v-model="showDeleteConfirm"
-      title="确认删除"
-      @cancel="showDeleteConfirm = false"
-      @ok="deletePost"
-    >
-      <p>确定要删除这篇帖子吗？此操作无法撤销。</p>
-    </a-modal>
-    
     <!-- 删除评论确认框 -->
     <a-modal
-      v-model="deleteCommentModalVisible"
+      :visible="deleteCommentModalVisible"
+      @before-ok="confirmDeleteComment"
+      @before-cancel="() => { deleteCommentModalVisible = false }"
+      @close="deleteCommentModalVisible = false"
       title="确认删除"
-      @cancel="deleteCommentModalVisible = false"
-      @ok="confirmDeleteComment"
+      simple
+      :width="350"
     >
-      <p>确定要删除这条评论吗？此操作无法撤销。</p>
+      <p style="margin: 0; padding: 5px 0;">确定要删除这条评论吗？此操作无法撤销。</p>
+    </a-modal>
+    
+    <!-- 删除帖子确认框 -->
+    <a-modal
+      :visible="showDeleteConfirm"
+      @before-ok="deletePost"
+      @before-cancel="() => { showDeleteConfirm = false }"
+      @close="showDeleteConfirm = false"
+      title="确认删除"
+      simple
+      :width="350"
+    >
+      <p style="margin: 0; padding: 5px 0;">确定要删除这篇帖子吗？此操作无法撤销。</p>
     </a-modal>
   </div>
 </template>
