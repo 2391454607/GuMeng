@@ -94,16 +94,16 @@ onMounted(() => {
   const light5 = new THREE.DirectionalLight(0xffffff, 1);
   light5.position.set(0, 10, 0);
   scene.add(light5);
-  const light6 = new THREE.DirectionalLight(0xffffff, 0.5);
+  const light6 = new THREE.DirectionalLight(0xffffff, 1);
   light5.position.set(5, 10, 0);
   scene.add(light6);
-  const light7 = new THREE.DirectionalLight(0xffffff, 0.5);
+  const light7 = new THREE.DirectionalLight(0xffffff, 1);
   light5.position.set(0, 10, 5);
   scene.add(light7);
-  const light8 = new THREE.DirectionalLight(0xffffff, 0.5);
+  const light8 = new THREE.DirectionalLight(0xffffff, 1);
   light5.position.set(0, 10, -5);
   scene.add(light8);
-  const light9 = new THREE.DirectionalLight(0xffffff, 0.5);
+  const light9 = new THREE.DirectionalLight(0xffffff, 1);
   light5.position.set(-5, 10, 0);
   scene.add(light9);
 
