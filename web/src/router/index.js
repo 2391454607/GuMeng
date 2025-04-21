@@ -4,6 +4,9 @@ import WebHome from "@/views/web/Home.vue";
 import {webRouters} from "@/router/web.js"
 import SysHome from "@/views/manage/Home.vue"
 import {sysRouters} from "@/router/sysIndex.js"
+import VisualizationHome from "@/views/visualization/Visualization.vue"
+import {visualizationRouters} from "@/router/visualization.js";
+
 
 /**
  * @description 导出路由配置
@@ -36,6 +39,16 @@ export const router = createRouter({
             }
         },
         /**
+         * @description 可视化路由
+         */
+        {
+            path: "/visualization",
+            name: "visualization",
+            component: VisualizationHome,
+            children: visualizationRouters,
+            meta: { requiresAuth: false }
+        },
+        /**
          * @description 登录界面
          */
         {
@@ -61,6 +74,14 @@ export const router = createRouter({
             name: "UserInfo",
             component: () => import("@/views/auth/UserInfo.vue"),
             meta: { requiresAuth: true } // 需要登录
+        },
+        /**
+         * @description 3D界面
+         */
+        {
+            path: "/show3D",
+            name: "Show3D",
+            component: () => import("@/views/web/pages/showroom/Show3D.vue")
         },
         /**
          * @description 401未认证或token无效界面
