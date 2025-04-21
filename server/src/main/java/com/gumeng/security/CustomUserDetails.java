@@ -1,6 +1,6 @@
 package com.gumeng.security;
 
-import com.gumeng.domain.User;
+import com.gumeng.domain.user.User;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

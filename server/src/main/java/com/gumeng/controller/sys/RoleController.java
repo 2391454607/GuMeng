@@ -1,11 +1,11 @@
 package com.gumeng.controller.sys;
 
 import com.gumeng.code.HttpResponse;
-import com.gumeng.domain.Role;
-import com.gumeng.domain.UserRole;
-import com.gumeng.service.RolePermissionService;
-import com.gumeng.service.RoleService;
-import com.gumeng.service.UserRoleService;
+import com.gumeng.domain.user.Role;
+import com.gumeng.domain.user.UserRole;
+import com.gumeng.service.user.RolePermissionService;
+import com.gumeng.service.user.RoleService;
+import com.gumeng.service.user.UserRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

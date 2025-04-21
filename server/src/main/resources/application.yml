@@ -65,7 +65,7 @@ spring:
 
 mybatis-plus:
   # 对应的 XML 文件位置
-  mapperLocations: classpath*:mapper/*Mapper.xml
+  mapperLocations: classpath*:mapper/**/*Mapper.xml
   configuration:
     map-underscore-to-camel-case: true #开启实体类中驼峰命名和数据库中下划线命名的自动转换
     logImpl: org.apache.ibatis.logging.stdout.StdOutImpl
