@@ -1,93 +1,26 @@
 <script setup>
-import { ref } from 'vue';
+import {onMounted, ref} from 'vue';
 import Footer from "@/views/web/layout/Footer.vue";
+import {getModelList} from "@/api/web/Model.js";
 
 const models = ref([
   {
-    id: 1,
-    name: '越野车',
-    image: '/src/assets/models/car.png',
-    author: '2023_byd_yang',
-    views: '1.6k'
+    id: '',
+    name: '',
+    modelPic: '',
+    author: '',
+    views: ''
   },
-  {
-    id: 2,
-    name: '机器人战士',
-    image: '/src/assets/models/robot.png',
-    author: '国际著名机器人',
-    views: '1.5w'
-  },
-  {
-    id: 3,
-    name: '昆虫模型',
-    image: '/src/assets/models/insect.png',
-    author: '机械昆虫',
-    views: '4.1w'
-  },
-  {
-    id: 4,
-    name: '创意水果',
-    image: '/src/assets/models/apple.png',
-    author: '苹果小贩',
-    views: '1.5w'
-  },
-  {
-    id: 1,
-    name: '越野车',
-    image: '/src/assets/models/car.png',
-    author: '2023_byd_yang',
-    views: '1.6k'
-  },
-  {
-    id: 2,
-    name: '机器人战士',
-    image: '/src/assets/models/robot.png',
-    author: '国际著名机器人',
-    views: '1.5w'
-  },
-  {
-    id: 3,
-    name: '昆虫模型',
-    image: '/src/assets/models/insect.png',
-    author: '机械昆虫',
-    views: '4.1w'
-  },
-  {
-    id: 4,
-    name: '创意水果',
-    image: '/src/assets/models/apple.png',
-    author: '苹果小贩',
-    views: '1.5w'
-  },
-  {
-    id: 1,
-    name: '越野车',
-    image: '/src/assets/models/car.png',
-    author: '2023_byd_yang',
-    views: '1.6k'
-  },
-  {
-    id: 2,
-    name: '机器人战士',
-    image: '/src/assets/models/robot.png',
-    author: '国际著名机器人',
-    views: '1.5w'
-  },
-  {
-    id: 3,
-    name: '昆虫模型',
-    image: '/src/assets/models/insect.png',
-    author: '机械昆虫',
-    views: '4.1w'
-  },
-  {
-    id: 4,
-    name: '创意水果',
-    image: '/src/assets/models/apple.png',
-    author: '苹果小贩',
-    views: '1.5w'
-  }
 ]);
+
+onMounted(()=>{
+
+  getModelList().then(res =>{
+    if (res.code === 200){
+      models.value = res.data;
+    }
+  })
+})
 
 const handleModelClick = (id) => {
   window.location.href = `/show3D?model=${id}`;
@@ -127,7 +60,7 @@ const handleModelClick = (id) => {
     <div class="model-grid">
       <div v-for="model in models" :key="model.id" class="model-card" @click="handleModelClick(model.id)">
         <div class="model-image">
-          <img :src="model.image" :alt="model.name">
+          <img :src="model.modelPic" :alt="model.name">
           <div class="model-overlay">
             <span class="view-detail">查看详情</span>
           </div>
@@ -326,14 +259,4 @@ const handleModelClick = (id) => {
   gap: 4px;
 }
 
-.footer {
-  height: 80px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  width: 100%;
-  background-color: #8b1f1f; /* 更改页脚背景色 */
-  color: #fff; /* 更改页脚文字颜色 */
-}
 </style>
