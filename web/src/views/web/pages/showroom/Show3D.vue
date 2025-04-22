@@ -21,29 +21,23 @@ const renderer = new THREE.WebGLRenderer({
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-const render = ()=>{
-  renderer.render(scene, camera);
-  controls && controls.update();
-  requestAnimationFrame(render);
-}
-
 onMounted(() => {
   //把渲染器插入到dom中
   canvasDom.value.appendChild(renderer.domElement);
   //初始化渲染器，渲染背景
   renderer.setClearColor("#000");
-  scene.background = new THREE.Color("#ccc");
-  scene.environment = new THREE.Color("#ccc");
+  scene.background = new THREE.Color("#1a1a1a"); // 更改背景
+  scene.environment = new THREE.Color("#1a1a1a"); // 保持环境色与背景一致
   render();
-
-  //添加网格地面
-  const gridHelper = new THREE.GridHelper(100,100);
-  gridHelper.material.opacity = 0.2;
-  gridHelper.material.transparent = true;
-  scene.add(gridHelper);
 
   //添加控制器
   controls = new OrbitControls(camera, renderer.domElement);
+  // 添加阻尼效果
+  controls.enableDamping = true; // 启用阻尼效果
+  controls.dampingFactor = 0.05; // 设置阻尼系数
+  controls.rotateSpeed = 0.8; // 调整旋转速度
+  controls.zoomSpeed = 0.8; // 调整缩放速度
+  controls.panSpeed = 0.8; // 调整平移速度
   controls.update();
 
   //添加模型
@@ -61,20 +55,21 @@ onMounted(() => {
     
     // 将模型居中并放置在网格上方
     car.position.x = -center.x;
-    car.position.y = -center.y + size.y / 2; // 修改这里，使模型底部与网格平齐
+    car.position.y = -center.y + size.y / 2;
     car.position.z = -center.z;
     
     // 调整相机位置以适应模型大小
     const maxDim = Math.max(size.x, size.y, size.z);
     const fov = camera.fov * (Math.PI / 180);
     const cameraZ = Math.abs(maxDim / Math.tan(fov / 2));
-    camera.position.set(maxDim, maxDim, cameraZ * 1.5); // 修改相机初始位置以便更好地观察模型
+    // 修改相机位置，减小距离系数
+    camera.position.set(maxDim * 0.8, maxDim * 0.8, cameraZ * 0.8);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
     
     scene.add(car);
     
-    // 更新控制器
-    controls.target.set(0, size.y / 4, 0); // 修改控制器目标点，使其对准模型中心
+    // 更新控制器目标点，稍微提高一点以更好地对准模型中心
+    controls.target.set(0, size.y / 3, 0);
     controls.update();
   });
 
@@ -109,6 +104,12 @@ onMounted(() => {
 
 });
 
+// 修改渲染函数，确保阻尼效果生效
+const render = () => {
+  renderer.render(scene, camera);
+  controls && controls.update(); // 确保每帧更新控制器
+  requestAnimationFrame(render);
+}
 </script>
 
 <template>
