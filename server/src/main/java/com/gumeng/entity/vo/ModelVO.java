@@ -1,5 +1,6 @@
 package com.gumeng.entity.vo;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,58 +8,53 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 功能：非遗政策封装类
+ * 功能：
  * 作者：Z
- * 日期：2025/4/11 上午10:13
+ * 日期：2025/4/22 下午6:44
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PolicyVO {
+public class ModelVO {
     /**
-     * id
+     *
      */
     private Integer id;
 
     /**
-     * 政策标题
+     * 所属地区
      */
-    private String title;
+    private String area;
 
     /**
-     * 政策类型
+     * 所属类别
      */
     private String type;
 
     /**
-     * 发文字号
+     * 名称
      */
-    private Integer documentNumber;
+    private String name;
 
     /**
-     * 发布机构
+     * 模型预览图
      */
-    private String publishOrg;
+    private String modelPic;
 
     /**
-     * 发布日期
+     * 作者
      */
-    private LocalDateTime publishDate;
+    private String author;
 
     /**
-     * 生效日期
+     * 模型路径
      */
-    private LocalDateTime effectiveDate;
+    private String modelUrl;
 
     /**
-     * 政策内容
+     * 浏览次数
      */
-    private String content;
-
-    /**
-     * 附件URL
-     */
-    private String attachmentUrl;
+    private String views;
 
     /**
      * 创建时间
@@ -69,4 +65,9 @@ public class PolicyVO {
      * 更新时间
      */
     private LocalDateTime updateTime;
+
+    /**
+     * 逻辑删除
+     */
+    private String isDelete;
 }

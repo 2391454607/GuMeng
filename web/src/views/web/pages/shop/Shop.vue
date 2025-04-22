@@ -3,7 +3,7 @@
 </script>
 
 <template>
-百科
+文创商城
 </template>
 
 <style scoped>

@@ -1,35 +1,45 @@
 <script setup>
 import * as THREE from "three";
-import {onMounted, reactive, ref} from "vue";
+import {onMounted, onUnmounted, reactive, ref} from "vue";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 
 let controls;
 let canvasDom = ref(null);
-//创建场景
-const scene = new THREE.Scene();
-//创建相机
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 0, 0);
-//创建渲染器
-const renderer = new THREE.WebGLRenderer({
-  //抗锯齿
-  antialias: true,
+let renderer;
+let camera;
+let scene;
 
-});
-renderer.setSize(window.innerWidth, window.innerHeight);
+// 初始化场景
+const initScene = () => {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 0, 0);
+  
+  renderer = new THREE.WebGLRenderer({
+    antialias: true,
+  });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+};
+
+// 初始化渲染
+const initRenderer = () => {
+  if (canvasDom.value && renderer) {
+    canvasDom.value.appendChild(renderer.domElement);
+    renderer.setClearColor("#000");
+    scene.background = new THREE.Color("#1a1a1a");
+    scene.environment = new THREE.Color("#1a1a1a");
+    render();
+  }
+};
 
 onMounted(() => {
-  //把渲染器插入到dom中
-  canvasDom.value.appendChild(renderer.domElement);
-  //初始化渲染器，渲染背景
-  renderer.setClearColor("#000");
-  scene.background = new THREE.Color("#1a1a1a"); // 更改背景
-  scene.environment = new THREE.Color("#1a1a1a"); // 保持环境色与背景一致
-  render();
-
+  initScene();
+  initRenderer();
   //添加控制器
   controls = new OrbitControls(camera, renderer.domElement);
   // 添加阻尼效果
@@ -110,11 +120,32 @@ const render = () => {
   controls && controls.update(); // 确保每帧更新控制器
   requestAnimationFrame(render);
 }
+
+const handleBack = () => {
+  router.push('/showroom');
+};
+
+// 组件卸载时清理资源
+onUnmounted(() => {
+  if (renderer) {
+    renderer.dispose();
+  }
+  if (controls) {
+    controls.dispose();
+  }
+});
 </script>
 
 <template>
   <div class="home">
     <div ref="canvasDom" class="canvas-container"></div>
+    <div class="back-button">
+      <a-button type="primary" shape="circle" @click="handleBack">
+        <template #icon>
+          <icon-arrow-left />
+        </template>
+      </a-button>
+    </div>
   </div>
 </template>
 
@@ -122,5 +153,39 @@ const render = () => {
 *{
   margin: 0;
   padding: 0;
+}
+
+.home {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+}
+
+.canvas-container {
+  width: 100%;
+  height: 100%;
+}
+
+.back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+}
+
+.back-button :deep(.arco-btn) {
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s;
+}
+
+.back-button :deep(.arco-btn):hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 </style>

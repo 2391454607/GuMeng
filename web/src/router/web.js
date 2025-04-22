@@ -61,9 +61,9 @@ const webRouters = [
         component: () => import("@/views/web/pages/policy/policy.vue")
     },
     {
-        path: "/encyclopedia",
-        name: "Encyclopedia",
-        //component: () => import("@/views/web/pages/encyclopedia/Encyclopedia.vue")
+        path: "/shop",
+        name: "shop",
+        //component: () => import("@/views/web/pages/shop/Shop.vue")
         component: () => import("@/views/error/Error404.vue")
     }
 
