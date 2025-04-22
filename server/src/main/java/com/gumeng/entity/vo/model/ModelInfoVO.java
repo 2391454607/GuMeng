@@ -1,4 +1,4 @@
-package com.gumeng.entity.vo;
+package com.gumeng.entity.vo.model;
 
 
 import lombok.AllArgsConstructor;
@@ -8,16 +8,17 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 /**
- * 功能：
+ * 功能：model相关
+ * 描述：model详细信息
  * 作者：Z
  * 日期：2025/4/22 下午6:44
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ModelVO {
+public class ModelInfoVO {
     /**
-     *
+     *id
      */
     private Integer id;
 

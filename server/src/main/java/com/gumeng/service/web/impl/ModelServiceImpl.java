@@ -1,7 +1,9 @@
 package com.gumeng.service.web.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.gumeng.entity.vo.ModelVO;
+import com.gumeng.domain.pages.Model;
+import com.gumeng.entity.vo.model.ModelInfoVO;
+import com.gumeng.entity.vo.model.ModelVO;
 import com.gumeng.service.web.ModelService;
 import com.gumeng.mapper.web.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +26,11 @@ public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelVO>
     @Override
     public List<ModelVO> getModelList() {
         return modelMapper.getModelList();
+    }
+
+    @Override
+    public List<ModelInfoVO> getModel(Integer modelId) {
+        return modelMapper.getModelById(modelId);
     }
 }
 

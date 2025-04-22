@@ -5,6 +5,7 @@ import com.gumeng.service.web.ModelService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -24,6 +25,12 @@ public class ModelController {
     public HttpResponse getModelList(){
         Object ModelList = modelService.getModelList();
         return HttpResponse.success(ModelList);
+    }
+
+    @GetMapping("/getModel")
+    public HttpResponse getModel(@RequestParam Integer modelId){
+        Object Model = modelService.getModel(modelId);
+        return HttpResponse.success(Model);
     }
 
 }

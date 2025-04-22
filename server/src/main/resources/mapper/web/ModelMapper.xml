@@ -23,8 +23,13 @@
         model_url,views,create_time,update_time,is_delete
     </sql>
 
-    <select id="getModelList" resultType="com.gumeng.entity.vo.ModelVO">
+    <select id="getModelList" resultType="com.gumeng.entity.vo.model.ModelVO">
         SELECT * FROM gumeng.model
+        WHERE is_delete = '0'
+    </select>
+    <select id="getModelById" resultType="com.gumeng.entity.vo.model.ModelInfoVO">
+        SELECT * FROM gumeng.model
+        WHERE id = #{id}
     </select>
 
 </mapper>

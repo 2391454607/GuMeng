@@ -1,7 +1,9 @@
 package com.gumeng.service.web;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.gumeng.entity.vo.ModelVO;
+import com.gumeng.domain.pages.Model;
+import com.gumeng.entity.vo.model.ModelInfoVO;
+import com.gumeng.entity.vo.model.ModelVO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,4 +17,7 @@ import java.util.List;
 public interface ModelService extends IService<ModelVO> {
 
     List<ModelVO> getModelList();
+
+    List<ModelInfoVO> getModel(Integer modelId);
+
 }

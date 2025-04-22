@@ -1,8 +1,9 @@
 package com.gumeng.mapper.web;
 
-import com.gumeng.domain.pages.Model;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.gumeng.entity.vo.ModelVO;
+import com.gumeng.domain.pages.Model;
+import com.gumeng.entity.vo.model.ModelInfoVO;
+import com.gumeng.entity.vo.model.ModelVO;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public interface ModelMapper extends BaseMapper<ModelVO> {
 
     List<ModelVO> getModelList();
 
+    List<ModelInfoVO> getModelById(Integer modelId);
 }
 
 
