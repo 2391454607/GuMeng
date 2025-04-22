@@ -7,6 +7,7 @@ import { IconSearch, IconEye, IconPlus, IconHeart, IconMessage, IconHeartFill } 
 import { getPostListAPI as getPostsAPI, getTopicsAPI, likePostAPI, unlikePostAPI } from '@/api/forum';
 import { useUserStore } from '@/stores';
 import { formatDate } from '@/utils/format';
+import Footer from "@/views/web/layout/Footer.vue";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -372,6 +373,9 @@ onMounted(() => {
       {{ showDebugInfo ? '隐藏调试信息' : '显示调试信息' }}
     </div>
   </div>
+  <div>
+    <Footer class="footer"></Footer>
+  </div>
 </template>
 
 <style scoped>
@@ -382,6 +386,7 @@ onMounted(() => {
   padding: 20px;
   font-family: "SimSun", "宋体", serif;
   background-color: #F9F3E9;
+  min-height: calc(100vh - 64px);
 }
 
 /* 顶部区域 */
@@ -806,5 +811,10 @@ onMounted(() => {
   .pagination-container :deep(.arco-pagination-jumper) {
     display: none;
   }
+}
+
+.footer{
+  display: flex;
+  bottom: 0;
 }
 </style>

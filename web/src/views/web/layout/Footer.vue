@@ -23,9 +23,13 @@
 }
 
 .container {
-  height: 64px;
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  height: 64px;
+  font-size: 16px;
+  background-color: #8b1f1f; /* 更改页脚背景色 */
+  color: #fff; /* 更改页脚文字颜色 */
 }
 </style>
