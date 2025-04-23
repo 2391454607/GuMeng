@@ -2,7 +2,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
-import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI } from '@/api/forum';
+import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI, checkSensitiveWordsAPI } from '@/api/forum';
 import { useUserStore } from '@/stores';
 
 const router = useRouter();
@@ -23,6 +23,10 @@ const postForm = reactive({
 // 自定义话题相关
 const useCustomTopic = ref(false);
 const customTopicName = ref('');
+
+// 敏感词相关
+const checkingSensitiveWords = ref(false);
+const sensitiveWordsError = ref('');
 
 // 表单校验规则
 const rules = {
@@ -150,6 +154,32 @@ const submitForm = async () => {
     if (!isValid) {
       submitting.value = false;
       return;
+    }
+    
+    // 准备提交前检查敏感词
+    checkingSensitiveWords.value = true;
+    sensitiveWordsError.value = '';
+    
+    // 合并标题和内容进行检查
+    const textToCheck = postForm.title + ' ' + postForm.content;
+    
+    try {
+      const checkResult = await checkSensitiveWordsAPI({ text: textToCheck });
+      console.log('敏感词检查结果:', checkResult);
+      
+      if (checkResult.code === 200 && checkResult.data.containsSensitiveWords) {
+        const sensitiveWords = checkResult.data.sensitiveWords || [];
+        sensitiveWordsError.value = `内容包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
+        Message.error(sensitiveWordsError.value);
+        submitting.value = false;
+        checkingSensitiveWords.value = false;
+        return;
+      }
+    } catch (err) {
+      console.error('敏感词检查出错:', err);
+      // 敏感词检查出错，继续提交流程
+    } finally {
+      checkingSensitiveWords.value = false;
     }
     
     // 准备提交数据前确保话题数据正确
@@ -292,6 +322,11 @@ onMounted(() => {
           show-word-limit
           class="custom-textarea"
         />
+      </a-form-item>
+      
+      <!-- 敏感词错误提示 -->
+      <a-form-item v-if="sensitiveWordsError">
+        <a-alert type="error" :content="sensitiveWordsError" />
       </a-form-item>
       
       <a-form-item>

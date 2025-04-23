@@ -7,6 +7,7 @@ import { IconSearch, IconEye, IconPlus, IconHeart, IconMessage, IconHeartFill } 
 import { getPostListAPI as getPostsAPI, getTopicsAPI, likePostAPI, unlikePostAPI } from '@/api/forum';
 import { useUserStore } from '@/stores';
 import { formatDate } from '@/utils/format';
+import Footer from "@/views/web/layout/Footer.vue";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -20,11 +21,9 @@ const activeTab = ref('all');
 
 // 数据加载
 const loading = ref(true);
-const loadingMore = ref(false);
 const pageNum = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(6); // 修改为每页6条
 const total = ref(0);
-const hasMore = computed(() => posts.value.length < total.value);
 
 // 数据
 const posts = ref([]);
@@ -55,7 +54,6 @@ const testBackendConnection = async () => {
 // 处理搜索
 const handleSearch = () => {
   pageNum.value = 1;
-  posts.value = [];
   fetchPosts();
 };
 
@@ -63,28 +61,30 @@ const handleSearch = () => {
 const switchTopic = (topicId) => {
   activeTab.value = topicId;
   pageNum.value = 1;
-  posts.value = [];
   fetchPosts();
 };
 
 // 获取帖子列表
 const fetchPosts = async () => {
-  if (pageNum.value === 1) {
-    loading.value = true;
-  } else {
-    loadingMore.value = true;
-  }
+  loading.value = true;
   
   try {
     const params = {
-      pageNum: pageNum.value,
-      pageSize: pageSize.value,
+      page: pageNum.value,
+      size: pageSize.value,
       keyword: searchText.value,
     };
     
     // 添加话题筛选
     if (activeTab.value !== 'all') {
-      params.topicId = activeTab.value;
+      // 查找选中话题的名称
+      const selectedTopic = topics.value.find(t => t.id === activeTab.value);
+      if (selectedTopic) {
+        // 使用话题名称传递而非ID
+        params.topic = selectedTopic.name;
+      } else {
+        params.topic = activeTab.value;
+      }
     }
     
     const res = await getPostsAPI(params);
@@ -102,14 +102,13 @@ const fetchPosts = async () => {
         // 确保点赞数和评论数不为空
         post.thumbsUpNum = post.thumbsUpNum || 0;
         post.commonNum = post.commonNum || 0;
+        
+        // 确保用户名和头像字段正确
+        post.authorName = post.username || '匿名用户';
+        post.authorAvatar = post.avatar || '/avatar/default-avatar.png';
       });
       
-      if (pageNum.value === 1) {
-        posts.value = newPosts;
-      } else {
-        posts.value = [...posts.value, ...newPosts];
-      }
-      
+      posts.value = newPosts;
       total.value = res.data.total || 0;
     } else {
       Message.warning(res.msg || '获取帖子列表失败');
@@ -119,7 +118,6 @@ const fetchPosts = async () => {
     Message.warning('获取帖子列表失败，请稍后重试');
   } finally {
     loading.value = false;
-    loadingMore.value = false;
   }
 };
 
@@ -135,23 +133,24 @@ const fetchTopics = async () => {
   }
 };
 
-// 加载更多
-const loadMore = () => {
-  if (hasMore.value && !loadingMore.value) {
-    pageNum.value++;
-    fetchPosts();
-  }
+// 处理分页变化
+const handlePageChange = (page) => {
+  pageNum.value = page;
+  fetchPosts();
+  // 滚动到顶部
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 };
 
 // 跳转到帖子详情
 const goToDetail = (id) => {
-  console.log('跳转到帖子详情:', id);
   router.push(`/forum/detail/${id}`);
 };
 
 // 创建新帖子
 const createPost = () => {
-  console.log('创建帖子, 登录状态:', isLogin.value);
   if (!isLogin.value) {
     Message.warning('请先登录再发布帖子');
     return;
@@ -339,11 +338,10 @@ onMounted(() => {
               
               <!-- 帖子底部信息 -->
               <div class="post-footer">
-                <div class="post-topics">
-                  <span class="topic-tag" v-if="post.topicName">{{ post.topicName }}</span>
-                  <span class="topic-tag custom" v-if="post.customTopic">{{ post.customTopic }}</span>
-                </div>
                 <div class="post-stats">
+                  <span class="stat-item topic-badge">
+                    <span class="topic-tag">{{ post.topic }}</span>
+                  </span>
                   <span class="stat-item">
                     <icon-eye />
                     {{ post.viewCount || 0 }}
@@ -362,11 +360,16 @@ onMounted(() => {
             </div>
           </div>
           
-          <!-- 加载更多 -->
-          <div class="more-button" v-if="hasMore">
-            <a-button @click="loadMore" :loading="loadingMore">
-              加载更多
-            </a-button>
+          <!-- 分页 -->
+          <div class="pagination-container" v-if="total > 0">
+            <a-pagination
+              :current="pageNum"
+              :total="total"
+              :page-size="pageSize"
+              show-total
+              show-jumper
+              @change="handlePageChange"
+            />
           </div>
         </div>
       </div>
@@ -376,6 +379,9 @@ onMounted(() => {
     <div class="debug-button" v-if="showDebugInfo" @click="toggleDebugInfo">
       {{ showDebugInfo ? '隐藏调试信息' : '显示调试信息' }}
     </div>
+  </div>
+  <div>
+    <Footer class="footer"></Footer>
   </div>
 </template>
 
@@ -387,6 +393,7 @@ onMounted(() => {
   padding: 20px;
   font-family: "SimSun", "宋体", serif;
   background-color: #F9F3E9;
+  min-height: calc(100vh - 64px);
 }
 
 /* 顶部区域 */
@@ -685,34 +692,14 @@ onMounted(() => {
 
 .post-footer {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-}
-
-.post-topics {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.topic-tag {
-  padding: 4px 8px;
-  background-color: #FBF0E9;
-  color: #8C1F28;
-  font-size: 12px;
-  border-radius: 4px;
-  border: 1px solid #E4D9C3;
-}
-
-.topic-tag.custom {
-  background-color: #E8F4F8;
-  color: #2C6E8C;
-  border-color: #B8D8E6;
 }
 
 .post-stats {
   display: flex;
   gap: 16px;
+  align-items: center;
 }
 
 .stat-item {
@@ -736,15 +723,28 @@ onMounted(() => {
   margin-right: 5px;
 }
 
-.more-button {
-  padding: 20px;
-  text-align: center;
+.topic-badge {
+  cursor: default;
 }
 
-.more-button a-button {
-  background-color: #8C1F28;
-  border-color: #8C1F28;
-  color: #F9F3E9;
+.topic-badge:hover {
+  color: #7F4F24;
+}
+
+.topic-tag {
+  padding: 4px 8px;
+  background-color: #FBF0E9;
+  color: #8C1F28;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid #E4D9C3;
+}
+
+.pagination-container {
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  justify-content: center;
 }
 
 /* 调试按钮 */
@@ -814,5 +814,14 @@ onMounted(() => {
     width: calc(33.333% - 7px);
     height: 100px;
   }
+  
+  .pagination-container :deep(.arco-pagination-jumper) {
+    display: none;
+  }
+}
+
+.footer{
+  display: flex;
+  bottom: 0;
 }
 </style>

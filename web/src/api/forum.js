@@ -126,6 +126,16 @@ export function uploadImageAPI(file, type = 'post') {
   return http.post('/file/upload/image', formData);
 }
 
+/**
+ * 检测文本是否包含敏感词
+ * @param {Object} data 
+ * @param {string} data.text - 待检测的文本内容
+ * @returns {Promise} 返回检测结果
+ */
+export function checkSensitiveWordsAPI(data) {
+  return http.post('/forum/checkSensitiveWords', data);
+}
+
 // 论坛路由配置
 export const forumRoutes = {
   path: '/forum',

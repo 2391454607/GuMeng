@@ -1,9 +1,9 @@
 package com.gumeng.security;
 
-import com.gumeng.domain.User;
-import com.gumeng.service.PermissionService;
-import com.gumeng.service.RoleService;
-import com.gumeng.service.UserService;
+import com.gumeng.domain.user.User;
+import com.gumeng.service.user.PermissionService;
+import com.gumeng.service.user.RoleService;
+import com.gumeng.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

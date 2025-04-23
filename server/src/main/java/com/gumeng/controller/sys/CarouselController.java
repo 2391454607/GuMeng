@@ -2,7 +2,7 @@ package com.gumeng.controller.sys;
 
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.pages.Carousel;
-import com.gumeng.service.CarouselService;
+import com.gumeng.service.sys.CarouselService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -38,15 +38,15 @@ public class CarouselController {
 
     //修改轮播图
     @PostMapping("/updateCarousel")
-    public HttpResponse updateCarousel(@RequestParam Integer id, String imageUrl) {
-        carouselService.updateCarousel(id, imageUrl);
+    public HttpResponse updateCarousel(@RequestBody Carousel carousel) {
+        carouselService.updateCarousel(carousel);
         return HttpResponse.success();
     }
 
     //删除
     @PostMapping("/deleteCarousel")
-    public HttpResponse deleteCarousel(@RequestParam Integer id) {
-        carouselService.deleteCarousel(id);
+    public HttpResponse deleteCarousel(@RequestBody Carousel carousel) {
+        carouselService.deleteCarousel(carousel);
         return HttpResponse.success();
     }
 

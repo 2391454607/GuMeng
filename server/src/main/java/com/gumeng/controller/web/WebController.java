@@ -2,7 +2,7 @@ package com.gumeng.controller.web;
 
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.Policy;
-import com.gumeng.service.CarouselService;
+import com.gumeng.service.sys.CarouselService;
 import com.gumeng.service.PolicyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
