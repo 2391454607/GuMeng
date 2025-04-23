@@ -1,3 +1,6 @@
+import * as path from "node:path";
+import { visualizationRouters } from "./visualization.js";
+
 const webRouters = [
     {
         path: "/",
@@ -51,8 +54,13 @@ const webRouters = [
     {
         path: "/showroom",
         name: "ShowRoom",
-        //component: () => import("@/views/web/pages/showroom/Showroom.vue")
-        component: () => import("@/views/error/Error404.vue")
+        component: () => import("@/views/web/pages/showroom/Showroom.vue"),
+    },
+    {
+        path: "/visualization",
+        name: "Visualization",
+        component: () => import("@/views/visualization/Visualization.vue"),
+        children: visualizationRouters[0].children
     },
     {
         path: "/policy",
@@ -60,13 +68,11 @@ const webRouters = [
         component: () => import("@/views/web/pages/policy/policy.vue")
     },
     {
-        path: "/encyclopedia",
-        name: "Encyclopedia",
-        //component: () => import("@/views/web/pages/encyclopedia/Encyclopedia.vue")
+        path: "/shop",
+        name: "shop",
+        //component: () => import("@/views/web/pages/shop/Shop.vue")
         component: () => import("@/views/error/Error404.vue")
     }
-
-
 ];
 
 export {webRouters};

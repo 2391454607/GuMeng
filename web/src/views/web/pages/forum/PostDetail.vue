@@ -19,7 +19,8 @@ import {
   addCommentAPI, 
   deleteCommentAPI, 
   likeCommentAPI, 
-  unlikeCommentAPI 
+  unlikeCommentAPI,
+  checkSensitiveWordsAPI
 } from '@/api/forum';
 import { useUserStore } from '@/stores';
 import { formatDate } from '@/utils/format';
@@ -61,6 +62,10 @@ const showCommentDeleteConfirm = ref(false);
 const deleteCommentModalVisible = ref(false);
 const commentToDelete = ref(null);
 
+// 敏感词相关
+const checkingSensitiveWords = ref(false);
+const sensitiveWordsError = ref('');
+
 // 计算评论总数（包括所有回复）
 const totalCommentCount = computed(() => {
   let count = comments.value.length;
@@ -101,6 +106,11 @@ const fetchPostDetail = async () => {
     
     if (res.code === 200) {
       post.value = res.data;
+      
+      // 确保用户名和头像字段正确
+      post.value.username = post.value.username || post.value.authorName || '匿名用户';
+      post.value.avatar = post.value.avatar || post.value.userPic || '/avatar/default-avatar.png';
+      
       // 将图片字符串转为数组
       if (post.value.images && typeof post.value.images === 'string') {
         post.value.images = post.value.images.split(',').filter(img => img);
@@ -254,6 +264,28 @@ const submitComment = async () => {
     return;
   }
   
+  // 检查敏感词
+  checkingSensitiveWords.value = true;
+  sensitiveWordsError.value = '';
+  
+  try {
+    const checkResult = await checkSensitiveWordsAPI({ text: commentContent.value.trim() });
+    console.log('敏感词检查结果:', checkResult);
+    
+    if (checkResult.code === 200 && checkResult.data.containsSensitiveWords) {
+      const sensitiveWords = checkResult.data.sensitiveWords || [];
+      sensitiveWordsError.value = `评论包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
+      Message.error(sensitiveWordsError.value);
+      checkingSensitiveWords.value = false;
+      return;
+    }
+  } catch (err) {
+    console.error('敏感词检查出错:', err);
+    // 敏感词检查出错，继续评论流程
+  } finally {
+    checkingSensitiveWords.value = false;
+  }
+  
   try {
     const res = await addCommentAPI({
       postId: postId.value,
@@ -265,6 +297,7 @@ const submitComment = async () => {
     if (res.code === 200) {
       Message.success('评论成功');
       commentContent.value = '';
+      sensitiveWordsError.value = '';
       // 重新获取评论列表
       fetchComments();
       // 更新帖子评论数
@@ -317,6 +350,28 @@ const submitReply = async () => {
     return;
   }
   
+  // 检查敏感词
+  checkingSensitiveWords.value = true;
+  sensitiveWordsError.value = '';
+  
+  try {
+    const checkResult = await checkSensitiveWordsAPI({ text: replyContent.value.trim() });
+    console.log('敏感词检查结果:', checkResult);
+    
+    if (checkResult.code === 200 && checkResult.data.containsSensitiveWords) {
+      const sensitiveWords = checkResult.data.sensitiveWords || [];
+      sensitiveWordsError.value = `回复包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
+      Message.error(sensitiveWordsError.value);
+      checkingSensitiveWords.value = false;
+      return;
+    }
+  } catch (err) {
+    console.error('敏感词检查出错:', err);
+    // 敏感词检查出错，继续回复流程
+  } finally {
+    checkingSensitiveWords.value = false;
+  }
+  
   try {
     const res = await addCommentAPI({
       postId: postId.value,
@@ -333,6 +388,7 @@ const submitReply = async () => {
       replyContent.value = '';
       replyingTo.value = null;
       parentComment.value = null;
+      sensitiveWordsError.value = '';
       // 重新获取评论列表
       fetchComments();
       // 更新帖子评论数
@@ -504,15 +560,15 @@ onMounted(() => {
     <template v-else>
       <a-card class="post-card">
         <div class="post-header">
-          <div class="post-topic" v-if="post.topicName">
-            <span class="topic-tag">{{ post.topicName }}</span>
+          <div class="post-topic" v-if="post.topic">
+            <span class="topic-tag">{{ post.topic }}</span>
           </div>
           <h1 class="post-title">{{ post.title }}</h1>
           <div class="post-meta">
             <div class="author-info">
-              <img :src="post.authorAvatar || '@/assets/avatar/default-avatar.png'" alt="作者头像" class="author-avatar">
+              <img :src="post.avatar || '/avatar/default-avatar.png'" alt="作者头像" class="author-avatar">
               <div class="author-detail">
-                <div class="author-name">{{ post.authorName }}</div>
+                <div class="author-name">{{ post.username }}</div>
                 <div class="post-time">{{ formatDate(post.createTime) }}</div>
               </div>
             </div>
@@ -583,13 +639,16 @@ onMounted(() => {
               :auto-size="{ minRows: 3, maxRows: 5 }"
               class="comment-textarea"
             />
+            <!-- 敏感词错误提示 -->
+            <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 10px 0;" />
             <a-button 
               type="primary" 
               @click="submitComment" 
-              :disabled="!commentContent.trim() || !userStore.isLogin" 
+              :loading="checkingSensitiveWords"
+              :disabled="!commentContent.trim() || !userStore.isLogin || checkingSensitiveWords" 
               class="comment-submit-btn"
             >
-              {{ userStore.isLogin ? '发表评论' : '请先登录' }}
+              {{ userStore.isLogin ? (checkingSensitiveWords ? '检测中...' : '发表评论') : '请先登录' }}
             </a-button>
           </div>
           
@@ -635,6 +694,8 @@ onMounted(() => {
                     :auto-size="{ minRows: 2, maxRows: 4 }"
                     class="reply-textarea"
                   />
+                  <!-- 敏感词错误提示 -->
+                  <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 5px 0;" />
                   <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
                     取消
                   </a-button>
@@ -642,10 +703,11 @@ onMounted(() => {
                     type="primary" 
                     size="small" 
                     @click="submitReply" 
-                    :disabled="!replyContent.trim()" 
+                    :loading="checkingSensitiveWords"
+                    :disabled="!replyContent.trim() || checkingSensitiveWords" 
                     class="reply-submit-btn"
                   >
-                    回复
+                    {{ checkingSensitiveWords ? '检测中...' : '回复' }}
                   </a-button>
                 </div>
                 
@@ -931,6 +993,16 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.topic-tag-footer {
+  padding: 4px 12px;
+  background-color: #FBF0E9;
+  color: #8C1F28;
+  font-size: 12px;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid #E4D9C3;
 }
 
 .interaction-actions {

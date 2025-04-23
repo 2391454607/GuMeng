@@ -12,12 +12,13 @@ let beginX = 0;
 
 const menuItems = [
   {name: '首页', url: '/'},
-  {name: '资讯', url: '/information'},
+  {name: '非遗百科', url: '/information'},
   {name: '非遗论坛', url: '/forum'},
   {name: '非遗互动', url: '/interaction'},
   {name: '虚拟展厅', url: '/showroom'},
-  {name: '政策', url: '/policy'},
-  {name: '百科', url: '/encyclopedia'},
+  {name: '大数据可视化', url: '/visualization'},
+  {name: '相关政策', url: '/policy'},
+  {name: '非遗文创', url: '/shop'},
 ];
 
 // 点击菜单项
@@ -130,7 +131,21 @@ const handleLogout = () => {
               @mousedown="handleMouseDown"
               @mouseout="handleMouseOut"
               @mouseover="handleMouseOver">
-            {{ item.name }}
+            <template v-if="item.children">
+              <a-dropdown trigger="hover">
+                <span>{{ item.name }}</span>
+                <template #content>
+                  <a-doption v-for="(child, childIndex) in item.children"
+                            :key="childIndex"
+                            @click="onClickMenuItem(child)">
+                    {{ child.name }}
+                  </a-doption>
+                </template>
+              </a-dropdown>
+            </template>
+            <template v-else>
+              {{ item.name }}
+            </template>
           </li>
         </ul>
       </nav>

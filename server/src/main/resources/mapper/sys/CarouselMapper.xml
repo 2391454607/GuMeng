@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gumeng.mapper.sys.CarouselMapper">
+
+    <resultMap id="BaseResultMap" type="com.gumeng.domain.pages.Carousel">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="imageUrl" column="image_url" jdbcType="VARCHAR"/>
+            <result property="createdTime" column="created_time" jdbcType="TIMESTAMP"/>
+            <result property="updatedTime" column="updated_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,image_url,created_time,updated_time
+    </sql>
+
+    <!-- 查询轮播图 -->
+    <select id="getCarousel" resultType="com.gumeng.domain.pages.Carousel">
+        SELECT * FROM carousel
+    </select>
+
+    <!-- 根据id查询 -->
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT 
+        <include refid="Base_Column_List"/>
+        FROM carousel
+        WHERE id = #{id}
+    </select>
+
+    <!-- 新增 -->
+    <select id="addCarousel" resultType="com.gumeng.domain.pages.Carousel">
+        INSERT INTO carousel
+        SET image_url = #{imageUrl},
+            created_time = now(),
+            updated_time = now()
+    </select>
+
+    <!-- 修改轮播图 -->
+    <select id="updateCarousel" resultType="com.gumeng.domain.pages.Carousel">
+        UPDATE carousel
+        SET image_url = #{imageUrl},
+            updated_time = now()
+        WHERE id = #{id}
+    </select>
+
+    <!-- 删除 -->
+    <select id="deleteCarousel">
+        DELETE FROM carousel WHERE id = #{id}
+    </select>
+
+</mapper>
