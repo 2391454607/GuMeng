@@ -17,7 +17,7 @@ import java.util.List;
 * @createDate 2025-04-22 18:23:07
 */
 @Service
-public class ModelServiceImpl extends ServiceImpl<ModelMapper, ModelVO>
+public class ModelServiceImpl extends ServiceImpl<ModelMapper, Model>
     implements ModelService{
 
     @Autowired

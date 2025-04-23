@@ -23,13 +23,13 @@ public class Model implements Serializable {
     /**
      * 所属地区
      */
-    @TableId(value = "area")
+    @TableField(value = "area")
     private String area;
 
     /**
      * 所属类别
      */
-    @TableId(value = "type")
+    @TableField(value = "type")
     private String type;
 
     /**

@@ -15,7 +15,7 @@ import java.util.List;
 * @Entity com.gumeng.domain.pages.Model
 */
 @Mapper
-public interface ModelMapper extends BaseMapper<ModelVO> {
+public interface ModelMapper extends BaseMapper<Model> {
 
     List<ModelVO> getModelList();
 

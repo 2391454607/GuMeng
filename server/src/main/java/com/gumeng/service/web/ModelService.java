@@ -14,7 +14,7 @@ import java.util.List;
 * @createDate 2025-04-22 18:23:07
 */
 @Service
-public interface ModelService extends IService<ModelVO> {
+public interface ModelService extends IService<Model> {
 
     List<ModelVO> getModelList();
 
