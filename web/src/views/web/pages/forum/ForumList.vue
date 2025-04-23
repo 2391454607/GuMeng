@@ -77,7 +77,14 @@ const fetchPosts = async () => {
     
     // 添加话题筛选
     if (activeTab.value !== 'all') {
-      params.topic = activeTab.value;
+      // 查找选中话题的名称
+      const selectedTopic = topics.value.find(t => t.id === activeTab.value);
+      if (selectedTopic) {
+        // 使用话题名称传递而非ID
+        params.topic = selectedTopic.name;
+      } else {
+        params.topic = activeTab.value;
+      }
     }
     
     const res = await getPostsAPI(params);
