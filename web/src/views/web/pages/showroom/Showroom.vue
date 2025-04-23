@@ -2,6 +2,7 @@
 import {onMounted, ref} from 'vue';
 import Footer from "@/views/web/layout/Footer.vue";
 import {getModelList} from "@/api/web/Model.js";
+import { useRouter } from 'vue-router';
 
 const models = ref([
   {
@@ -22,8 +23,13 @@ onMounted(()=>{
   })
 })
 
+const router = useRouter();
+
 const handleModelClick = (id) => {
-  window.location.href = `/show3D?model=${id}`;
+  router.push({
+    path: '/show3D',
+    query: { modelId: id }
+  });
 };
 </script>
 

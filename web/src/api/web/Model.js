@@ -6,6 +6,6 @@ export const getModelList = () => {
 }
 
 //获取模型详情（3d展览）
-export const getModelDetail = ({id:id}) => {
-    return http.get(`/web/getModelDetail`, {id:id});
+export const getModelDetail = ({modelId: modelId}) => {
+    return http.get(`/web/getModel`, {modelId: modelId});
 }
