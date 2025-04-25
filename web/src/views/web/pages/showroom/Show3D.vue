@@ -46,10 +46,9 @@ const getModel = async () => {
       console.log('模型数据:', modelData);
       
       if (modelData.modelUrl && validateModelUrl(modelData.modelUrl)) {
-        const modelUrl = modelData.modelUrl.startsWith('http') 
-          ? modelData.modelUrl 
-          : `${import.meta.env.VITE_API_URL}${modelData.modelUrl}`;
-        console.log('处理后的模型URL:', modelUrl);
+        // 直接使用返回的路径
+        const modelUrl = modelData.modelUrl;
+        console.log('模型URL:', modelUrl);
         loadModel(modelUrl);
       } else {
         // 模拟加载进度
