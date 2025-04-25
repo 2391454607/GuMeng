@@ -52,7 +52,7 @@ const scrollToSection = (index) => {
 const carouselList = ref([
   {
     id: "default",
-    imageUrl: "/src/assets/image/gumeng.png"  // 默认轮播图
+    imageUrl: "/image/gumeng.png"  // 默认轮播图
   }
 ])
 
