@@ -121,7 +121,7 @@ const loadModel = (modelUrl) => {
   try {
     const loader = new GLTFLoader();
     const dracoLoader = new DRACOLoader();
-    dracoLoader.setDecoderPath("/public/draco/");
+    dracoLoader.setDecoderPath("/draco/");
     loader.setDRACOLoader(dracoLoader);
     
     loader.load(

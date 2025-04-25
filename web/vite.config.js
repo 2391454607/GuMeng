@@ -4,7 +4,13 @@ import { fileURLToPath } from 'url';
 import { URL } from 'node:url';
 import Components from 'unplugin-vue-components/vite'
 import { StCommonUIVue3Resolver} from "st-common-ui-vue3"
+
 export default defineConfig({
+  /**
+   * 控制打包后所有资源的相对路径。
+   */
+  base: '/',
+
   plugins: [
       vue(),
     // 配置按需自动加载组件的 Vite 插件
