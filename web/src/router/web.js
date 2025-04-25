@@ -1,4 +1,5 @@
 import * as path from "node:path";
+import { visualizationRouters } from "./visualization.js";
 
 const webRouters = [
     {
@@ -56,6 +57,12 @@ const webRouters = [
         component: () => import("@/views/web/pages/showroom/Showroom.vue"),
     },
     {
+        path: "/visualization",
+        name: "Visualization",
+        component: () => import("@/views/visualization/Visualization.vue"),
+        children: visualizationRouters[0].children
+    },
+    {
         path: "/policy",
         name: "Policy",
         component: () => import("@/views/web/pages/policy/policy.vue")
@@ -66,8 +73,6 @@ const webRouters = [
         //component: () => import("@/views/web/pages/shop/Shop.vue")
         component: () => import("@/views/error/Error404.vue")
     }
-
-
 ];
 
 export {webRouters};
