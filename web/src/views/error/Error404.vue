@@ -17,7 +17,7 @@ const goBack = () => {
   <div class="not-found-container">
     <div class="content-wrapper">
       <div class="image-container">
-        <img src="@/assets/image/gumeng.png" alt="故梦阑珊" class="not-found-image" />
+        <img src="/image/gumeng.png" alt="故梦阑珊" class="not-found-image" />
       </div>
       <div class="text-container">
         <h1 class="error-code">404</h1>
@@ -129,7 +129,7 @@ const goBack = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('@/assets/image/gumeng.png');
+  background-image: url('/image/gumeng.png');
   opacity: 0.05;
   z-index: 1;
 }

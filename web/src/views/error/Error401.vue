@@ -16,7 +16,7 @@ const goLogin = () => {
   <div class="unauthorized-container">
     <div class="content-wrapper">
       <div class="image-container">
-        <img src="@/assets/image/gumeng.png" alt="传统龙纹" class="dragon-image" />
+        <img src="/image/gumeng.png" alt="传统龙纹" class="dragon-image" />
       </div>
       <div class="text-container">
         <h1 class="error-code">401</h1>
@@ -125,7 +125,7 @@ const goLogin = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('@/assets/image/gumeng.png');
+  background-image: url('/image/gumeng.png');
   opacity: 0.05;
   z-index: 1;
 }

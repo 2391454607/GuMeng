@@ -17,7 +17,7 @@ const getDivStyle = (i, {start, end}) => {
     width: '100%',
     height: '100%',
     transform: `rotateX(${(360 / img.value) * i}deg) translateZ(3430px)`,
-    background: `url(/public/background/${imageIndex}.jpg) no-repeat`,
+    background: `url(/background/${imageIndex}.jpg) no-repeat`,
     backgroundSize: 'cover'
   }
 }

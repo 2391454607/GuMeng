@@ -16,7 +16,6 @@ const menuItems = [
   {name: '非遗论坛', url: '/forum'},
   {name: '非遗互动', url: '/interaction'},
   {name: '虚拟展厅', url: '/showroom'},
-  {name: '大数据可视化', url: '/visualization'},
   {name: '相关政策', url: '/policy'},
   {name: '非遗文创', url: '/shop'},
 ];
@@ -274,7 +273,7 @@ const handleLogout = () => {
   width: 90px;
   height: 64px;
   border-radius: 10px;
-  background: url("@/assets/image/dh.png") no-repeat;
+  background: url("/image/dh.png") no-repeat;
   position: absolute;
   transition: left 0.1s ease;
 }

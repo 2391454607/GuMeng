@@ -16,7 +16,7 @@ const goBack = () => {
   <div class="forbidden-container">
     <div class="content-wrapper">
       <div class="image-container">
-        <img src="@/assets/image/gumeng.png" alt="古蒙形象" class="forbidden-image" />
+        <img src="/public/image/gumeng.png" alt="古蒙形象" class="forbidden-image" />
       </div>
       <div class="text-container">
         <h1 class="error-code">403</h1>
@@ -125,7 +125,7 @@ const goBack = () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('@/assets/image/gumeng.png');
+  background-image: url('/image/gumeng.png');
   opacity: 0.05;
   z-index: 1;
 }
