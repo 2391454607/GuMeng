@@ -1,7 +1,6 @@
 <script setup>
 import { useRouter, useRoute } from 'vue-router';
 import { ref, watch } from 'vue';
-import { Message } from '@arco-design/web-vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -9,7 +8,7 @@ const route = useRoute();
 const activeTab = ref('trend');
 
 const tabs = [
-  { key: 'trend', title: '趋势分析', path: '/visualization' },
+  { key: 'trend', title: '趋势分析', path: '/visualization/trend' },
   { key: 'overview', title: '数据概览', path: '/visualization/overview' },
   { key: 'content', title: '内容分析', path: '/visualization/content' },
   { key: 'relation', title: '关联分析', path: '/visualization/relation' }
@@ -52,13 +51,15 @@ const handleTabChange = (key) => {
         </a-tabs>
       </div>
       <a-layout-content>
-        <router-view v-slot="{ Component }">
-          <transition name="fade" mode="out-in">
-            <keep-alive>
-              <component :is="Component" />
-            </keep-alive>
-          </transition>
-        </router-view>
+        <RouterView></RouterView>
+
+        <!--        <router-view v-slot="{ Component }">-->
+<!--          <transition name="fade" mode="out-in">-->
+<!--            <keep-alive>-->
+<!--              <component :is="Component" />-->
+<!--            </keep-alive>-->
+<!--          </transition>-->
+<!--        </router-view>-->
       </a-layout-content>
     </a-layout>
   </div>

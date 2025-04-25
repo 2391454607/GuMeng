@@ -1,13 +1,8 @@
 import * as path from "node:path";
 
 const visualizationRouters = [
-    {
-        path: "",
-        name: "visualizationHome",
-        component: () => import("@/views/visualization/Visualization.vue"),
-        children: [
             {
-                path: "",
+                path: "trend",
                 name: "Trend",
                 component: () => import("@/views/visualization/pages/Trend.vue")
             },
@@ -26,8 +21,6 @@ const visualizationRouters = [
                 name: "Relation",
                 component: () => import("@/views/visualization/pages/Relation.vue")
             }
-        ]
-    }
 ];
 
 export {visualizationRouters};

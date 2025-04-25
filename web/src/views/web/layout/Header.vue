@@ -153,7 +153,7 @@ const handleLogout = () => {
         <template v-if="token">
           <a-dropdown position="bottom" trigger="hover">
             <a-space>
-              <a-avatar :image-url="userInfo.userPic || '/src/assets/image/gumeng.png'" :size="40"
+              <a-avatar :image-url="userInfo.userPic || '/image/gumeng.png'" :size="40"
                         style="cursor: pointer">
                 <template #fallback>
                   <icon-user/>
@@ -169,6 +169,10 @@ const handleLogout = () => {
               <a-doption v-if="isAdmin" @click="router.push('/sys')">
                 <icon-settings/>
                 管理系统
+              </a-doption>
+              <a-doption @click="router.push('/visualization/trend')">
+                <icon-settings/>
+                非遗数据大屏
               </a-doption>
               <a-doption @click="handleLogout">
                 <icon-export/>
