@@ -6,6 +6,8 @@ import SysHome from "@/views/manage/Home.vue"
 import {sysRouters} from "@/router/sysIndex.js"
 import VisualizationHome from "@/views/visualization/Visualization.vue"
 import {visualizationRouters} from "@/router/visualization.js"
+import UserInfo from "@/views/userInfo/UserInfo.vue"
+import {userInfoRouters} from "@/router/userInfo.js";
 
 /**
  * @description 导出路由配置
@@ -74,7 +76,8 @@ export const router = createRouter({
         {
             path: "/userInfo",
             name: "UserInfo",
-            component: () => import("@/views/auth/UserInfo.vue"),
+            component: UserInfo,
+            children: userInfoRouters,
             meta: { requiresAuth: true } // 需要登录
         },
         /**

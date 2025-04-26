@@ -3,7 +3,7 @@
 </script>
 
 <template>
-用户个人信息
+个人资料
 </template>
 
 <style scoped>
