@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gumeng.mapper.shop.ProductMapper">
+
+    <resultMap id="BaseResultMap" type="com.gumeng.domain.shop.Product">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="imageUrl" column="image_url" jdbcType="VARCHAR"/>
+            <result property="priceMoney" column="price_money" jdbcType="DECIMAL"/>
+            <result property="mixedPriceMoney" column="mixed_price_money" jdbcType="DECIMAL"/>
+            <result property="mixedPricePoints" column="mixed_price_points" jdbcType="INTEGER"/>
+            <result property="stock" column="stock" jdbcType="INTEGER"/>
+            <result property="isAvailable" column="is_available" jdbcType="TINYINT"/>
+            <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+            <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,image_url,price_money,mixed_price_money,mixed_price_points,
+        stock,is_available,created_at,updated_at
+    </sql>
+</mapper>
