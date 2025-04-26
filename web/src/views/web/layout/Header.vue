@@ -135,8 +135,8 @@ const handleLogout = () => {
                 <span>{{ item.name }}</span>
                 <template #content>
                   <a-doption v-for="(child, childIndex) in item.children"
-                            :key="childIndex"
-                            @click="onClickMenuItem(child)">
+                             :key="childIndex"
+                             @click="onClickMenuItem(child)">
                     {{ child.name }}
                   </a-doption>
                 </template>
@@ -152,7 +152,7 @@ const handleLogout = () => {
       <div class="header-right">
         <template v-if="token">
           <a-dropdown position="bottom" trigger="hover">
-            <a-space>
+            <a-space @click="router.push('/userInfo')">
               <a-avatar :image-url="userInfo.userPic || '/image/gumeng.png'" :size="40"
                         style="cursor: pointer">
                 <template #fallback>
@@ -282,24 +282,4 @@ const handleLogout = () => {
   transition: left 0.1s ease;
 }
 
-.header-right :deep(.arco-dropdown-item) {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-}
-
-.header-right :deep(.arco-icon) {
-  font-size: 16px;
-}
-
-.header-right :deep(.arco-btn) {
-  color: white;
-  border-color: white;
-}
-
-.header-right :deep(.arco-btn:hover) {
-  color: #ffd700;
-  border-color: #ffd700;
-}
 </style>
