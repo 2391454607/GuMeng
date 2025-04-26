@@ -282,4 +282,25 @@ const handleLogout = () => {
   transition: left 0.1s ease;
 }
 
+.header-right :deep(.arco-dropdown-item) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+}
+
+.header-right :deep(.arco-icon) {
+  font-size: 16px;
+}
+
+.header-right :deep(.arco-btn) {
+  color: white;
+  border-color: white;
+}
+
+.header-right :deep(.arco-btn:hover) {
+  color: #ffd700;
+  border-color: #ffd700;
+}
+
 </style>
