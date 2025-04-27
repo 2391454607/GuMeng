@@ -16,4 +16,6 @@ public interface UserPointsService extends IService<UserPoints> {
 
 
     UserPoints getUserPoints(Integer userId);
+
+    void addPoints(Integer userId, Integer rewardPoints);
 }

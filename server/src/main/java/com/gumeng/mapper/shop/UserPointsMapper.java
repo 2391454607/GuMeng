@@ -16,6 +16,10 @@ public interface UserPointsMapper extends BaseMapper<UserPoints> {
 
 
     UserPoints getPoints(Integer userId);
+
+    void addUserPoints(UserPoints userPoints);
+
+    void updateUserPointsById(UserPoints userPoints);
 }
 
 
