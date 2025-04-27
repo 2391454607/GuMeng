@@ -91,6 +91,7 @@ const menuItems = [
   { name: '我的订单', icon: IconUnorderedList, url: '/userInfo/order' },
   { name: '我的收藏', icon: IconStar, url: '/userInfo/collection' },
   { name: '浏览历史', icon: IconHistory, url: '/userInfo/history' },
+  { name: '资产流动', icon: IconUser, url: '/userInfo/assetFlows' },
   { name: '账号设置', icon: IconSettings, url: '/userInfo/settings' }
 ];
 

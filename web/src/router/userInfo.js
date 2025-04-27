@@ -11,11 +11,21 @@ const userInfoRouters = [
         name: "order",
         component: () => import("@/views/userInfo/info/Order.vue")
     },
-    // {
-    //     path: "",
-    //     name: "",
-    //     component: () => import("")
-    // },
+    {
+        path: "collection",
+        name: "collection",
+        component:() => import("@/views/userInfo/info/Collection.vue")
+    },
+    {
+        path: "history",
+        name: "history",
+        component:() => import("@/views/userInfo/info/History.vue")
+    },
+    {
+        path: "assetFlows",
+        name: "assetFlows",
+        component: () => import("@/views/userInfo/info/AssetFlows.vue")
+    },
     {
         path: "settings",
         name: "settings",

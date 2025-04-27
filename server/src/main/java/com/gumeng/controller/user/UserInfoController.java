@@ -126,4 +126,15 @@ public class UserInfoController {
             return HttpResponse.error("签到失败：" + e.getMessage());
         }
     }
+
+    //充值
+
+
+    //提现
+
+
+    //获取用户资产流动信息
+
+
+
 }
