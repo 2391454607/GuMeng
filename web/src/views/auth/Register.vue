@@ -2,7 +2,7 @@
 import {onMounted, onBeforeUnmount, reactive, ref} from 'vue';
 import {Message} from '@arco-design/web-vue';
 import {useRouter} from 'vue-router';
-import {SendEmailApi, userRegisterAPI} from "@/api/Auth.js";
+import {SendEmailApi, userRegisterAPI} from "@/api/user/Auth.js";
 //引入3D文本组件
 import {St3DText, St3DTiltContainer, StDynamicBorder1, StGhostText,} from "st-common-ui-vue3";
 

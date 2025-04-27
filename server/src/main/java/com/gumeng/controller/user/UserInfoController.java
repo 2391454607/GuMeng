@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -63,18 +64,22 @@ public class UserInfoController {
         // 获取用户积分信息
         UserPoints points = userPointsService.getUserPoints(userId);
         if (points == null) {
-            return HttpResponse.error("获取积分信息失败");
+            userAssetVO.setTotalPoints(0);     // 设置默认值0
+            userAssetVO.setCurrentPoints(0);   // 设置默认值0
+        } else {
+            userAssetVO.setTotalPoints(points.getTotalPoints());     // 总积分
+            userAssetVO.setCurrentPoints(points.getCurrentPoints()); // 可用积分
         }
-        userAssetVO.setTotalPoints(points.getTotalPoints());     // 总积分
-        userAssetVO.setCurrentPoints(points.getCurrentPoints()); // 可用积分
         
         // 获取用户余额信息
         UserBalance balance = userBalanceService.getUserBalance(userId);
         if (balance == null) {
-            return HttpResponse.error("获取余额信息失败");
+            userAssetVO.setTotalAmount(BigDecimal.valueOf(0.00));     // 设置默认值0
+            userAssetVO.setCurrentAmount(BigDecimal.valueOf(0.00));   // 设置默认值0
+        } else {
+            userAssetVO.setTotalAmount(balance.getTotalAmount());     // 累计余额
+            userAssetVO.setCurrentAmount(balance.getCurrentAmount()); // 可用余额
         }
-        userAssetVO.setTotalAmount(balance.getTotalAmount());     // 累计余额
-        userAssetVO.setCurrentAmount(balance.getCurrentAmount()); // 可用余额
         
         return HttpResponse.success(userAssetVO);
     }

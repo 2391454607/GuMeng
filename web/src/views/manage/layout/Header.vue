@@ -3,7 +3,7 @@ import {ref, onMounted} from "vue";
 import {router} from "@/router/index.js";
 import {Message} from '@arco-design/web-vue';
 import {IconCaretLeft, IconCaretRight, IconHome, IconUser, IconExport} from "@arco-design/web-vue/es/icon";
-import {userLogoutAPI, getUserInfoAPI} from "@/api/Auth.js";
+import {userLogoutAPI, getUserInfoAPI} from "@/api/user/Auth.js";
 
 const props = defineProps({
   coll: {

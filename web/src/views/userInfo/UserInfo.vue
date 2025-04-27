@@ -2,7 +2,8 @@
 import Footer from "@/views/web/layout/Footer.vue";
 import {router} from "@/router/index.js";
 import {onMounted, ref} from "vue";
-import {getUserInfoAPI, userLogoutAPI} from "@/api/Auth.js";
+import {getUserInfoAPI, userLogoutAPI} from "@/api/user/Auth.js";
+import {dailySignAPI, getUserAssetAPI} from "@/api/user/UserInfo.js";
 import {Message} from "@arco-design/web-vue";
 import {
   IconUser,
@@ -17,6 +18,12 @@ import {
 const userInfo = ref({});
 const token = localStorage.getItem('token');
 const isAdmin = ref(false);
+const userAsset = ref({
+  totalAmount: "",     //累计金额
+  currentAmount: "",   //可用金额
+  totalPoints: "",     //累计积分
+  currentPoints: ""    //可用积分
+});
 
 onMounted(() => {
 
@@ -30,7 +37,6 @@ onMounted(() => {
     const token = localStorage.getItem('token');
     if (token) {
       getUserInfoAPI().then(res => {
-        console.log(res.data);
         if (res.code === 200) {
           userInfo.value = res.data;
           // 更新本地存储的用户信息
@@ -39,11 +45,18 @@ onMounted(() => {
           Message.error('获取用户信息失败');
         }
       });
+
+      //获取用户资产
+      getUserAssetAPI().then(res => {
+        userAsset.value = res.data;
+      })
     }
   } catch (error) {
     console.error('获取用户信息错误:', error);
     Message.error('获取用户信息失败');
   }
+
+
 });
 
 // 退出登录
@@ -57,7 +70,7 @@ const handleLogout = () => {
         Message.success('退出登录成功');
         // 延时刷新当前页面
         setTimeout(() => {
-          window.location.reload();
+          router.push("/");
         }, 1000);
       } else {
         Message.error(res.msg || '退出登录失败');
@@ -93,6 +106,21 @@ const onClickMenuItem = (item) => {
     Message.warning('该菜单项没有配置跳转地址');
   }
 };
+
+// 用户签到
+const dailySign = () => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    dailySignAPI().then(res => {
+      if (res.code === 200) {
+        Message.success(res.data);
+        window.location.reload();
+      } else {
+        Message.error(res.msg);
+      }
+    })
+  }
+}
 </script>
 
 <template>
@@ -148,27 +176,27 @@ const onClickMenuItem = (item) => {
           </div>
         </div>
         <div class="user-bag">
-          <div>
+          <div class="user-bag-item">
             <h3>累计积分</h3>
-            <p>200</p>
+            <p>{{ userAsset.totalPoints }}</p>
           </div>
-          <div>
+          <div class="user-bag-item">
             <h3>累计金额</h3>
-            <p>200</p>
+            <p>{{ userAsset.totalAmount }}</p>
           </div>
-          <div>
+          <div class="user-bag-item">
             <h3>可用积分</h3>
-            <p>100</p>
+            <p>{{ userAsset.currentPoints }}</p>
           </div>
-          <div>
+          <div class="user-bag-item">
             <h3>可用余额</h3>
-            <p>100</p>
+            <p>{{ userAsset.currentAmount }}</p>
           </div>
         </div>
         <div class="user-bag-button">
           <a-button>提现</a-button>
           <a-button>充值</a-button>
-          <a-button>签到</a-button>
+          <a-button @click="dailySign">签到</a-button>
         </div>
       </div>
 
@@ -354,6 +382,14 @@ const onClickMenuItem = (item) => {
   padding: 0 40px;
 }
 
+.user-bag-item{
+  p{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
 .user-bag h3 {
   margin: 0;
   font-size: 16px;
@@ -416,7 +452,6 @@ const onClickMenuItem = (item) => {
 
 .footer {
   display: flex;
-  position: absolute;
   bottom: 0;
 }
 </style>

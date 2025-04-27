@@ -50,7 +50,7 @@
      * */
     import {resetSize, _code_chars, _code_color1, _code_color2} from './../utils/util'
     import {aesEncrypt} from "./../utils/ase"
-    import {getCaptchaAPI,checkCaptchaAPI}  from "@/api/Auth.js"
+    import {getCaptchaAPI,checkCaptchaAPI}  from "@/api/user/Auth.js"
     import { computed, onMounted, reactive, ref,watch,nextTick,toRefs, watchEffect,getCurrentInstance} from 'vue';
     export default {
         name: 'VerifyPoints',

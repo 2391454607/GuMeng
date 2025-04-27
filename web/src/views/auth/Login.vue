@@ -1,7 +1,7 @@
 <script setup>
 import {onMounted, onBeforeUnmount, reactive, ref, computed} from 'vue';
 import {Message} from '@arco-design/web-vue';
-import {userLoginAPI} from "@/api/Auth.js";
+import {userLoginAPI} from "@/api/user/Auth.js";
 import { IconCheck } from '@arco-design/web-vue/es/icon';
 
 //引入组件
