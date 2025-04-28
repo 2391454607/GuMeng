@@ -2,6 +2,7 @@ package com.gumeng.controller.user;
 
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.shop.UserBalance;
+import com.gumeng.domain.shop.UserBalanceLog;
 import com.gumeng.domain.shop.UserPoints;
 import com.gumeng.domain.shop.UserPointLog;
 import com.gumeng.entity.vo.user.UserAssetVO;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -134,7 +137,29 @@ public class UserInfoController {
 
 
     //获取用户资产流动信息
+    @GetMapping("/getAssetLog")
+    public HttpResponse getAssetLog() {
+        // 获取当前登录用户ID
+        Map<String,Object> map = ThreadLocalUtil.get();
+        Integer userId = (Integer) map.get("id");
 
+        try {
+            // 获取积分变动记录
+            List<UserPointLog> pointLogs = userPointLogService.getLogsByUserId(userId);
+            
+            // 获取余额变动记录
+            List<UserBalanceLog> balanceLogs = userBalanceLogService.getLogsByUserId(userId);
+            
+            // 封装返回数据
+            Map<String, Object> result = new HashMap<>();
+            result.put("pointLogs", pointLogs);
+            result.put("balanceLogs", balanceLogs);
+            
+            return HttpResponse.success(result);
+        } catch (Exception e) {
+            return HttpResponse.error("获取资产流动信息失败：" + e.getMessage());
+        }
+    }
 
 
 }

@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.shop.UserPointLog;
 import com.gumeng.service.shop.UserPointLogService;
 import com.gumeng.mapper.shop.UserPointLogMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
 * @author Chine
@@ -15,6 +18,13 @@ import org.springframework.stereotype.Service;
 public class UserPointLogServiceImpl extends ServiceImpl<UserPointLogMapper, UserPointLog>
     implements UserPointLogService{
 
+    @Autowired
+    private UserPointLogMapper userPointLogMapper;
+
+    @Override
+    public List<UserPointLog> getLogsByUserId(Integer userId) {
+        return userPointLogMapper.getUserPointLog(userId);
+    }
 }
 
 

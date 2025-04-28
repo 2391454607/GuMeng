@@ -16,4 +16,10 @@
     <sql id="Base_Column_List">
         id,user_id,change_type,change_amount,description,created_time
     </sql>
+
+
+    <select id="getUserBalanceLog" resultType="com.gumeng.domain.shop.UserBalanceLog">
+        SELECT * FROM gumeng.user_balance_log
+        WHERE user_id = #{userId}
+    </select>
 </mapper>

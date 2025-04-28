@@ -4,7 +4,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.shop.UserBalanceLog;
 import com.gumeng.service.shop.UserBalanceLogService;
 import com.gumeng.mapper.shop.UserBalanceLogMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
 * @author Chine
@@ -15,6 +18,13 @@ import org.springframework.stereotype.Service;
 public class UserBalanceLogServiceImpl extends ServiceImpl<UserBalanceLogMapper, UserBalanceLog>
     implements UserBalanceLogService{
 
+    @Autowired
+    private UserBalanceLogMapper userBalanceLogMapper;
+
+    @Override
+    public List<UserBalanceLog> getLogsByUserId(Integer userId) {
+        return userBalanceLogMapper.getUserBalanceLog(userId);
+    }
 }
 
 
