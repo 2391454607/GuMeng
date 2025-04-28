@@ -68,9 +68,9 @@ const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('userInfo');
         Message.success('退出登录成功');
-        // 延时刷新当前页面
+        // 延时跳转页面
         setTimeout(() => {
-          router.push("/");
+          router.push('/');
         }, 1000);
       } else {
         Message.error(res.msg || '退出登录失败');
@@ -115,7 +115,11 @@ const dailySign = () => {
     dailySignAPI().then(res => {
       if (res.code === 200) {
         Message.success(res.data);
-        window.location.reload();
+
+        //更新用户资产
+        getUserAssetAPI().then(res => {
+          userAsset.value = res.data;
+        })
       } else {
         Message.error(res.msg);
       }
