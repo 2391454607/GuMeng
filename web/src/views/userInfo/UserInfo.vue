@@ -3,7 +3,7 @@ import Footer from "@/views/web/layout/Footer.vue";
 import {router} from "@/router/index.js";
 import {onMounted, ref} from "vue";
 import {getUserInfoAPI, userLogoutAPI} from "@/api/user/Auth.js";
-import {dailySignAPI, getUserAssetAPI} from "@/api/user/UserInfo.js";
+import {dailySignAPI, getUserAssetAPI, rechargeAPI, withdrawAPI} from "@/api/user/UserInfo.js";
 import {Message} from "@arco-design/web-vue";
 import {
   IconUser,
@@ -13,6 +13,7 @@ import {
   IconHistory,
   IconSettings
 } from '@arco-design/web-vue/es/icon';
+import background from "three/src/renderers/common/Background.js";
 
 // 存储用户信息
 const userInfo = ref({});
@@ -126,6 +127,75 @@ const dailySign = () => {
     })
   }
 }
+
+// 充值相关
+const rechargeVisible = ref(false);
+const rechargeAmount = ref(0); // 修改为数字类型的初始值
+
+const handleRecharge = () => {
+  rechargeVisible.value = true;
+};
+
+const confirmRecharge = () => {
+  if (!rechargeAmount.value || isNaN(rechargeAmount.value)) {
+    Message.error('请输入有效的充值金额');
+    return;
+  }
+
+  rechargeAPI({
+    amount: Number(rechargeAmount.value)
+  }).then(res => {
+    if (res.code === 200) {
+      Message.success('充值成功');
+      rechargeVisible.value = false;
+      rechargeAmount.value = 0;  // 修改这里，改为数字 0
+      // 刷新用户资产
+      getUserAssetAPI().then(res => {
+        userAsset.value = res.data;
+      });
+    } else {
+      Message.error(res.msg || '充值失败');
+    }
+  });
+};
+
+// 提现相关
+const withdrawVisible = ref(false);
+const withdrawAmount = ref(0);
+const withdrawAccount = ref('');
+
+const handleWithdraw = () => {
+  withdrawVisible.value = true;
+};
+
+const confirmWithdraw = () => {
+  if (!withdrawAmount.value || isNaN(withdrawAmount.value)) {
+    Message.error('请输入有效的提现金额');
+    return;
+  }
+  if (!withdrawAccount.value) {
+    Message.error('请输入提现账号');
+    return;
+  }
+
+  withdrawAPI({
+    amount: Number(withdrawAmount.value),
+    account: withdrawAccount.value
+  }).then(res => {
+    if (res.code === 200) {
+      Message.success('提现申请已提交');
+      withdrawVisible.value = false;
+      withdrawAmount.value = 0;
+      withdrawAccount.value = '';
+      // 刷新用户资产
+      getUserAssetAPI().then(res => {
+        userAsset.value = res.data;
+      });
+    } else {
+      Message.error(res.msg || '提现失败');
+    }
+  });
+};
 </script>
 
 <template>
@@ -199,8 +269,8 @@ const dailySign = () => {
           </div>
         </div>
         <div class="user-bag-button">
-          <a-button>提现</a-button>
-          <a-button>充值</a-button>
+          <a-button @click="handleWithdraw">提现</a-button>
+          <a-button @click="handleRecharge">充值</a-button>
           <a-button @click="dailySign">签到</a-button>
         </div>
       </div>
@@ -228,6 +298,141 @@ const dailySign = () => {
     <Footer class="footer"></Footer>
   </div>
 
+  <!-- 充值弹窗 -->
+  <a-modal
+      v-model:visible="rechargeVisible"
+      @cancel="() => {
+        rechargeVisible = false;
+        rechargeAmount = 0;
+      }"
+      @ok="confirmRecharge"
+      title="充值"
+      :modal-style="{
+        borderRadius: '10px',
+        backgroundColor: '#FFF7E9',
+        padding: '24px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+      }"
+      :title-style="{
+        color: '#C2101C',
+        fontWeight: '500',
+        fontSize: '18px',
+        borderBottom: '2px solid rgba(194, 16, 28, 0.1)'
+      }"
+      :footer-style="{
+        borderTop: '1px solid rgba(194, 16, 28, 0.1)',
+        padding: '12px 24px',
+        backgroundColor: 'rgba(194, 16, 28, 0.02)'
+      }"
+      :ok-button-props="{
+        style: {
+          backgroundColor: '#C2101C',
+          borderColor: '#C2101C'
+        }
+      }"
+      :cancel-button-props="{
+        style: {
+          color: '#C2101C',
+          borderColor: '#C2101C'
+        }
+      }"
+      ok-text="确认充值"
+      cancel-text="取消"
+  >
+    <a-form :model="{ amount: rechargeAmount }">
+      <a-form-item label="充值金额" :style="{ color: '#C2101C' }">
+        <a-input-number
+            v-model="rechargeAmount"
+            placeholder="请输入充值金额"
+            :precision="2"
+            hide-button
+            style="width: 100%"
+            :style="{
+              backgroundColor: '#FFF',
+              borderColor: 'rgba(194, 16, 28, 0.3)',
+            }"
+            :hover-style="{
+              borderColor: '#C2101C',
+            }"
+        />
+      </a-form-item>
+    </a-form>
+  </a-modal>
+
+  <!-- 提现弹窗 -->
+  <a-modal
+      v-model:visible="withdrawVisible"
+      @cancel="() => {
+        withdrawVisible = false;
+        withdrawAmount = 0;
+        withdrawAccount = '';
+      }"
+      @ok="confirmWithdraw"
+      title="提现"
+      :modal-style="{
+        borderRadius: '10px',
+        backgroundColor: '#FFF7E9',
+        padding: '24px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+      }"
+      :title-style="{
+        color: '#C2101C',
+        fontWeight: '500',
+        fontSize: '18px',
+        borderBottom: '2px solid rgba(194, 16, 28, 0.1)'
+      }"
+      :footer-style="{
+        borderTop: '1px solid rgba(194, 16, 28, 0.1)',
+        padding: '12px 24px',
+        backgroundColor: 'rgba(194, 16, 28, 0.02)'
+      }"
+      :ok-button-props="{
+        style: {
+          backgroundColor: '#C2101C',
+          borderColor: '#C2101C'
+        }
+      }"
+      :cancel-button-props="{
+        style: {
+          color: '#C2101C',
+          borderColor: '#C2101C'
+        }
+      }"
+      ok-text="确认提现"
+      cancel-text="取消"
+  >
+    <a-form :model="{ amount: withdrawAmount, account: withdrawAccount }">
+      <a-form-item label="提现金额" :style="{ color: '#C2101C' }">
+        <a-input-number
+            v-model="withdrawAmount"
+            placeholder="请输入提现金额"
+            :precision="2"
+            hide-button
+            style="width: 100%"
+            :style="{
+              backgroundColor: '#FFF',
+              borderColor: 'rgba(194, 16, 28, 0.3)',
+            }"
+            :hover-style="{
+              borderColor: '#C2101C',
+            }"
+        />
+      </a-form-item>
+      <a-form-item label="提现账号" :style="{ color: '#C2101C' }">
+        <a-input
+            v-model="withdrawAccount"
+            placeholder="请输入提现账号"
+            :style="{
+              backgroundColor: '#FFF',
+              borderColor: 'rgba(194, 16, 28, 0.3)',
+            }"
+            :hover-style="{
+              borderColor: '#C2101C',
+            }"
+        />
+      </a-form-item>
+    </a-form>
+  </a-modal>
 
 </template>
 
