@@ -18,6 +18,10 @@ public interface UserBalanceMapper extends BaseMapper<UserBalance> {
 
 
     UserBalance getBalance(Integer userId);
+
+    void addBalance(UserBalance userBalance);
+
+    void updateBalance(UserBalance userBalance);
 }
 
 

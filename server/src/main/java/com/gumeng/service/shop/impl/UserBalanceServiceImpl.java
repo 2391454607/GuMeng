@@ -27,6 +27,43 @@ public class UserBalanceServiceImpl extends ServiceImpl<UserBalanceMapper, UserB
     public UserBalance getUserBalance(Integer userId) {
         return userBalanceMapper.getBalance(userId);
     }
+
+    //充值
+    @Override
+    public void addBalance(Integer userId, BigDecimal amount) {
+        // 获取用户当前余额信息
+        UserBalance userBalance = this.getUserBalance(userId);
+
+        if (userBalance == null) {
+            // 如果用户没有余额记录，创建新记录
+            userBalance = new UserBalance();
+            userBalance.setUserId(userId);
+            userBalance.setTotalAmount(amount);
+            userBalance.setCurrentAmount(amount);
+            userBalanceMapper.addBalance(userBalance);
+        } else {
+            // 更新现有余额记录
+            userBalance.setTotalAmount(userBalance.getTotalAmount().add(amount));
+            userBalance.setCurrentAmount(userBalance.getCurrentAmount().add(amount));
+            userBalanceMapper.updateBalance(userBalance);
+        }
+    }
+
+    //提现
+    @Override
+    public void subtractBalance(Integer userId, BigDecimal amount) {
+        // 获取用户当前余额信息
+        UserBalance userBalance = this.getUserBalance(userId);
+
+        //
+        if (userBalance == null || userBalance.getCurrentAmount().compareTo(amount) < 0) {
+            throw new RuntimeException("余额不足");
+        }
+
+        // 更新余额
+        userBalance.setCurrentAmount(userBalance.getCurrentAmount().subtract(amount));
+        baseMapper.updateById(userBalance);
+    }
 }
 
 

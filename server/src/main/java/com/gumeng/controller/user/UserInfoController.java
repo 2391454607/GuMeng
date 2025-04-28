@@ -13,10 +13,7 @@ import com.gumeng.service.shop.UserPointsService;
 import com.gumeng.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -131,9 +128,72 @@ public class UserInfoController {
     }
 
     //充值
+    @PostMapping("/recharge")
+    public HttpResponse recharge(@RequestBody Map<String, BigDecimal> params) {
+        BigDecimal amount = params.get("amount");
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return HttpResponse.error("充值金额必须大于0");
+        }
 
+        // 获取当前登录用户ID
+        Map<String,Object> map = ThreadLocalUtil.get();
+        Integer userId = (Integer) map.get("id");
+
+        try {
+            // 添加余额变动记录
+            UserBalanceLog balanceLog = new UserBalanceLog();
+            balanceLog.setUserId(userId);
+            balanceLog.setChangeType("充值");
+            balanceLog.setChangeAmount(amount);
+            balanceLog.setDescription("用户充值");
+            balanceLog.setCreatedTime(LocalDateTime.now());
+            userBalanceLogService.save(balanceLog);
+
+            // 更新用户余额
+            userBalanceService.addBalance(userId, amount);
+
+            return HttpResponse.success("充值成功");
+        } catch (Exception e) {
+            return HttpResponse.error("充值失败：" + e.getMessage());
+        }
+    }
 
     //提现
+    @PostMapping("/withdraw")
+    public HttpResponse withdraw(@RequestBody Map<String, BigDecimal> params) {
+        BigDecimal amount = params.get("amount");
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return HttpResponse.error("提现金额必须大于0");
+        }
+
+        // 获取当前登录用户ID
+        Map<String,Object> map = ThreadLocalUtil.get();
+        Integer userId = (Integer) map.get("id");
+
+        try {
+            // 检查余额是否足够
+            UserBalance balance = userBalanceService.getUserBalance(userId);
+            if (balance == null || balance.getCurrentAmount().compareTo(amount) < 0) {
+                return HttpResponse.error("余额不足");
+            }
+
+            // 添加余额变动记录
+            UserBalanceLog balanceLog = new UserBalanceLog();
+            balanceLog.setUserId(userId);
+            balanceLog.setChangeType("提现");
+            balanceLog.setChangeAmount(amount.negate());  // 使用负数表示减少
+            balanceLog.setDescription("用户提现");
+            balanceLog.setCreatedTime(LocalDateTime.now());
+            userBalanceLogService.save(balanceLog);
+
+            // 更新用户余额
+            userBalanceService.subtractBalance(userId, amount);
+
+            return HttpResponse.success("提现申请成功，请等待审核");
+        } catch (Exception e) {
+            return HttpResponse.error("提现失败：" + e.getMessage());
+        }
+    }
 
 
     //获取用户资产流动信息

@@ -15,4 +15,8 @@ public interface UserBalanceService extends IService<UserBalance> {
 
 
     UserBalance getUserBalance(Integer userId);
+
+    void addBalance(Integer userId, BigDecimal amount);
+
+    void subtractBalance(Integer userId, BigDecimal amount);
 }
