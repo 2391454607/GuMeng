@@ -17,9 +17,4 @@
         id,user_id,change_type,change_value,description,create_time
     </sql>
 
-
-    <select id="getUserPointLog" resultType="com.gumeng.domain.shop.UserPointLog">
-        SELECT * FROM gumeng.user_point_log
-        WHERE user_id = #{userId}
-    </select>
 </mapper>

@@ -1,5 +1,6 @@
 package com.gumeng.service.shop;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gumeng.domain.shop.UserPointLog;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -12,5 +13,8 @@ import java.util.List;
 */
 public interface UserPointLogService extends IService<UserPointLog> {
 
-    List<UserPointLog> getLogsByUserId(Integer userId);
+    /**
+     * 分页获取用户积分变动记录
+     */
+    IPage<UserPointLog> getPageByUserId(Integer userId, IPage<UserPointLog> page);
 }

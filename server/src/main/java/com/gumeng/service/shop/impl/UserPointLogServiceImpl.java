@@ -1,5 +1,6 @@
 package com.gumeng.service.shop.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.shop.UserPointLog;
 import com.gumeng.service.shop.UserPointLogService;
@@ -18,12 +19,12 @@ import java.util.List;
 public class UserPointLogServiceImpl extends ServiceImpl<UserPointLogMapper, UserPointLog>
     implements UserPointLogService{
 
-    @Autowired
-    private UserPointLogMapper userPointLogMapper;
-
     @Override
-    public List<UserPointLog> getLogsByUserId(Integer userId) {
-        return userPointLogMapper.getUserPointLog(userId);
+    public IPage<UserPointLog> getPageByUserId(Integer userId, IPage<UserPointLog> page) {
+        return lambdaQuery()
+                .eq(UserPointLog::getUserId, userId)
+                .orderByDesc(UserPointLog::getCreateTime)
+                .page(page);
     }
 }
 

@@ -1,7 +1,9 @@
 package com.gumeng.mapper.shop;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.gumeng.domain.shop.UserBalanceLog;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -13,7 +15,6 @@ import java.util.List;
 */
 public interface UserBalanceLogMapper extends BaseMapper<UserBalanceLog> {
 
-    List<UserBalanceLog> getUserBalanceLog(Integer userId);
 }
 
 

@@ -3,7 +3,6 @@ package com.gumeng.mapper.shop;
 import com.gumeng.domain.shop.UserPointLog;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import java.util.List;
 
 /**
 * @author Chine
@@ -13,7 +12,6 @@ import java.util.List;
 */
 public interface UserPointLogMapper extends BaseMapper<UserPointLog> {
 
-    List<UserPointLog> getUserPointLog(Integer userId);
 }
 
 

@@ -11,6 +11,9 @@ import com.gumeng.service.shop.UserBalanceService;
 import com.gumeng.service.shop.UserPointLogService;
 import com.gumeng.service.shop.UserPointsService;
 import com.gumeng.utils.ThreadLocalUtil;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +22,6 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -198,17 +200,21 @@ public class UserInfoController {
 
     //获取用户资产流动信息
     @GetMapping("/getAssetLog")
-    public HttpResponse getAssetLog() {
+    public HttpResponse getAssetLog(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
         // 获取当前登录用户ID
         Map<String,Object> map = ThreadLocalUtil.get();
         Integer userId = (Integer) map.get("id");
 
         try {
             // 获取积分变动记录
-            List<UserPointLog> pointLogs = userPointLogService.getLogsByUserId(userId);
+            IPage<UserPointLog> pointLogPage = new Page<>(pageNum, pageSize);
+            IPage<UserPointLog> pointLogs = userPointLogService.getPageByUserId(userId, pointLogPage);
             
             // 获取余额变动记录
-            List<UserBalanceLog> balanceLogs = userBalanceLogService.getLogsByUserId(userId);
+            IPage<UserBalanceLog> balanceLogPage = new Page<>(pageNum, pageSize);
+            IPage<UserBalanceLog> balanceLogs = userBalanceLogService.getPageByUserId(userId, balanceLogPage);
             
             // 封装返回数据
             Map<String, Object> result = new HashMap<>();
