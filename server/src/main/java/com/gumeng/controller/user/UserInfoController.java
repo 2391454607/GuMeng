@@ -198,9 +198,9 @@ public class UserInfoController {
     }
 
 
-    //获取用户资产流动信息
-    @GetMapping("/getAssetLog")
-    public HttpResponse getAssetLog(
+    //获取用户积分流动信息
+    @GetMapping("/getPointLog")
+    public HttpResponse getPointLog(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
         // 获取当前登录用户ID
@@ -212,18 +212,37 @@ public class UserInfoController {
             IPage<UserPointLog> pointLogPage = new Page<>(pageNum, pageSize);
             IPage<UserPointLog> pointLogs = userPointLogService.getPageByUserId(userId, pointLogPage);
             
-            // 获取余额变动记录
-            IPage<UserBalanceLog> balanceLogPage = new Page<>(pageNum, pageSize);
-            IPage<UserBalanceLog> balanceLogs = userBalanceLogService.getPageByUserId(userId, balanceLogPage);
-            
             // 封装返回数据
             Map<String, Object> result = new HashMap<>();
             result.put("pointLogs", pointLogs);
-            result.put("balanceLogs", balanceLogs);
             
             return HttpResponse.success(result);
         } catch (Exception e) {
-            return HttpResponse.error("获取资产流动信息失败：" + e.getMessage());
+            return HttpResponse.error("获取积分流动信息失败：" + e.getMessage());
+        }
+    }
+
+    //获取用户余额流动信息
+    @GetMapping("/getBalanceLog")
+    public HttpResponse getBalanceLog(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        // 获取当前登录用户ID
+        Map<String,Object> map = ThreadLocalUtil.get();
+        Integer userId = (Integer) map.get("id");
+
+        try {
+            // 获取余额变动记录
+            IPage<UserBalanceLog> balanceLogPage = new Page<>(pageNum, pageSize);
+            IPage<UserBalanceLog> balanceLogs = userBalanceLogService.getPageByUserId(userId, balanceLogPage);
+
+            // 封装返回数据
+            Map<String, Object> result = new HashMap<>();
+            result.put("balanceLogs", balanceLogs);
+
+            return HttpResponse.success(result);
+        } catch (Exception e) {
+            return HttpResponse.error("获取余额流动信息失败：" + e.getMessage());
         }
     }
 
