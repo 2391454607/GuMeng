@@ -21,7 +21,7 @@ public class UserBalanceLogServiceImpl extends ServiceImpl<UserBalanceLogMapper,
     public IPage<UserBalanceLog> getPageByUserId(Integer userId, IPage<UserBalanceLog> page) {
         return lambdaQuery()
                 .eq(UserBalanceLog::getUserId, userId)
-                .orderByDesc(UserBalanceLog::getCreatedTime)
+                .orderByDesc(UserBalanceLog::getCreateTime)
                 .page(page);
     }
 }

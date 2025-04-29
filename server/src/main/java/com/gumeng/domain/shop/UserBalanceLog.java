@@ -49,8 +49,8 @@ public class UserBalanceLog implements Serializable {
     /**
      * 创建时间
      */
-    @TableField(value = "created_time")
-    private LocalDateTime createdTime;
+    @TableField(value = "create_time")
+    private LocalDateTime createTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
@@ -72,7 +72,7 @@ public class UserBalanceLog implements Serializable {
             && (this.getChangeType() == null ? other.getChangeType() == null : this.getChangeType().equals(other.getChangeType()))
             && (this.getChangeAmount() == null ? other.getChangeAmount() == null : this.getChangeAmount().equals(other.getChangeAmount()))
             && (this.getDescription() == null ? other.getDescription() == null : this.getDescription().equals(other.getDescription()))
-            && (this.getCreatedTime() == null ? other.getCreatedTime() == null : this.getCreatedTime().equals(other.getCreatedTime()));
+            && (this.getCreateTime() == null ? other.getCreateTime() == null : this.getCreateTime().equals(other.getCreateTime()));
     }
 
     @Override
@@ -84,7 +84,7 @@ public class UserBalanceLog implements Serializable {
         result = prime * result + ((getChangeType() == null) ? 0 : getChangeType().hashCode());
         result = prime * result + ((getChangeAmount() == null) ? 0 : getChangeAmount().hashCode());
         result = prime * result + ((getDescription() == null) ? 0 : getDescription().hashCode());
-        result = prime * result + ((getCreatedTime() == null) ? 0 : getCreatedTime().hashCode());
+        result = prime * result + ((getCreateTime() == null) ? 0 : getCreateTime().hashCode());
         return result;
     }
 
@@ -99,7 +99,7 @@ public class UserBalanceLog implements Serializable {
         sb.append(", changeType=").append(changeType);
         sb.append(", changeAmount=").append(changeAmount);
         sb.append(", description=").append(description);
-        sb.append(", createdTime=").append(createdTime);
+        sb.append(", createTime=").append(createTime);
         sb.append(", serialVersionUID=").append(serialVersionUID);
         sb.append("]");
         return sb.toString();

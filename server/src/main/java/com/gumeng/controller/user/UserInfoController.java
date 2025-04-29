@@ -148,7 +148,7 @@ public class UserInfoController {
             balanceLog.setChangeType("充值");
             balanceLog.setChangeAmount(amount);
             balanceLog.setDescription("用户充值");
-            balanceLog.setCreatedTime(LocalDateTime.now());
+            balanceLog.setCreateTime(LocalDateTime.now());
             userBalanceLogService.save(balanceLog);
 
             // 更新用户余额
@@ -185,7 +185,7 @@ public class UserInfoController {
             balanceLog.setChangeType("提现");
             balanceLog.setChangeAmount(amount.negate());  // 使用负数表示减少
             balanceLog.setDescription("用户提现");
-            balanceLog.setCreatedTime(LocalDateTime.now());
+            balanceLog.setCreateTime(LocalDateTime.now());
             userBalanceLogService.save(balanceLog);
 
             // 更新用户余额
