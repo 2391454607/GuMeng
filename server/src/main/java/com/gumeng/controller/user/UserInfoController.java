@@ -212,11 +212,7 @@ public class UserInfoController {
             IPage<UserPointLog> pointLogPage = new Page<>(pageNum, pageSize);
             IPage<UserPointLog> pointLogs = userPointLogService.getPageByUserId(userId, pointLogPage);
             
-            // 封装返回数据
-            Map<String, Object> result = new HashMap<>();
-            result.put("pointLogs", pointLogs);
-            
-            return HttpResponse.success(result);
+            return HttpResponse.success(pointLogs);
         } catch (Exception e) {
             return HttpResponse.error("获取积分流动信息失败：" + e.getMessage());
         }
@@ -236,11 +232,7 @@ public class UserInfoController {
             IPage<UserBalanceLog> balanceLogPage = new Page<>(pageNum, pageSize);
             IPage<UserBalanceLog> balanceLogs = userBalanceLogService.getPageByUserId(userId, balanceLogPage);
 
-            // 封装返回数据
-            Map<String, Object> result = new HashMap<>();
-            result.put("balanceLogs", balanceLogs);
-
-            return HttpResponse.success(result);
+            return HttpResponse.success(balanceLogs);
         } catch (Exception e) {
             return HttpResponse.error("获取余额流动信息失败：" + e.getMessage());
         }
