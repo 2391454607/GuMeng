@@ -14,6 +14,8 @@ import {
   IconSettings,
   IconRelation
 } from '@arco-design/web-vue/es/icon';
+import { useRoute } from 'vue-router';
+
 
 // 存储用户信息
 const userInfo = ref({});
@@ -27,6 +29,8 @@ const userAsset = ref({
 });
 
 onMounted(() => {
+  // 设置初始激活菜单
+  activeMenu.value = route.path;
 
   // 从 token 中解析用户角色
   const tokenParts = token.split('.');
@@ -97,7 +101,8 @@ const menuItems = [
 ];
 
 // 添加当前激活菜单状态
-const activeMenu = ref(menuItems[0].url);
+const route = useRoute();
+const activeMenu = ref(route.path);
 
 // 点击菜单项
 const onClickMenuItem = (item) => {
@@ -149,10 +154,8 @@ const confirmRecharge = () => {
       Message.success('充值成功');
       rechargeVisible.value = false;
       rechargeAmount.value = 0;  // 修改这里，改为数字 0
-      // 刷新用户资产
-      getUserAssetAPI().then(res => {
-        userAsset.value = res.data;
-      });
+      // 刷新
+      window.location.reload();
     } else {
       Message.error(res.msg || '充值失败');
     }
@@ -187,10 +190,8 @@ const confirmWithdraw = () => {
       withdrawVisible.value = false;
       withdrawAmount.value = 0;
       withdrawAccount.value = '';
-      // 刷新用户资产
-      getUserAssetAPI().then(res => {
-        userAsset.value = res.data;
-      });
+      // 刷新
+      window.location.reload();
     } else {
       Message.error(res.msg || '提现失败');
     }
