@@ -201,15 +201,15 @@ public class UserInfoController {
     //获取用户积分流动信息
     @GetMapping("/getPointLog")
     public HttpResponse getPointLog(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam(defaultValue = "10") Integer size) {
         // 获取当前登录用户ID
         Map<String,Object> map = ThreadLocalUtil.get();
         Integer userId = (Integer) map.get("id");
 
         try {
             // 获取积分变动记录
-            IPage<UserPointLog> pointLogPage = new Page<>(pageNum, pageSize);
+            IPage<UserPointLog> pointLogPage = new Page<>(current, size);
             IPage<UserPointLog> pointLogs = userPointLogService.getPageByUserId(userId, pointLogPage);
             
             return HttpResponse.success(pointLogs);
@@ -221,15 +221,15 @@ public class UserInfoController {
     //获取用户余额流动信息
     @GetMapping("/getBalanceLog")
     public HttpResponse getBalanceLog(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam(defaultValue = "10") Integer size) {
         // 获取当前登录用户ID
         Map<String,Object> map = ThreadLocalUtil.get();
         Integer userId = (Integer) map.get("id");
 
         try {
             // 获取余额变动记录
-            IPage<UserBalanceLog> balanceLogPage = new Page<>(pageNum, pageSize);
+            IPage<UserBalanceLog> balanceLogPage = new Page<>(current, size);
             IPage<UserBalanceLog> balanceLogs = userBalanceLogService.getPageByUserId(userId, balanceLogPage);
 
             return HttpResponse.success(balanceLogs);
