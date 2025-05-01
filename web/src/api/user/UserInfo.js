@@ -21,7 +21,12 @@ export const withdrawAPI = async ( amount ) => {
     return http.post('/user/withdraw', amount)
 }
 
-//获取用户资产流动信息
-export const getAssetLogoAPI = async () => {
-    return http.get('/user/getAssetLog')
+//获取用户积分流动信息
+export const getPointLogAPI = async ({current: current,size: size}) => {
+    return http.get('/user/getPointLog',{current: current,size: size})
+}
+
+//获取用户余额流动信息
+export const getBalanceLogAPI = async ({current: current,size: size}) => {
+    return http.get('/user/getBalanceLog', {current: current,size: size})
 }
