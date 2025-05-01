@@ -2,6 +2,7 @@
 import {onMounted, reactive, ref} from "vue";
 import {getPointLogAPI, getBalanceLogAPI} from "@/api/user/UserInfo.js";
 import {h} from 'vue';
+import { formatDate } from '@/utils/format';
 
 const loading = ref(false);
 
@@ -81,14 +82,13 @@ onMounted(() => {
 
 // 定义积分表格列
 const pointColumns = [
-  {title: '类型', dataIndex: 'changeType', align: 'center', width: 50},
+  {title: '类型', dataIndex: 'changeType', align: 'center'},
   {
     title: '积分变动',
     dataIndex: 'changeValue',
     align: 'center',
-    width: 100,
-    render: (text, record) => {
-      const value = text || 0;
+    render: (params) => {
+      const value = Number(params.record?.changeValue) || 0;
       return h('span', {
         style: {
           color: value > 0 ? '#52c41a' : '#ff4d4f',
@@ -97,20 +97,26 @@ const pointColumns = [
       }, `${value > 0 ? '+' : ''}${value}`);
     }
   },
-  {title: '描述', dataIndex: 'description', align: 'center', width: 100},
-  {title: '时间', dataIndex: 'createTime', align: 'center', width: 100}
+  {title: '描述', dataIndex: 'description', align: 'center'},
+  {
+    title: '变动时间',
+    dataIndex: 'createTime', 
+    align: 'center',
+    render: (params) => {
+      return formatDate(params.record?.createTime);
+    }
+  }
 ];
 
 // 定义余额表格列
 const balanceColumns = [
-  {title: '类型', dataIndex: 'changeType', align: 'center', width: 50},
+  {title: '类型', dataIndex: 'changeType', align: 'center'},
   {
     title: '金额变动',
     dataIndex: 'changeAmount',
     align: 'center',
-    width: 100,
-    render: (text, record) => {
-      const value = text || 0;
+    render: (params) => {
+      const value = Number(params.record?.changeAmount) || 0;
       return h('span', {
         style: {
           color: value > 0 ? '#52c41a' : '#ff4d4f',
@@ -119,8 +125,15 @@ const balanceColumns = [
       }, `${value > 0 ? '+' : ''}${value}`);
     }
   },
-  {title: '描述', dataIndex: 'description', align: 'center', width: 100},
-  {title: '时间', dataIndex: 'createTime', align: 'center', width: 100}
+  {title: '描述', dataIndex: 'description', align: 'center'},
+  {
+    title: '变动时间',
+    dataIndex: 'createTime', 
+    align: 'center',
+    render: (params) => {
+      return formatDate(params.record?.createTime);
+    }
+  }
 ];
 </script>
 
@@ -148,7 +161,6 @@ const balanceColumns = [
     current: status.current,
     pageSize: status.size,
     showTotal: true,
-    showJumper: true
   }"
           size="small"
           @page-change="handlePageChange"
@@ -179,11 +191,45 @@ const balanceColumns = [
 }
 
 :deep(.arco-table-th) {
-  background-color: #fafafa !important;
+  background-color: #FFE5CA !important;
   font-weight: 600;
+  color: #333;
 }
 
-:deep(.arco-table-tr:hover) {
-  background-color: #f5f5f5;
+:deep(.arco-table-tr) {
+  background-color: #FFF7E9;
+}
+
+:deep(.arco-table-td) {
+  border-bottom: 1px solid #FFE5CA !important;
+  color: #666;
+  background-color: #FFF7E9;
+}
+
+:deep(.arco-table-tr:hover .arco-table-td) {
+  color: #333;
+  background-color: #FFE5CA !important;
+}
+
+:deep(.arco-pagination-item) {
+  background-color: #FFF7E9;
+}
+
+:deep(.arco-select-view) {
+  background-color: #FFF7E9;
+}
+
+:deep(.arco-pagination) {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  color: #333;
+}
+
+:deep(.arco-pagination-item:hover),
+:deep(.arco-pagination-item.arco-pagination-item-active) {
+  background-color: #FFE5CA;
+  border-color: #FFE5CA;
+  color: #333;
 }
 </style>
