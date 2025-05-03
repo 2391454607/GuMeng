@@ -96,16 +96,24 @@ public class UserInfoController {
 
         // 生成Redis key
         String signKey = "user:sign:" + userId;
+        String lockKey = "user:sign:lock:" + userId;
 
         // 检查是否已签到
         if (Boolean.TRUE.equals(stringRedisTemplate.hasKey(signKey))) {
             return HttpResponse.error("今日已签到");
         }
 
+        // 尝试获取分布式锁
+        Boolean locked = stringRedisTemplate.opsForValue().setIfAbsent(lockKey, "1", Duration.ofSeconds(3));
+        if (Boolean.FALSE.equals(locked)) {
+            return HttpResponse.error("操作太频繁，请稍后重试");
+        }
+
         try {
-            // 执行签到
-            Integer rewardPoints = 10; // 签到奖励积分
-            
+
+            // 执行签到逻辑
+            Integer rewardPoints = 10;
+
             // 添加积分记录
             UserPointLog pointLog = new UserPointLog();
             pointLog.setUserId(userId);
@@ -114,7 +122,7 @@ public class UserInfoController {
             pointLog.setDescription("每日签到奖励");
             pointLog.setCreateTime(LocalDateTime.now());
             userPointLogService.save(pointLog);
-            
+
             // 更新用户总积分
             userPointsService.addPoints(userId, rewardPoints);
 
@@ -126,6 +134,9 @@ public class UserInfoController {
             return HttpResponse.success("签到成功，获得" + rewardPoints + "积分");
         } catch (Exception e) {
             return HttpResponse.error("签到失败：" + e.getMessage());
+        } finally {
+            // 释放分布式锁
+            stringRedisTemplate.delete(lockKey);
         }
     }
 
