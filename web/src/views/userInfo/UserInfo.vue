@@ -143,7 +143,7 @@ const dailySign = debounce(() => {
     }).finally(() => {
     });
   }
-}, 700); // 700ms 的防抖延迟
+}, 700); // 防抖延迟
 
 // 充值相关
 const rechargeVisible = ref(false);
@@ -165,7 +165,7 @@ const confirmRecharge = () => {
     if (res.code === 200) {
       Message.success('充值成功');
       rechargeVisible.value = false;
-      rechargeAmount.value = 0;  // 修改这里，改为数字 0
+      rechargeAmount.value = 0;  // 重新初始化
       // 刷新
       window.location.reload();
     } else {
@@ -651,7 +651,7 @@ const confirmWithdraw = () => {
 
 .user-bag-button :deep(.arco-btn:hover) {
   background: #ffd700; /* 改为金色背景 */
-  border-color: #ffd700; /* 边框也改为金色 */
+  border-color: #ffd700; /* 边框改为金色 */
   color: #8B1F1F; /* 文字改为深红色，增加对比度 */
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3); /* 添加金色阴影 */
