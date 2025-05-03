@@ -1,7 +1,7 @@
 <script setup>
 import Footer from "@/views/web/layout/Footer.vue";
 import {router} from "@/router/index.js";
-import {onMounted, ref} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import {getUserInfoAPI, userLogoutAPI} from "@/api/user/Auth.js";
 import {dailySignAPI, getUserAssetAPI, rechargeAPI, withdrawAPI} from "@/api/user/UserInfo.js";
 import {Message} from "@arco-design/web-vue";
@@ -14,7 +14,7 @@ import {
   IconSettings,
   IconRelation
 } from '@arco-design/web-vue/es/icon';
-import { useRoute } from 'vue-router';
+import {useRoute} from 'vue-router';
 
 
 // 存储用户信息
@@ -92,12 +92,12 @@ const handleLogout = () => {
 
 //用户信息菜单数据
 const menuItems = [
-  { name: '个人资料', icon: IconUser, url: '/userInfo' },
-  { name: '我的订单', icon: IconUnorderedList, url: '/userInfo/order' },
-  { name: '我的收藏', icon: IconStar, url: '/userInfo/collection' },
-  { name: '浏览历史', icon: IconHistory, url: '/userInfo/history' },
-  { name: '资产流动', icon: IconRelation, url: '/userInfo/assetFlows' },
-  { name: '账号设置', icon: IconSettings, url: '/userInfo/settings' }
+  {name: '个人资料', icon: IconUser, url: '/userInfo'},
+  {name: '我的订单', icon: IconUnorderedList, url: '/userInfo/order'},
+  {name: '我的收藏', icon: IconStar, url: '/userInfo/collection'},
+  {name: '浏览历史', icon: IconHistory, url: '/userInfo/history'},
+  {name: '资产流动', icon: IconRelation, url: '/userInfo/assetFlows'},
+  {name: '账号设置', icon: IconSettings, url: '/userInfo/settings'}
 ];
 
 // 添加当前激活菜单状态
@@ -114,24 +114,36 @@ const onClickMenuItem = (item) => {
   }
 };
 
+// 添加防抖函数
+const debounce = (fn, delay) => {
+  let timer = null;
+  return function (...args) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  };
+};
+
 // 用户签到
-const dailySign = () => {
+const dailySign = debounce(() => {
+
   const token = localStorage.getItem('token');
   if (token) {
     dailySignAPI().then(res => {
       if (res.code === 200) {
         Message.success(res.data);
-
         //更新用户资产
         getUserAssetAPI().then(res => {
           userAsset.value = res.data;
-        })
+        });
       } else {
         Message.error(res.msg);
       }
-    })
+    }).finally(() => {
+    });
   }
-}
+}, 700); // 700ms 的防抖延迟
 
 // 充值相关
 const rechargeVisible = ref(false);
@@ -285,7 +297,7 @@ const confirmWithdraw = () => {
               class="menu-item"
               @click="onClickMenuItem(item)"
           >
-            <component :is="item.icon" />
+            <component :is="item.icon"/>
             <span>{{ item.name }}</span>
           </div>
         </div>
@@ -302,28 +314,22 @@ const confirmWithdraw = () => {
   <!-- 充值弹窗 -->
   <a-modal
       v-model:visible="rechargeVisible"
-      @cancel="() => {
-        rechargeVisible = false;
-        rechargeAmount = 0;
-      }"
-      @ok="confirmRecharge"
-      title="充值"
-      :modal-style="{
-        borderRadius: '10px',
-        backgroundColor: '#FFF7E9',
-        padding: '24px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-      }"
-      :title-style="{
-        color: '#C2101C',
-        fontWeight: '500',
-        fontSize: '18px',
-        borderBottom: '2px solid rgba(194, 16, 28, 0.1)'
+      :cancel-button-props="{
+        style: {
+          color: '#C2101C',
+          borderColor: '#C2101C'
+        }
       }"
       :footer-style="{
         borderTop: '1px solid rgba(194, 16, 28, 0.1)',
         padding: '12px 24px',
         backgroundColor: 'rgba(194, 16, 28, 0.02)'
+      }"
+      :modal-style="{
+        borderRadius: '10px',
+        backgroundColor: '#FFF7E9',
+        padding: '24px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
       }"
       :ok-button-props="{
         style: {
@@ -331,30 +337,36 @@ const confirmWithdraw = () => {
           borderColor: '#C2101C'
         }
       }"
-      :cancel-button-props="{
-        style: {
-          color: '#C2101C',
-          borderColor: '#C2101C'
-        }
+      :title-style="{
+        color: '#C2101C',
+        fontWeight: '500',
+        fontSize: '18px',
+        borderBottom: '2px solid rgba(194, 16, 28, 0.1)'
       }"
-      ok-text="确认充值"
       cancel-text="取消"
+      ok-text="确认充值"
+      title="充值"
+      @cancel="() => {
+        rechargeVisible = false;
+        rechargeAmount = 0;
+      }"
+      @ok="confirmRecharge"
   >
     <a-form :model="{ amount: rechargeAmount }">
-      <a-form-item label="充值金额" :style="{ color: '#C2101C' }">
+      <a-form-item :style="{ color: '#C2101C' }" label="充值金额">
         <a-input-number
             v-model="rechargeAmount"
-            placeholder="请输入充值金额"
+            :hover-style="{
+              borderColor: '#C2101C',
+            }"
             :precision="2"
-            hide-button
-            style="width: 100%"
             :style="{
               backgroundColor: '#FFF',
               borderColor: 'rgba(194, 16, 28, 0.3)',
             }"
-            :hover-style="{
-              borderColor: '#C2101C',
-            }"
+            hide-button
+            placeholder="请输入充值金额"
+            style="width: 100%"
         />
       </a-form-item>
     </a-form>
@@ -363,29 +375,22 @@ const confirmWithdraw = () => {
   <!-- 提现弹窗 -->
   <a-modal
       v-model:visible="withdrawVisible"
-      @cancel="() => {
-        withdrawVisible = false;
-        withdrawAmount = 0;
-        withdrawAccount = '';
-      }"
-      @ok="confirmWithdraw"
-      title="提现"
-      :modal-style="{
-        borderRadius: '10px',
-        backgroundColor: '#FFF7E9',
-        padding: '24px',
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
-      }"
-      :title-style="{
-        color: '#C2101C',
-        fontWeight: '500',
-        fontSize: '18px',
-        borderBottom: '2px solid rgba(194, 16, 28, 0.1)'
+      :cancel-button-props="{
+        style: {
+          color: '#C2101C',
+          borderColor: '#C2101C'
+        }
       }"
       :footer-style="{
         borderTop: '1px solid rgba(194, 16, 28, 0.1)',
         padding: '12px 24px',
         backgroundColor: 'rgba(194, 16, 28, 0.02)'
+      }"
+      :modal-style="{
+        borderRadius: '10px',
+        backgroundColor: '#FFF7E9',
+        padding: '24px',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
       }"
       :ok-button-props="{
         style: {
@@ -393,43 +398,50 @@ const confirmWithdraw = () => {
           borderColor: '#C2101C'
         }
       }"
-      :cancel-button-props="{
-        style: {
-          color: '#C2101C',
-          borderColor: '#C2101C'
-        }
+      :title-style="{
+        color: '#C2101C',
+        fontWeight: '500',
+        fontSize: '18px',
+        borderBottom: '2px solid rgba(194, 16, 28, 0.1)'
       }"
-      ok-text="确认提现"
       cancel-text="取消"
+      ok-text="确认提现"
+      title="提现"
+      @cancel="() => {
+        withdrawVisible = false;
+        withdrawAmount = 0;
+        withdrawAccount = '';
+      }"
+      @ok="confirmWithdraw"
   >
     <a-form :model="{ amount: withdrawAmount, account: withdrawAccount }">
-      <a-form-item label="提现金额" :style="{ color: '#C2101C' }">
+      <a-form-item :style="{ color: '#C2101C' }" label="提现金额">
         <a-input-number
             v-model="withdrawAmount"
-            placeholder="请输入提现金额"
+            :hover-style="{
+              borderColor: '#C2101C',
+            }"
             :precision="2"
-            hide-button
-            style="width: 100%"
             :style="{
               backgroundColor: '#FFF',
               borderColor: 'rgba(194, 16, 28, 0.3)',
             }"
-            :hover-style="{
-              borderColor: '#C2101C',
-            }"
+            hide-button
+            placeholder="请输入提现金额"
+            style="width: 100%"
         />
       </a-form-item>
-      <a-form-item label="提现账号" :style="{ color: '#C2101C' }">
+      <a-form-item :style="{ color: '#C2101C' }" label="提现账号">
         <a-input
             v-model="withdrawAccount"
-            placeholder="请输入提现账号"
+            :hover-style="{
+              borderColor: '#C2101C',
+            }"
             :style="{
               backgroundColor: '#FFF',
               borderColor: 'rgba(194, 16, 28, 0.3)',
             }"
-            :hover-style="{
-              borderColor: '#C2101C',
-            }"
+            placeholder="请输入提现账号"
         />
       </a-form-item>
     </a-form>
@@ -515,9 +527,9 @@ const confirmWithdraw = () => {
 }
 
 .content-list {
-  width: 15vw;  /* 调整宽度 */
+  width: 15vw; /* 调整宽度 */
   padding: 20px 0;
-  border-radius: 0 0 0 10px;  /* 修改圆角 */
+  border-radius: 0 0 0 10px; /* 修改圆角 */
   background-color: #FFF7E9;
   display: flex;
   flex-direction: column;
@@ -525,22 +537,22 @@ const confirmWithdraw = () => {
 }
 
 .content-list .menu-item {
-  padding: 15px 30px;  /* 增加内边距 */
+  padding: 15px 30px; /* 增加内边距 */
   cursor: pointer;
   transition: all 0.3s ease;
   color: #333;
   font-size: 16px;
   display: flex;
   align-items: center;
-  gap: 12px;  /* 增加图标和文字间距 */
+  gap: 12px; /* 增加图标和文字间距 */
 }
 
 .content-item {
-  flex: 1;  /* 让内容区域自适应剩余宽度 */
-  padding: 20px;  /* 添加内边距 */
+  flex: 1; /* 让内容区域自适应剩余宽度 */
+  padding: 20px; /* 添加内边距 */
   border-radius: 0 0 10px 0;
   background-color: #FFF7E9;
-  overflow-y: auto;  /* 添加滚动条 */
+  overflow-y: auto; /* 添加滚动条 */
 }
 
 .content-list .menu-item:hover {
@@ -574,14 +586,14 @@ const confirmWithdraw = () => {
 
 .user-info-text h2 {
   margin: 0;
-  font-size: 28px;  /* 增大字号 */
-  color: #FFE4E1;  /* 使用偏暖的白色 */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);  /* 添加文字阴影 */
-  font-weight: 600;  /* 加粗 */
-  letter-spacing: 1px;  /* 添加字间距 */
+  font-size: 28px; /* 增大字号 */
+  color: #FFE4E1; /* 使用偏暖的白色 */
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 添加文字阴影 */
+  font-weight: 600; /* 加粗 */
+  letter-spacing: 1px; /* 添加字间距 */
 }
 
-.user-bag{
+.user-bag {
   height: 16vh;
   display: flex;
   flex-direction: row;
@@ -593,8 +605,8 @@ const confirmWithdraw = () => {
   padding: 0 40px;
 }
 
-.user-bag-item{
-  p{
+.user-bag-item {
+  p {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -620,10 +632,10 @@ const confirmWithdraw = () => {
 
 .user-bag-button {
   display: flex;
-  flex-direction: row;  /* 改为水平排列 */
-  gap: 20px;  /* 调整按钮间距 */
+  flex-direction: row; /* 改为水平排列 */
+  gap: 20px; /* 调整按钮间距 */
   padding: 0 40px;
-  margin-right: 20px;  /* 添加右边距 */
+  margin-right: 20px; /* 添加右边距 */
 }
 
 .user-bag-button :deep(.arco-btn) {
@@ -638,18 +650,19 @@ const confirmWithdraw = () => {
 }
 
 .user-bag-button :deep(.arco-btn:hover) {
-  background: #ffd700;  /* 改为金色背景 */
-  border-color: #ffd700;  /* 边框也改为金色 */
-  color: #8B1F1F;  /* 文字改为深红色，增加对比度 */
+  background: #ffd700; /* 改为金色背景 */
+  border-color: #ffd700; /* 边框也改为金色 */
+  color: #8B1F1F; /* 文字改为深红色，增加对比度 */
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);  /* 添加金色阴影 */
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3); /* 添加金色阴影 */
 }
 
 .user-bag-button :deep(.arco-btn:active) {
   transform: translateY(0);
-  background: #f8d000;  /* 点击时稍微暗一点的金色 */
+  background: #f8d000; /* 点击时稍微暗一点的金色 */
   border-color: #f8d000;
 }
+
 .menu-item {
   display: flex;
   align-items: center;
