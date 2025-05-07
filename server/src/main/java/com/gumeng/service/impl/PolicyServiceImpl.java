@@ -22,11 +22,6 @@ public class PolicyServiceImpl extends ServiceImpl<PolicyMapper, Policy>
     private PolicyMapper policyMapper;
 
     @Override
-    public List<Policy> getPolicyList() {
-        return policyMapper.getPolicyList();
-    }
-
-    @Override
     public Policy findById(Integer id) {
         return policyMapper.findById(id);
     }

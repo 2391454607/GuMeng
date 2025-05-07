@@ -39,7 +39,7 @@ public class Policy implements Serializable {
      * 发文字号
      */
     @TableField(value = "document_number")
-    private Integer documentNumber;
+    private String documentNumber;
 
     /**
      * 发布机构

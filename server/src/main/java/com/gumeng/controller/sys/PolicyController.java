@@ -1,6 +1,6 @@
 package com.gumeng.controller.sys;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.code.HttpResponse;
@@ -9,7 +9,6 @@ import com.gumeng.entity.DTO.PolicyDTO;
 import com.gumeng.service.PolicyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -34,37 +33,19 @@ public class PolicyController {
     @GetMapping("/getList")
     public HttpResponse getPolicyList(
             @RequestParam(defaultValue = "1") Integer current,
-            @RequestParam(defaultValue = "10") Integer size,
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) String publishOrg) {
+            @RequestParam(defaultValue = "10") Integer size) {
         try {
             // 创建分页对象
             Page<Policy> page = new Page<>(current, size);
 
             // 创建查询条件
-            LambdaQueryWrapper<Policy> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(Policy::getIsDelete, "0");
-
-            // 添加可选的查询条件
-            if (StringUtils.hasText(title)) {
-                queryWrapper.like(Policy::getTitle, title);
-            }
-            if (StringUtils.hasText(type)) {
-                queryWrapper.eq(Policy::getType, type);
-            }
-            if (StringUtils.hasText(publishOrg)) {
-                queryWrapper.eq(Policy::getPublishOrg, publishOrg);
-            }
-
-            // 按发布日期降序排序
-            queryWrapper.orderByDesc(Policy::getId);
+            QueryWrapper<Policy> queryWrapper = new QueryWrapper<Policy>()
+                    .select("id", "title", "type", "document_number", "publish_org",
+                            "publish_date", "effective_date","create_time", "update_time")
+                    .orderByDesc("id");
 
             // 执行查询
             IPage<Policy> policyPage = policyService.page(page, queryWrapper);
-
-            // 处理返回结果，移除content字段
-            policyPage.getRecords().forEach(policy -> policy.setContent(null));
 
             return HttpResponse.success(policyPage);
         } catch (Exception e) {

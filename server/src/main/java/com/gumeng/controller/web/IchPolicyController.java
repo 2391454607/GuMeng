@@ -1,10 +1,16 @@
 package com.gumeng.controller.web;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.Policy;
 import com.gumeng.service.PolicyService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Base64;
 
@@ -23,9 +29,17 @@ public class IchPolicyController {
 
     //获取政策列表
     @GetMapping("/getList")
-    public HttpResponse getPolicy() {
-        Object getPolicy = policyService.getPolicyList();
-        return HttpResponse.success(getPolicy);
+    public HttpResponse getPolicy(
+            @RequestParam(defaultValue = "1") Long current,
+            @RequestParam(defaultValue = "10") Long size) {
+        Page<Policy> page = new Page<>(current, size);
+        QueryWrapper<Policy> queryWrapper = new QueryWrapper<Policy>()
+                .select("id", "title", "type", "document_number", "publish_org",
+                        "publish_date", "effective_date")
+                .orderByDesc("publish_date");
+
+        IPage<Policy> policyPage = policyService.page(page, queryWrapper);
+        return HttpResponse.success(policyPage);
     }
 
     //根据id查询政策

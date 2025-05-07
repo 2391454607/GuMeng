@@ -14,8 +14,6 @@ import java.util.List;
 @Service
 public interface PolicyService extends IService<Policy> {
 
-    //获取政策列表
-    List<Policy> getPolicyList();
     //根据id查询政策
     Policy findById(Integer id);
 

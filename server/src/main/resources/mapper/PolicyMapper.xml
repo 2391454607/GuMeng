@@ -8,7 +8,7 @@
             <id property="id" column="id" jdbcType="INTEGER"/>
             <result property="title" column="title" jdbcType="VARCHAR"/>
             <result property="type" column="type" jdbcType="VARCHAR"/>
-            <result property="documentNumber" column="document_number" jdbcType="INTEGER"/>
+            <result property="documentNumber" column="document_number" jdbcType="VARCHAR"/>
             <result property="publishOrg" column="publish_org" jdbcType="VARCHAR"/>
             <result property="publishDate" column="publish_date" jdbcType="TIMESTAMP"/>
             <result property="effectiveDate" column="effective_date" jdbcType="TIMESTAMP"/>
@@ -24,11 +24,6 @@
         effective_date,content,attachment_url,create_time,update_time,
         is_delete
     </sql>
-
-
-    <select id="getPolicyList" resultType="com.gumeng.domain.Policy">
-        SELECT * FROM policy
-    </select>
 
     <select id="findById" resultType="com.gumeng.domain.Policy">
         SELECT * FROM policy WHERE id = #{id}

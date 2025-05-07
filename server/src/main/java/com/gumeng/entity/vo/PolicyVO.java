@@ -33,7 +33,7 @@ public class PolicyVO {
     /**
      * 发文字号
      */
-    private Integer documentNumber;
+    private String documentNumber;
 
     /**
      * 发布机构
@@ -50,23 +50,4 @@ public class PolicyVO {
      */
     private LocalDateTime effectiveDate;
 
-    /**
-     * 政策内容
-     */
-    private String content;
-
-    /**
-     * 附件URL
-     */
-    private String attachmentUrl;
-
-    /**
-     * 创建时间
-     */
-    private LocalDateTime createTime;
-
-    /**
-     * 更新时间
-     */
-    private LocalDateTime updateTime;
 }

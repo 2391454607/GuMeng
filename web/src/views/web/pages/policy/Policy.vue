@@ -1,9 +1,26 @@
 <script setup>
-import {onMounted, ref} from "vue";
+import {onMounted, reactive, ref} from "vue";
 import {downloadPolicyAPI, getPolicyList} from "@/api/web/Web.js";
 import {IconEye, IconDownload, IconLoading } from '@arco-design/web-vue/es/icon';
 import Footer from "@/views/web/layout/Footer.vue";
 import {Message} from "@arco-design/web-vue";
+
+//分页器状态
+const status = reactive({
+  current: 1,
+  size: 10
+})
+const total = ref(0);
+// 分页处理函数
+const handlePageChange = (current) => {
+  status.current = current;
+  loading.value = true;
+  getPolicyList(status).then(res => {
+    PolicyList.value = res.data.records;
+    total.value = res.data.total;
+    loading.value = false;
+  });
+};
 
 const PolicyList = ref({
   id:"",
@@ -13,15 +30,14 @@ const PolicyList = ref({
   publishOrg: "",
   publishDate: "",
   effectiveDate: "",
-  content: "",
-  attachmentUrl: "",
 })
 
 const loading = ref(true);
 
 onMounted(()=>{
   getPolicyList().then((res)=>{
-    PolicyList.value = res.data;
+    PolicyList.value = res.data.records;
+    total.value = res.data.total;
     loading.value = false;
   })
 })
@@ -61,7 +77,13 @@ const handleDownload = async (item) => {
     <div class="policy-list">
       <a-spin :loading="loading" size="large">
         <template #icon><icon-loading /></template>
-        <a-list :data="PolicyList" :bordered="false">
+        <a-list :data="PolicyList" :bordered="false" @page-change="handlePageChange" :pagination="{
+          total: total,
+          current: status.current,
+          pageSize: status.size,
+          showTotal: true,
+          showJumper: true
+        }">
           <template #item="{ item }">
             <a-list-item class="policy-item">
               <div class="policy-content">
@@ -72,6 +94,7 @@ const handleDownload = async (item) => {
                     <span>发文字号：{{ item.documentNumber }}</span>
                     <span>发布机构：{{ item.publishOrg }}</span>
                     <span>颁布日期：{{ item.publishDate }}</span>
+                    <span>生效日期：{{ item.effectiveDate }}</span>
                   </div>
                 </div>
                 <div class="policy-actions">

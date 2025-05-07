@@ -16,9 +16,6 @@ import java.util.List;
 @Mapper
 public interface PolicyMapper extends BaseMapper<Policy> {
 
-    //获取政策列表
-    List<Policy> getPolicyList();
-
     //根据id查询政策
     Policy findById(Integer id);
 

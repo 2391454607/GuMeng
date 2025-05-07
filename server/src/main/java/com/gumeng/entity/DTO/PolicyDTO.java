@@ -18,7 +18,7 @@ public class PolicyDTO {
 
     private String type;
 
-    private Integer documentNumber;
+    private String documentNumber;
 
     private String publishOrg;
 
