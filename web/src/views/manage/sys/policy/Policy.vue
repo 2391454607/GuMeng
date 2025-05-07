@@ -186,7 +186,6 @@ const delOk = (record) => {
           current: status.current,
           pageSize: status.size,
           showTotal: true,
-          showJumper: true
         }"
         :size="'small'"
         @page-change="handlePageChange"
@@ -197,8 +196,6 @@ const delOk = (record) => {
           <a-table-column align="center" data-index="type" title="类型"></a-table-column>
           <a-table-column align="center" data-index="documentNumber" title="发文字号"></a-table-column>
           <a-table-column align="center" data-index="publishOrg" title="发布机构"></a-table-column>
-          <a-table-column align="center" data-index="createTime" title="创建时间"></a-table-column>
-          <a-table-column align="center" data-index="updateTime" title="更新时间"></a-table-column>
           <a-table-column align="center" data-index="optional" title="操作">
             <template #cell="{record}" class="option">
 
