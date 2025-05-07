@@ -6,8 +6,8 @@ export const getCarouselAPI = async () => {
 }
 
 //获取非遗政策相关信息
-export const getPolicyList = async () => {
-    return http.get("/web/policy/getList")
+export const getPolicyList = async ({current: current,size: size}) => {
+    return http.get("/web/policy/getList", {current: current,size: size})
 }
 
 //根据id获取政策详细信息

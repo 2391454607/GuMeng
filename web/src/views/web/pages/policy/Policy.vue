@@ -35,7 +35,7 @@ const PolicyList = ref({
 const loading = ref(true);
 
 onMounted(()=>{
-  getPolicyList().then((res)=>{
+  getPolicyList(status).then((res)=>{
     PolicyList.value = res.data.records;
     total.value = res.data.total;
     loading.value = false;
@@ -77,13 +77,8 @@ const handleDownload = async (item) => {
     <div class="policy-list">
       <a-spin :loading="loading" size="large">
         <template #icon><icon-loading /></template>
-        <a-list :data="PolicyList" :bordered="false" @page-change="handlePageChange" :pagination="{
-          total: total,
-          current: status.current,
-          pageSize: status.size,
-          showTotal: true,
-          showJumper: true
-        }">
+        <a-list :data="PolicyList" :bordered="false">
+          <!-- 列表项模板 -->
           <template #item="{ item }">
             <a-list-item class="policy-item">
               <div class="policy-content">
@@ -109,6 +104,17 @@ const handleDownload = async (item) => {
                 </div>
               </div>
             </a-list-item>
+          </template>
+          
+          <!-- 添加分页器 -->
+          <template #footer>
+            <a-pagination
+              :total="total"
+              :current="status.current"
+              :page-size="status.size"
+              @change="handlePageChange"
+              show-total
+            />
           </template>
         </a-list>
       </a-spin>
@@ -213,5 +219,43 @@ const handleDownload = async (item) => {
 .footer{
   display: flex;
   bottom: 0;
+}
+.empty-wrapper {
+  padding: 40px 0;
+  text-align: center;
+  color: #86909c;
+}
+
+:deep(.arco-pagination) {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+:deep(.arco-pagination-item:hover),
+:deep(.arco-pagination-item-active) {
+  color: #fff !important;
+  background-color: #C2101C !important;
+  border-color: #C2101C !important;
+}
+
+:deep(.arco-pagination-item-previous:hover),
+:deep(.arco-pagination-item-next:hover) {
+  color: #C2101C !important;
+  background-color: #fff !important;
+  border-color: #C2101C !important;
+}
+
+:deep(.arco-pagination-jumper-input:focus) {
+  border-color: #C2101C !important;
+  box-shadow: 0 0 0 2px rgba(194, 16, 28, 0.2) !important;
+}
+
+:deep(.arco-pagination-jumper-input:hover) {
+  border-color: #C2101C !important;
+}
+
+:deep(.arco-pagination-total) {
+  color: #86909c;
 }
 </style>
