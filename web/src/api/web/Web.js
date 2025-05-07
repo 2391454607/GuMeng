@@ -17,7 +17,5 @@ export const getPolicyInfoAPI = async () => {
 
 //下载文件
 export const downloadPolicyAPI = async (id) => {
-    return http.get(`/web/policy/download?id=${id}`, {
-        responseType: 'blob'
-    })
+    return http.get(`/web/policy/download?id=${id}`)
 }

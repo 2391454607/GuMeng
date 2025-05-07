@@ -4,14 +4,9 @@ import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.Policy;
 import com.gumeng.service.PolicyService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 
 /**
@@ -40,7 +35,16 @@ public class IchPolicyController {
         return HttpResponse.success(policy);
     }
 
-//    // 根据ID下载PDF文件
-//    @GetMapping("/download")
+    // 根据ID下载PDF文件
+    @GetMapping("/download")
+    public HttpResponse downloadPolicy(@RequestParam Integer id) {
+        Policy policy = policyService.findById(id);
+        if (policy == null || policy.getContent() == null) {
+            return HttpResponse.error("文件不存在");
+        }
+
+        String base64Content = Base64.getEncoder().encodeToString(policy.getContent());
+        return HttpResponse.success(base64Content);
+    }
 
 }

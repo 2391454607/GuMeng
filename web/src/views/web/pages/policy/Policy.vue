@@ -27,7 +27,25 @@ onMounted(()=>{
 })
 
 const handleDownload = async (item) => {
-
+  try {
+    const response = await downloadPolicyAPI(item.id);
+    if (response.code === 200) {
+      // 直接使用返回的 Base64 数据
+      const link = document.createElement('a');
+      link.href = `data:application/pdf;base64,${response.data}`;
+      link.download = `${item.title}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      Message.success('下载成功');
+    } else {
+      Message.error('下载失败');
+    }
+  } catch (error) {
+    console.error('下载失败:', error);
+    Message.error('下载失败');
+  }
 };
 </script>
 
