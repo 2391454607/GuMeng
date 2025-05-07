@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 /**
  * 功能：非遗政策封装类
@@ -43,11 +43,11 @@ public class PolicyVO {
     /**
      * 发布日期
      */
-    private LocalDateTime publishDate;
+    private LocalDate publishDate;
 
     /**
      * 生效日期
      */
-    private LocalDateTime effectiveDate;
+    private LocalDate effectiveDate;
 
 }
