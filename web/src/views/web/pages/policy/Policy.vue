@@ -69,18 +69,17 @@ onMounted(()=>{
     </div>
   </div>
 
-  <div>
-    <Footer class="footer"></Footer>
-  </div>
+
+  <Footer class="footer"></Footer>
+
 
 </template>
 
 <style scoped>
 .policy-container {
-  margin-left: 100px;
-  margin-right: 100px;
   padding: 24px;
-  background: #f7f8fa;
+  min-height: calc(100vh - 176px);
+  background: #FFF7E9;
 }
 
 .policy-header {
@@ -166,7 +165,7 @@ onMounted(()=>{
 }
 
 .footer{
-  position: absolute;
+  display: flex;
   bottom: 0;
 }
 </style>
