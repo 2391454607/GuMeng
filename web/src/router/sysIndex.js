@@ -15,6 +15,11 @@ const sysRouters = [
         path: "user",
         name: "User",
         component: () => import("@/views/manage/sys/user/User.vue")
+    },
+    {
+        path: "policy",
+        name: "Policy",
+        component: () => import("@/views/manage/sys/policy/Policy.vue")
     }
 
 ];

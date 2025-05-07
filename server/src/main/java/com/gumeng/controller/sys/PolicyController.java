@@ -8,7 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 功能：
+ * 功能：政策信息后台管理
  * 作者：Z
  * 日期：2025/4/11 上午9:20
  */

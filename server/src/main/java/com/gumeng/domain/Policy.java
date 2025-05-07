@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.mysql.cj.jdbc.Blob;
 import lombok.Data;
 
 /**
@@ -58,10 +60,10 @@ public class Policy implements Serializable {
     private LocalDateTime effectiveDate;
 
     /**
-     * 政策内容
+     * 政策内容PDF格式
      */
     @TableField(value = "content")
-    private String content;
+    private byte[] content;
 
     /**
      * 附件URL
