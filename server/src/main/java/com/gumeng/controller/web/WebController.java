@@ -32,13 +32,6 @@ public class WebController {
         return HttpResponse.success(carousel);
     }
 
-    //获取政策列表
-    @GetMapping("/getPolicyList")
-    public HttpResponse getPolicy() {
-        Object getPolicy = policyService.getPolicyList();
-        return HttpResponse.success(getPolicy);
-    }
-
     //根据id查询政策
     @GetMapping("/getPolicyInfo")
     public HttpResponse policyInfo(@RequestParam Integer id) {
