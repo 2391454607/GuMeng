@@ -18,11 +18,5 @@ public interface PolicyService extends IService<Policy> {
     List<Policy> getPolicyList();
     //根据id查询政策
     Policy findById(Integer id);
-    //添加
-    void addPolicy(Policy policy);
-    //修改
-    void updatePolicy(Policy policy);
-    //删除
-    void deletePolicy(Integer id);
 
 }

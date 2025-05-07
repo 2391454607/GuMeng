@@ -31,20 +31,7 @@ public class PolicyServiceImpl extends ServiceImpl<PolicyMapper, Policy>
         return policyMapper.findById(id);
     }
 
-    @Override
-    public void addPolicy(Policy policy) {
-        policyMapper.addPolicy(policy);
-    }
 
-    @Override
-    public void updatePolicy(Policy policy) {
-        policyMapper.updatePolicy(policy);
-    }
-
-    @Override
-    public void deletePolicy(Integer id) {
-        policyMapper.deletePolicy(id);
-    }
 }
 
 

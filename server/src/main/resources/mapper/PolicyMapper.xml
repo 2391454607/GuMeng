@@ -34,39 +34,5 @@
         SELECT * FROM policy WHERE id = #{id}
     </select>
 
-    <select id="addPolicy" resultType="com.gumeng.domain.Policy">
-        INSERT INTO policy
-        SET
-            title = #{title},
-            type = #{type},
-            document_number = #{documentNumber},
-            publish_org = #{publishOrg},
-            publish_date = #{publishDate},
-            effective_date = #{effectiveDate},
-            content = #{content},
-            attachment_url = #{attachmentUrl},
-            create_time = now(),
-            update_time = now()
-    </select>
-
-    <select id="updatePolicy" resultType="com.gumeng.domain.Policy">
-        UPDATE policy
-        SET
-            title = #{title},
-            type = #{type},
-            document_number = #{documentNumber},
-            publish_org = #{publishOrg},
-            publish_date = #{publishDate},
-            effective_date = #{effectiveDate},
-            content = #{content},
-            attachment_url = #{attachmentUrl},
-            create_time = now(),
-            update_time = now()
-        WHERE id = #{id}
-    </select>
-
-    <select id="deletePolicy">
-        DELETE FROM carousel WHERE id = #{id}
-    </select>
 
 </mapper>

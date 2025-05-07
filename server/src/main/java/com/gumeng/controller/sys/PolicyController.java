@@ -160,7 +160,6 @@ public class PolicyController {
     //删除
     @PostMapping("/deletePolicy")
     public HttpResponse deletePolicy(@RequestParam Integer id) {
-        policyService.deletePolicy(id);
         return HttpResponse.success();
     }
 }

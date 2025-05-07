@@ -1,8 +1,9 @@
 <script setup>
 import {onMounted, ref} from "vue";
-import {getPolicyList} from "@/api/web/Web.js";
+import {downloadPolicyAPI, getPolicyList} from "@/api/web/Web.js";
 import {IconEye, IconDownload, IconLoading } from '@arco-design/web-vue/es/icon';
 import Footer from "@/views/web/layout/Footer.vue";
+import {Message} from "@arco-design/web-vue";
 
 const PolicyList = ref({
   id:"",
@@ -24,6 +25,10 @@ onMounted(()=>{
     loading.value = false;
   })
 })
+
+const handleDownload = async (item) => {
+
+};
 </script>
 
 <template>
@@ -56,7 +61,7 @@ onMounted(()=>{
                     <template #icon><icon-eye /></template>
                     查看详情
                   </a-button>
-                  <a-button v-if="item.attachmentUrl" shape="round">
+                  <a-button shape="round" @click="handleDownload(item)">
                     <template #icon><icon-download /></template>
                     下载附件
                   </a-button>

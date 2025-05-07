@@ -22,11 +22,6 @@ public interface PolicyMapper extends BaseMapper<Policy> {
     //根据id查询政策
     Policy findById(Integer id);
 
-    void addPolicy(Policy policy);
-
-    void updatePolicy(Policy policy);
-
-    void deletePolicy(Integer id);
 }
 
 

@@ -22,8 +22,6 @@ public class WebController {
     @Autowired
     private CarouselService carouselService;
 
-    @Autowired
-    private PolicyService policyService;
 
     //获取轮播图列表
     @GetMapping("/getCarousel")
@@ -32,11 +30,5 @@ public class WebController {
         return HttpResponse.success(carousel);
     }
 
-    //根据id查询政策
-    @GetMapping("/getPolicyInfo")
-    public HttpResponse policyInfo(@RequestParam Integer id) {
-        Policy policy = policyService.findById(id);
-        return HttpResponse.success(policy);
-    }
 
 }
