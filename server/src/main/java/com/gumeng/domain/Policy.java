@@ -5,10 +5,9 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
-import com.mysql.cj.jdbc.Blob;
 import lombok.Data;
 
 /**
@@ -52,13 +51,13 @@ public class Policy implements Serializable {
      * 发布日期
      */
     @TableField(value = "publish_date")
-    private LocalDate publishDate;
+    private Date publishDate;
 
     /**
      * 生效日期
      */
     @TableField(value = "effective_date")
-    private LocalDate effectiveDate;
+    private Date effectiveDate;
 
     /**
      * 政策内容PDF格式

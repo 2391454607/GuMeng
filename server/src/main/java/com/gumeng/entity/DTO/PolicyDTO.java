@@ -1,8 +1,10 @@
 package com.gumeng.entity.DTO;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
-import java.io.Serializable;
+import java.util.Date;
 
 /**
  * 功能：非遗政策上传功能DTO
@@ -22,9 +24,11 @@ public class PolicyDTO {
 
     private String publishOrg;
 
-    private String publishDate;
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private Date publishDate;
 
-    private String effectiveDate;
+    @TableField(updateStrategy = FieldStrategy.ALWAYS)
+    private Date effectiveDate;
 
     private String base64File;  // 用于接收base64编码的PDF文件
 

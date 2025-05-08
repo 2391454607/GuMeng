@@ -1,6 +1,7 @@
 package com.gumeng.controller.sys;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.code.HttpResponse;
@@ -11,9 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.Date;
 
 /**
  * 功能：政策信息后台管理
@@ -79,10 +82,12 @@ public class PolicyController {
             policy.setDocumentNumber(dto.getDocumentNumber());
             policy.setPublishOrg(dto.getPublishOrg());
 
-            // 修改时间格式解析
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            policy.setPublishDate(LocalDateTime.parse(dto.getPublishDate(), formatter));
-            policy.setEffectiveDate(LocalDateTime.parse(dto.getEffectiveDate(), formatter));
+            if (dto.getPublishDate() != null) {
+                policy.setPublishDate(dto.getPublishDate());
+            }
+            if (dto.getEffectiveDate() != null) {
+                policy.setEffectiveDate(dto.getEffectiveDate());
+            }
 
             policy.setContent(fileContent);
             policy.setCreateTime(LocalDateTime.now());
@@ -116,21 +121,27 @@ public class PolicyController {
                 existPolicy.setContent(Base64.getDecoder().decode(dto.getBase64File()));
             }
 
-            // 更新政策信息
-            existPolicy.setTitle(dto.getTitle());
-            existPolicy.setType(dto.getType());
-            existPolicy.setDocumentNumber(dto.getDocumentNumber());
-            existPolicy.setPublishOrg(dto.getPublishOrg());
+            // 创建UpdateWrapper
+            UpdateWrapper<Policy> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("id", dto.getId())
+                    .set("title", dto.getTitle())
+                    .set("type", dto.getType())
+                    .set("document_number", dto.getDocumentNumber())
+                    .set("publish_org", dto.getPublishOrg())
+                    .set("publish_date", dto.getPublishDate())
+                    .set("effective_date", dto.getEffectiveDate())
+                    .set("update_time", LocalDateTime.now());
 
-            // 修改时间格式解析
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-            existPolicy.setPublishDate(LocalDateTime.parse(dto.getPublishDate(), formatter));
-            existPolicy.setEffectiveDate(LocalDateTime.parse(dto.getEffectiveDate(), formatter));
-
-            existPolicy.setUpdateTime(LocalDateTime.now());
+            // 如果有新的PDF文件
+            if (dto.getBase64File() != null && !dto.getBase64File().trim().isEmpty()) {
+                updateWrapper.set("content", Base64.getDecoder().decode(dto.getBase64File()));
+            }
 
             // 更新数据库
-            policyService.updateById(existPolicy);
+            boolean result = policyService.update(null, updateWrapper);
+            if (!result) {
+                return HttpResponse.error("更新失败");
+            }
 
             return HttpResponse.success("更新成功");
         } catch (Exception e) {
