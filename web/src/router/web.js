@@ -65,7 +65,12 @@ const webRouters = [
     {
         path: "/policy",
         name: "webPolicy",
-        component: () => import("@/views/web/pages/policy/Policy.vue")
+        component: () => import("@/views/web/pages/policy/Policy.vue"),
+    },
+    {
+        path: "/policy/info",
+        name: "PolicyInfo",
+        component: () => import("@/views/web/pages/policy/PolicyInfo.vue")
     },
     {
         path: "/shop",

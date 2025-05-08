@@ -11,8 +11,8 @@ export const getPolicyList = async ({current: current,size: size}) => {
 }
 
 //根据id获取政策详细信息
-export const getPolicyInfoAPI = async () => {
-    return http.get("/web/policy/getInfo")
+export const getPolicyInfoAPI = async (id) => {
+    return http.get("/web/policy/getInfo",{id:id})
 }
 
 //下载文件

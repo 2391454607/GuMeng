@@ -4,6 +4,7 @@ import {downloadPolicyAPI, getPolicyList} from "@/api/web/Web.js";
 import {IconEye, IconDownload, IconLoading } from '@arco-design/web-vue/es/icon';
 import Footer from "@/views/web/layout/Footer.vue";
 import {Message} from "@arco-design/web-vue";
+import { useRouter } from 'vue-router';
 
 //分页器状态
 const status = reactive({
@@ -63,6 +64,24 @@ const handleDownload = async (item) => {
     Message.error('下载失败');
   }
 };
+
+const router = useRouter();
+const viewDetails = (item) => {
+  router.push({
+    name: 'PolicyInfo',
+    query: { id: item.id }
+  });
+};
+
+// 日期格式化函数
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}年${month}月${day}日`;
+};
 </script>
 
 <template>
@@ -88,12 +107,12 @@ const handleDownload = async (item) => {
                   <div class="policy-meta">
                     <span>发文字号：{{ item.documentNumber }}</span>
                     <span>发布机构：{{ item.publishOrg }}</span>
-                    <span>颁布日期：{{ item.publishDate }}</span>
-                    <span>生效日期：{{ item.effectiveDate }}</span>
+                    <span v-if="item.publishDate">颁布日期：{{ formatDate(item.publishDate) }}</span>
+                    <span v-if="item.effectiveDate">生效日期：{{ formatDate(item.effectiveDate) }}</span>
                   </div>
                 </div>
                 <div class="policy-actions">
-                  <a-button type="primary" shape="round">
+                  <a-button type="primary" shape="round" @click="viewDetails(item)">
                     <template #icon><icon-eye /></template>
                     查看详情
                   </a-button>
@@ -219,11 +238,6 @@ const handleDownload = async (item) => {
 .footer{
   display: flex;
   bottom: 0;
-}
-.empty-wrapper {
-  padding: 40px 0;
-  text-align: center;
-  color: #86909c;
 }
 
 :deep(.arco-pagination) {

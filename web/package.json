@@ -13,6 +13,7 @@
     "axios": "^1.8.4",
     "crypto-js": "^4.2.0",
     "echarts": "^5.6.0",
+    "pdfjs-dist": "^5.2.133",
     "pinia": "^3.0.1",
     "st-common-ui-vue3": "^0.14.0",
     "three": "^0.175.0",
