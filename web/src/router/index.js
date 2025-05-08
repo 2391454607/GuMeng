@@ -147,7 +147,7 @@ router.beforeEach(async (to, from, next) => {
         if (!decodedToken || !decodedToken.claims) {
             Message.error('无效的用户信息');
             localStorage.removeItem('token');
-            next('/401');
+            next('/');
             return;
         }
 
