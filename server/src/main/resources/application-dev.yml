@@ -30,7 +30,7 @@ spring:
     host: smtp.qq.com  #发送邮件的服务器地址
     port: 465  # 使用465端口
     username: 2391454607@qq.com  # 邮箱账号
-    password:   #开启 IMAP/SMTP 服务 授权码
+    password: kaaeauniqbfbdhhd  #开启 IMAP/SMTP 服务 授权码
     default-encoding: UTF-8
     protocol: smtps  # 使用smtps协议
     properties:

@@ -1,7 +1,7 @@
 <script setup>
-import {onMounted, onBeforeUnmount, reactive, ref, computed} from 'vue';
+import { onBeforeUnmount, reactive, ref, computed} from 'vue';
 import {Message} from '@arco-design/web-vue';
-import {userLoginAPI} from "@/api/user/Auth.js";
+import {useUserStore } from '@/stores/userStore';
 import { IconCheck } from '@arco-design/web-vue/es/icon';
 
 //引入组件
@@ -78,6 +78,8 @@ const canVerify = computed(() => {
   return login.username.length >= 5 && login.password.length >= 6;
 });
 
+const userStore = useUserStore();
+
 const handleSubmit = async () => {
 
   loading.value = true;
@@ -94,49 +96,33 @@ const handleSubmit = async () => {
     return;
   }
 
-
-  if (login.username.length >= 5 && login.password.length >= 6) {
-    try {
-      // 将验证数据添加到登录请求中
-      const loginParams = {
-        ...login,
-        captchaVerification: verifyData.value.captchaVerification
-      };
-      
-      const res = await userLoginAPI(loginParams);
-      if (res.code === 200) {
-        // 存储 token
-        localStorage.setItem('token', res.data);
-        
-        // 解析 token 中的用户信息
-        const tokenParts = res.data.split('.');
-        const claims = JSON.parse(atob(tokenParts[1]));
-        
-        Message.success(res.msg);
-        show3DEffect.value = false;
-        
-        setTimeout(() => {
-          // 根据解析出的角色信息决定跳转路径
-          if (claims.claims.role.includes('superAdmin') || claims.claims.role.includes('admin')) {
-            window.location.href = '/sys';
-          } else {
-            window.location.href = '/';
-          }
-        }, 500);
-      } else {
-        Message.error(res.msg);
-        // 重置验证状态
-        isVerified.value = false;
-        verifyData.value = null;
-      }
-    } catch (error) {
-      Message.error("登录失败，请稍后重试");
-      // 登录失败时重置验证状态
+  try {
+    const loginParams = {
+      ...login,
+      captchaVerification: verifyData.value.captchaVerification
+    };
+    
+    const result = await userStore.login(loginParams);
+    if (result.success) {
+      show3DEffect.value = false;
+      setTimeout(() => {
+        if (result.isAdmin) {
+          window.location.href = '/sys';
+        } else {
+          window.location.href = '/';
+        }
+      }, 500);
+    } else {
       isVerified.value = false;
       verifyData.value = null;
     }
+  } catch (error) {
+    console.error('登录错误:', error);
+    isVerified.value = false;
+    verifyData.value = null;
+  } finally {
+    loading.value = false;
   }
-  loading.value = false;
 };
 
 // 添加 ref 用于存储组件实例
