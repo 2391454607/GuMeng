@@ -77,14 +77,14 @@ const addOk = async () => {
     Message.error('请上传文件');
     return;
   }
-  // 构建请求数据
+  // 构建请求数据，确保日期字段在没有值时传递 null
   const requestData = {
     title: newPolicy.value.title,
     type: newPolicy.value.type,
     documentNumber: newPolicy.value.documentNumber,
     publishOrg: newPolicy.value.publishOrg,
-    publishDate: newPolicy.value.publishDate,
-    effectiveDate: newPolicy.value.effectiveDate,
+    publishDate: newPolicy.value.publishDate || null,
+    effectiveDate: newPolicy.value.effectiveDate || null,
     base64File: newPolicy.value.content
   };
   addPolicyAPI(requestData).then((res) => {
@@ -123,15 +123,16 @@ const updatePolicyClick = async (record) => {
   updatePolicyData.type = record.type;
   updatePolicyData.documentNumber = String(record.documentNumber);
   updatePolicyData.publishOrg = record.publishOrg;
-  // 格式化日期
-  updatePolicyData.publishDate = new Date(record.publishDate).toISOString().slice(0, 19).replace('T', ' ');
-  updatePolicyData.effectiveDate = new Date(record.effectiveDate).toISOString().slice(0, 19).replace('T', ' ');
+  updatePolicyData.publishDate = record.publishDate;
+  updatePolicyData.effectiveDate = record.effectiveDate;
   updatePolicy.value = true;
 };
 
 const updateOk = () => {
   const requestData = {
     ...updatePolicyData,
+    publishDate: updatePolicyData.publishDate || null,
+    effectiveDate: updatePolicyData.effectiveDate || null,
     content: updatePolicyData.content  // 添加 base64File 字段
   };
   updatePolicyAPI(requestData).then((res) => {
@@ -250,16 +251,14 @@ const delOk = (record) => {
       <a-form-item field="publishDate" label="发布日期">
         <a-date-picker
             v-model="newPolicy.publishDate"
-            show-time
-            format="YYYY-MM-DD HH:mm:ss"
+            format="YYYY-MM-DD"
             placeholder="请选择发布日期"
         />
       </a-form-item>
       <a-form-item field="effectiveDate" label="生效日期">
         <a-date-picker
             v-model="newPolicy.effectiveDate"
-            show-time
-            format="YYYY-MM-DD HH:mm:ss"
+            format="YYYY-MM-DD"
             placeholder="请选择生效日期"
         />
       </a-form-item>
@@ -301,16 +300,14 @@ const delOk = (record) => {
       <a-form-item field="publishDate" label="发布日期">
         <a-date-picker
             v-model="updatePolicyData.publishDate"
-            show-time
-            format="YYYY-MM-DD HH:mm:ss"
+            format="YYYY-MM-DD"
             placeholder="请选择发布日期"
         />
       </a-form-item>
       <a-form-item field="effectiveDate" label="生效日期">
         <a-date-picker
             v-model="updatePolicyData.effectiveDate"
-            show-time
-            format="YYYY-MM-DD HH:mm:ss"
+            format="YYYY-MM-DD"
             placeholder="请选择生效日期"
         />
       </a-form-item>
