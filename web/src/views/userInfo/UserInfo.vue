@@ -2,7 +2,6 @@
 import Footer from "@/views/web/layout/Footer.vue";
 import {router} from "@/router/index.js";
 import {onMounted, ref} from "vue";
-import {getUserInfoAPI} from "@/api/user/Auth.js";
 import {dailySignAPI, getUserAssetAPI, rechargeAPI, withdrawAPI} from "@/api/user/UserInfo.js";
 import {Message} from "@arco-design/web-vue";
 import {
@@ -42,13 +41,11 @@ onMounted(() => {
   try {
     const token = localStorage.getItem('token');
     if (token) {
-      getUserInfoAPI().then(res => {
-        if (res.code === 200) {
-          userInfo.value = res.data;
-          // 更新本地存储的用户信息
-          localStorage.setItem('userInfo', JSON.stringify(res.data));
-        } else {
-          Message.error('获取用户信息失败');
+
+      // 使用 store 获取用户信息
+      userStore.fetchUserInfo().then(data => {
+        if (data) {
+          userInfo.value = data;
         }
       });
 
@@ -61,7 +58,6 @@ onMounted(() => {
     console.error('获取用户信息错误:', error);
     Message.error('获取用户信息失败');
   }
-
 
 });
 

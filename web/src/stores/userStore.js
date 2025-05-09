@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia';
 import { Message } from '@arco-design/web-vue';
-import {userLoginAPI, userLogoutAPI} from "@/api/user/Auth.js";
+import {getUserInfoAPI, userLoginAPI, userLogoutAPI} from "@/api/user/Auth.js";
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     token: localStorage.getItem('token') || '',
     userInfo: JSON.parse(localStorage.getItem('userInfo') || '{}'),
-    isAdminRole: false,  // 改名以避免与 getter 冲突
+    isAdminRole: false,
   }),
 
   getters: {
@@ -152,6 +152,26 @@ export const useUserStore = defineStore('user', {
         console.error('退出登录错误:', error);
         Message.error('退出登录失败');
         return false;
+      }
+    },
+
+    async fetchUserInfo() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+
+        const res = await getUserInfoAPI();
+        if (res.code === 200) {
+          this.setUserInfo(res.data);
+          return res.data;
+        } else {
+          Message.error('获取用户信息失败');
+          return null;
+        }
+      } catch (error) {
+        console.error('获取用户信息错误:', error);
+        Message.error('获取用户信息失败');
+        return null;
       }
     }
   }

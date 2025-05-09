@@ -3,7 +3,6 @@ import {ref, onMounted} from 'vue';
 import {router} from "@/router/index.js";
 import {Message} from "@arco-design/web-vue";
 import {IconUser, IconExport} from '@arco-design/web-vue/es/icon';
-import {getUserInfoAPI} from "@/api/user/Auth.js";
 import { useUserStore } from '@/stores/userStore';
 
 const position = ref(0);
@@ -68,14 +67,10 @@ onMounted(() => {
       const claims = JSON.parse(atob(tokenParts[1]));
       isAdmin.value = claims.claims.role.includes('superAdmin') || claims.claims.role.includes('admin');
 
-      getUserInfoAPI().then(res => {
-        console.log(res.data);
-        if (res.code === 200) {
-          userInfo.value = res.data;
-          // 更新本地存储的用户信息
-          localStorage.setItem('userInfo', JSON.stringify(res.data));
-        } else {
-          Message.error('获取用户信息失败');
+      // 使用 store 获取用户信息
+      userStore.fetchUserInfo().then(data => {
+        if (data) {
+          userInfo.value = data;
         }
       });
     }
