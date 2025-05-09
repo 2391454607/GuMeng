@@ -3,7 +3,7 @@ import {ref, onMounted} from 'vue';
 import {router} from "@/router/index.js";
 import {Message} from "@arco-design/web-vue";
 import {IconUser, IconExport} from '@arco-design/web-vue/es/icon';
-import {getUserInfoAPI, userLogoutAPI} from "@/api/user/Auth.js";
+import {getUserInfoAPI} from "@/api/user/Auth.js";
 import { useUserStore } from '@/stores/userStore';
 
 const position = ref(0);

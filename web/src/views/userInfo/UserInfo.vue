@@ -1,8 +1,8 @@
 <script setup>
 import Footer from "@/views/web/layout/Footer.vue";
 import {router} from "@/router/index.js";
-import {onMounted, reactive, ref} from "vue";
-import {getUserInfoAPI, userLogoutAPI} from "@/api/user/Auth.js";
+import {onMounted, ref} from "vue";
+import {getUserInfoAPI} from "@/api/user/Auth.js";
 import {dailySignAPI, getUserAssetAPI, rechargeAPI, withdrawAPI} from "@/api/user/UserInfo.js";
 import {Message} from "@arco-design/web-vue";
 import {
