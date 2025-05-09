@@ -1,5 +1,5 @@
 <script setup>
-import {ref, onMounted} from 'vue';
+import {ref, onMounted, computed} from 'vue';
 import {router} from "@/router/index.js";
 import {Message} from "@arco-design/web-vue";
 import {IconUser, IconExport} from '@arco-design/web-vue/es/icon';
@@ -33,11 +33,13 @@ const handleMouseOver = (event) => end = event.target.offsetLeft;
 const handleMouseDown = (event) => beginX = event.target.offsetLeft;
 const handleMouseOut = () => end = beginX;
 
-const token = localStorage.getItem('token');
-// 存储用户信息
-const userInfo = ref({});
+// 获取 store 实例
+const userStore = useUserStore();
 
-const isAdmin = ref(false);
+// 使用 computed 获取状态
+const token = computed(() => userStore.token);
+const userInfo = computed(() => userStore.userInfo);
+const isAdmin = computed(() => userStore.isAdmin);
 
 onMounted(() => {
   // 获取当前路由对应的菜单项
@@ -58,42 +60,22 @@ onMounted(() => {
     begin = begin + (end - begin) * 0.1;
     position.value = begin;
   }, 10);
-  //获取用户登录信息
-  try {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // 从 token 中解析用户角色
-      const tokenParts = token.split('.');
-      const claims = JSON.parse(atob(tokenParts[1]));
-      isAdmin.value = claims.claims.role.includes('superAdmin') || claims.claims.role.includes('admin');
 
-      // 使用 store 获取用户信息
-      userStore.fetchUserInfo().then(data => {
-        if (data) {
-          userInfo.value = data;
-        }
-      });
-    }
-  } catch (error) {
-    console.error('获取用户信息错误:', error);
-    Message.error('获取用户信息失败');
+  // 获取用户信息
+  if (token.value) {
+    userStore.fetchUserInfo();
   }
 });
 
-// 获取 store 实例
-const userStore = useUserStore();
-
 // 退出登录
 const handleLogout = () => {
-  const token = localStorage.getItem('token');
-  if (token) {
+  if (token.value) {
     userStore.logout();
   } else {
     Message.warning('您尚未登录');
     router.push('/login');
   }
 };
-
 </script>
 
 <template>

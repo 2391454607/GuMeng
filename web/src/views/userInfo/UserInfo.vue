@@ -1,7 +1,7 @@
 <script setup>
 import Footer from "@/views/web/layout/Footer.vue";
 import {router} from "@/router/index.js";
-import {onMounted, ref} from "vue";
+import {onMounted, ref, computed} from "vue";
 import {dailySignAPI, getUserAssetAPI, rechargeAPI, withdrawAPI} from "@/api/user/UserInfo.js";
 import {Message} from "@arco-design/web-vue";
 import {
@@ -16,11 +16,14 @@ import {
 import {useRoute} from 'vue-router';
 import {useUserStore} from "@/stores/userStore.js";
 
+// 获取 store 实例
+const userStore = useUserStore();
 
-// 存储用户信息
-const userInfo = ref({});
-const token = localStorage.getItem('token');
-const isAdmin = ref(false);
+// 使用 computed 获取状态
+const token = computed(() => userStore.token);
+const userInfo = computed(() => userStore.userInfo);
+const isAdmin = computed(() => userStore.isAdmin);
+
 const userAsset = ref({
   totalAmount: "",     //累计金额
   currentAmount: "",   //可用金额
@@ -32,39 +35,21 @@ onMounted(() => {
   // 设置初始激活菜单
   activeMenu.value = route.path;
 
-  // 从 token 中解析用户角色
-  const tokenParts = token.split('.');
-  const claims = JSON.parse(atob(tokenParts[1]));
-  isAdmin.value = claims.claims.role.includes('superAdmin') || claims.claims.role.includes('admin');
-
-  //获取用户登录信息
-  try {
-    const token = localStorage.getItem('token');
-    if (token) {
-
-      // 使用 store 获取用户信息
-      userStore.fetchUserInfo().then(data => {
-        if (data) {
-          userInfo.value = data;
-        }
-      });
-
-      //获取用户资产
+  // 获取用户信息和资产
+  if (token.value) {
+    // 确保先获取用户信息
+    userStore.fetchUserInfo().then(() => {
+      // 获取资产信息
       getUserAssetAPI().then(res => {
         userAsset.value = res.data;
-      })
-    }
-  } catch (error) {
-    console.error('获取用户信息错误:', error);
-    Message.error('获取用户信息失败');
+      });
+    });
   }
-
 });
-
 
 //用户信息菜单数据
 const menuItems = [
-  {name: '个人资料', icon: IconUser, url: '/userInfo'},
+  {name: '个人资料', icon : IconUser, url: '/userInfo'},
   {name: '我的订单', icon: IconUnorderedList, url: '/userInfo/order'},
   {name: '我的收藏', icon: IconStar, url: '/userInfo/collection'},
   {name: '浏览历史', icon: IconHistory, url: '/userInfo/history'},
@@ -99,9 +84,7 @@ const debounce = (fn, delay) => {
 
 // 用户签到
 const dailySign = debounce(() => {
-
-  const token = localStorage.getItem('token');
-  if (token) {
+  if (token.value) {
     dailySignAPI().then(res => {
       if (res.code === 200) {
         Message.success(res.data);
@@ -112,10 +95,9 @@ const dailySign = debounce(() => {
       } else {
         Message.error(res.msg);
       }
-    }).finally(() => {
     });
   }
-}, 700); // 防抖延迟
+}, 700);
 
 // 充值相关
 const rechargeVisible = ref(false);
@@ -182,13 +164,9 @@ const confirmWithdraw = () => {
   });
 };
 
-// 获取 store 实例
-const userStore = useUserStore();
-
 // 退出登录
 const handleLogout = () => {
-  const token = localStorage.getItem('token');
-  if (token) {
+  if (token.value) {
     userStore.logout();
   } else {
     Message.warning('您尚未登录');

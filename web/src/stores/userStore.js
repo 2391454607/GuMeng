@@ -10,34 +10,19 @@ export const useUserStore = defineStore('user', {
   }),
 
   getters: {
-    isLogin: (state) => {
-      const hasToken = !!state.token;
-      const hasUserInfo = state.userInfo && Object.keys(state.userInfo).length > 0;
-      return hasToken && hasUserInfo;
-    },
+    // 修改 isAdmin getter
     isAdmin: (state) => {
-      const decodedToken = state.token ? this.parseJwt(state.token) : null;
-      return decodedToken?.claims?.role?.includes('admin') || decodedToken?.claims?.role?.includes('superAdmin') || false;
-    },
-    userRoles: (state) => {
-      const decodedToken = state.token ? this.parseJwt(state.token) : null;
-      return decodedToken?.claims?.role || [];
+      const userRoles = state.userInfo?.role || [];
+      return userRoles.some(role => ['admin', 'superAdmin'].includes(role));
     },
   },
 
   actions: {
-    setToken(token) {
-      this.token = token;
-      localStorage.setItem('token', token);
-    },
-
+    // 修改 setUserInfo 方法
     setUserInfo(userInfo) {
       this.userInfo = userInfo;
-      // 更新管理员状态检查
-      this.isAdminRole = userInfo?.claims?.role?.some(role => role === 'admin' || role === 'superAdmin') || false;
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
     },
-
 
     parseJwt(token) {
       try {
@@ -126,6 +111,46 @@ export const useUserStore = defineStore('user', {
       }
     },
 
+    // 添加 setToken 方法
+    setToken(token) {
+      this.token = token;
+      localStorage.setItem('token', token);
+
+      // 解析 token 并更新角色信息
+      const decodedToken = this.parseJwt(token);
+      if (decodedToken?.claims?.role) {
+        this.isAdminRole = decodedToken.claims.role.some(
+            role => ['admin', 'superAdmin'].includes(role)
+        );
+      }
+    },
+
+    // 获取用户信息
+    async fetchUserInfo() {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return null;
+
+        const res = await getUserInfoAPI();
+        if (res.code === 200) {
+          this.setUserInfo(res.data);
+          // 解析 token 并更新角色信息
+          const decodedToken = this.parseJwt(token);
+          if (decodedToken?.claims?.role) {
+            this.userInfo.role = decodedToken.claims.role;
+          }
+          return res.data;
+        } else {
+          Message.error('获取用户信息失败');
+          return null;
+        }
+      } catch (error) {
+        console.error('获取用户信息错误:', error);
+        Message.error('获取用户信息失败');
+        return null;
+      }
+    },
+
     async logout() {
       try {
         const res = await userLogoutAPI();
@@ -155,24 +180,5 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    async fetchUserInfo() {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return null;
-
-        const res = await getUserInfoAPI();
-        if (res.code === 200) {
-          this.setUserInfo(res.data);
-          return res.data;
-        } else {
-          Message.error('获取用户信息失败');
-          return null;
-        }
-      } catch (error) {
-        console.error('获取用户信息错误:', error);
-        Message.error('获取用户信息失败');
-        return null;
-      }
-    }
   }
 });
