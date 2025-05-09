@@ -3,7 +3,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI, checkSensitiveWordsAPI } from '@/api/forum';
-import { useUserStore } from '@/stores';
+import { useUserStore } from '@/stores/userStore.js';
 
 const router = useRouter();
 const route = useRoute();

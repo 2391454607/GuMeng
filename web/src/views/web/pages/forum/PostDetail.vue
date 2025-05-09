@@ -22,7 +22,7 @@ import {
   unlikeCommentAPI,
   checkSensitiveWordsAPI
 } from '@/api/forum';
-import { useUserStore } from '@/stores';
+import { useUserStore } from '@/stores/userStore.js';
 import { formatDate } from '@/utils/format';
 
 const router = useRouter();

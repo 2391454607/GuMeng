@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import { IconSearch, IconEye, IconPlus, IconHeart, IconMessage, IconHeartFill } from '@arco-design/web-vue/es/icon';
 import { getPostListAPI as getPostsAPI, getTopicsAPI, likePostAPI, unlikePostAPI } from '@/api/forum';
-import { useUserStore } from '@/stores';
+import { useUserStore } from '@/stores/userStore.js';
 import { formatDate } from '@/utils/format';
 import Footer from "@/views/web/layout/Footer.vue";
 
