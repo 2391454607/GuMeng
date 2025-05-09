@@ -3,7 +3,8 @@ import {ref, onMounted} from "vue";
 import {router} from "@/router/index.js";
 import {Message} from '@arco-design/web-vue';
 import {IconCaretLeft, IconCaretRight, IconHome, IconUser, IconExport} from "@arco-design/web-vue/es/icon";
-import {userLogoutAPI, getUserInfoAPI} from "@/api/user/Auth.js";
+import {getUserInfoAPI} from "@/api/user/Auth.js";
+import {useUserStore} from "@/stores/userStore.js";
 
 const props = defineProps({
   coll: {
@@ -43,23 +44,14 @@ onMounted(() => {
   }
 });
 
+// 获取 store 实例
+const userStore = useUserStore();
+
 // 退出登录
 const handleLogout = () => {
   const token = localStorage.getItem('token');
   if (token) {
-    userLogoutAPI().then(res => {
-      if (res.code === 200) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userInfo');
-        Message.success('退出登录成功');
-        router.push('/login');
-      } else {
-        Message.error(res.msg || '退出登录失败');
-      }
-    }).catch(error => {
-      Message.error('退出登录失败');
-      console.error('退出登录错误:', error);
-    });
+    userStore.logout();
   } else {
     Message.warning('您尚未登录');
     router.push('/login');

@@ -15,6 +15,7 @@ import {
   IconRelation
 } from '@arco-design/web-vue/es/icon';
 import {useRoute} from 'vue-router';
+import {useUserStore} from "@/stores/userStore.js";
 
 
 // 存储用户信息
@@ -64,31 +65,6 @@ onMounted(() => {
 
 });
 
-// 退出登录
-const handleLogout = () => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    userLogoutAPI().then(res => {
-      if (res.code === 200) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userInfo');
-        Message.success('退出登录成功');
-        // 延时跳转页面
-        setTimeout(() => {
-          router.push('/');
-        }, 1000);
-      } else {
-        Message.error(res.msg || '退出登录失败');
-      }
-    }).catch(error => {
-      Message.error('退出登录失败');
-      console.error('退出登录错误:', error);
-    });
-  } else {
-    Message.warning('您尚未登录');
-    router.push('/login');
-  }
-};
 
 //用户信息菜单数据
 const menuItems = [
@@ -208,6 +184,20 @@ const confirmWithdraw = () => {
       Message.error(res.msg || '提现失败');
     }
   });
+};
+
+// 获取 store 实例
+const userStore = useUserStore();
+
+// 退出登录
+const handleLogout = () => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    userStore.logout();
+  } else {
+    Message.warning('您尚未登录');
+    router.push('/login');
+  }
 };
 </script>
 

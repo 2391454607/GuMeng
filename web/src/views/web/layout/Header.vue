@@ -4,6 +4,7 @@ import {router} from "@/router/index.js";
 import {Message} from "@arco-design/web-vue";
 import {IconUser, IconExport} from '@arco-design/web-vue/es/icon';
 import {getUserInfoAPI, userLogoutAPI} from "@/api/user/Auth.js";
+import { useUserStore } from '@/stores/userStore';
 
 const position = ref(0);
 let begin = 0;
@@ -84,26 +85,14 @@ onMounted(() => {
   }
 });
 
+// 获取 store 实例
+const userStore = useUserStore();
+
 // 退出登录
 const handleLogout = () => {
   const token = localStorage.getItem('token');
   if (token) {
-    userLogoutAPI().then(res => {
-      if (res.code === 200) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userInfo');
-        Message.success('退出登录成功');
-        // 延时刷新当前页面
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } else {
-        Message.error(res.msg || '退出登录失败');
-      }
-    }).catch(error => {
-      Message.error('退出登录失败');
-      console.error('退出登录错误:', error);
-    });
+    userStore.logout();
   } else {
     Message.warning('您尚未登录');
     router.push('/login');

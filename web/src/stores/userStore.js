@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { Message } from '@arco-design/web-vue';
-import { userLoginAPI } from "@/api/user/Auth.js";
+import {userLoginAPI, userLogoutAPI} from "@/api/user/Auth.js";
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -38,12 +38,6 @@ export const useUserStore = defineStore('user', {
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
     },
 
-    logout() {
-      this.token = '';
-      this.userInfo = {};
-      localStorage.removeItem('token');
-      localStorage.removeItem('userInfo');
-    },
 
     parseJwt(token) {
       try {
@@ -129,6 +123,35 @@ export const useUserStore = defineStore('user', {
           success: false,
           isAdmin: false
         };
+      }
+    },
+
+    async logout() {
+      try {
+        const res = await userLogoutAPI();
+        if (res.code === 200) {
+          // 清除状态
+          this.token = '';
+          this.userInfo = {};
+          // 清除本地存储
+          localStorage.removeItem('token');
+          localStorage.removeItem('userInfo');
+          Message.success('退出登录成功');
+
+          // 延时刷新页面
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+
+          return true;
+        } else {
+          Message.error(res.msg || '退出登录失败');
+          return false;
+        }
+      } catch (error) {
+        console.error('退出登录错误:', error);
+        Message.error('退出登录失败');
+        return false;
       }
     }
   }
