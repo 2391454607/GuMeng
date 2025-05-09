@@ -6,19 +6,22 @@ export const useUserStore = defineStore('user', {
   state: () => ({
     token: localStorage.getItem('token') || '',
     userInfo: JSON.parse(localStorage.getItem('userInfo') || '{}'),
-    isAdminRole: false,
   }),
 
   getters: {
-    // 修改 isAdmin getter
-    isAdmin: (state) => {
+    // 通用的角色判断方法
+    isUserInRoles: (state) => (allowedRoles) => {
       const userRoles = state.userInfo?.role || [];
-      return userRoles.some(role => ['admin', 'superAdmin'].includes(role));
+      return userRoles.some(role => allowedRoles.includes(role));
+    },
+    
+    isAdmin: (state) => {
+      return state.isUserInRoles(['admin', 'superAdmin']);
     },
   },
 
   actions: {
-    // 修改 setUserInfo 方法
+    // setUserInfo 方法
     setUserInfo(userInfo) {
       this.userInfo = userInfo;
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
@@ -111,17 +114,14 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    // 添加 setToken 方法
+    // setToken 方法
     setToken(token) {
       this.token = token;
       localStorage.setItem('token', token);
 
-      // 解析 token 并更新角色信息
       const decodedToken = this.parseJwt(token);
       if (decodedToken?.claims?.role) {
-        this.isAdminRole = decodedToken.claims.role.some(
-            role => ['admin', 'superAdmin'].includes(role)
-        );
+        this.setUserInfo(decodedToken.claims);
       }
     },
 
