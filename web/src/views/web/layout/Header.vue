@@ -73,7 +73,7 @@ const handleLogout = () => {
     userStore.logout();
   } else {
     Message.warning('您尚未登录');
-    router.push('/login');
+    router.push('/');
   }
 };
 </script>
