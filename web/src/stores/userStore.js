@@ -3,11 +3,24 @@ import {Message} from '@arco-design/web-vue';
 import {getUserInfoAPI, userLoginAPI, userLogoutAPI} from "@/api/user/Auth.js";
 
 export const useUserStore = defineStore('user', {
-    state: () => ({
-        token: localStorage.getItem('token') || '',
-        userInfo: JSON.parse(localStorage.getItem('userInfo') || '{}'),
-        dailyCleanupTimeout: null, // 添加定时器引用
-    }),
+    state: () => {
+        const token = localStorage.getItem('token') || '';
+        const store = {
+            token,
+            userInfo: JSON.parse(localStorage.getItem('userInfo') || '{}'),
+            dailyCleanupTimeout: null,
+        };
+
+        // 初始化时检查令牌状态
+        if (token) {
+            setTimeout(() => {
+                const userStore = useUserStore();
+                userStore.setupTokenExpirationTimer(token);
+            }, 0);
+        }
+
+        return store;
+    },
 
     getters: {
         // 通用的角色判断方法
@@ -22,6 +35,40 @@ export const useUserStore = defineStore('user', {
     },
 
     actions: {
+
+        // 获取令牌过期时间
+        getTokenExpirationTime(token) {
+            const decodedToken = this.parseJwt(token);
+            if (decodedToken && decodedToken.exp) {
+                return decodedToken.exp * 1000; // 转换为毫秒
+            }
+            return null;
+        },
+
+        // 设置令牌过期定时器
+        setupTokenExpirationTimer(token) {
+            const expirationTime = this.getTokenExpirationTime(token);
+            if (!expirationTime) return;
+
+            // 清除之前的定时器
+            if (this.dailyCleanupTimeout) {
+                clearTimeout(this.dailyCleanupTimeout);
+                this.dailyCleanupTimeout = null;
+            }
+
+            const timeUntilExpiration = expirationTime - Date.now();
+            if (timeUntilExpiration > 0) {
+                this.dailyCleanupTimeout = setTimeout(() => {
+                    Message.warning('登录已过期，请重新登录');
+                    // 直接调用登出方法，确保完整的清理流程
+                    this.logout();
+                }, timeUntilExpiration);
+            } else {
+                // 如果令牌已经过期，立即执行登出
+                Message.warning('登录已过期，请重新登录');
+                this.logout();
+            }
+        },
 
         // setUserInfo 方法
         setUserInfo(userInfo) {
@@ -112,6 +159,8 @@ export const useUserStore = defineStore('user', {
             if (decodedToken?.claims?.role) {
                 this.setUserInfo(decodedToken.claims);
             }
+            // 设置令牌过期定时器
+            this.setupTokenExpirationTimer(token);
         },
 
         // 获取用户信息
@@ -142,32 +191,35 @@ export const useUserStore = defineStore('user', {
 
         // 清理 clearUserState 方法
         clearUserState() {
+            // 清除定时器
+            if (this.dailyCleanupTimeout) {
+                clearTimeout(this.dailyCleanupTimeout);
+                this.dailyCleanupTimeout = null;
+            }
+
             this.token = '';
             this.userInfo = {};
             localStorage.removeItem('token');
             localStorage.removeItem('userInfo');
+
+            // 直接跳转到首页，不使用 setTimeout
+            window.location.href = '/';
         },
 
         // 用户登出方法
         async logout() {
-          try {
-            const res = await userLogoutAPI();
-            if (res.code === 200) {
-              Message.success('退出登录成功');
-            } else {
-              console.warn('后端登出失败，仅清理本地状态');
+            try {
+                const res = await userLogoutAPI();
+                if (res.code === 200) {
+                    Message.success('退出登录成功');
+                } else {
+                    console.warn('后端登出失败，仅清理本地状态');
+                }
+            } catch (error) {
+                console.error('退出登录错误:', error);
+            } finally {
+                this.clearUserState();
             }
-          } catch (error) {
-            console.error('退出登录错误:', error);
-          } finally {
-            // 无论后端是否成功，都清理本地状态
-            this.clearUserState();
-            
-            // 延时刷新页面
-            setTimeout(() => {
-              window.location.reload();
-            }, 1000);
-          }
         },
 
     }
