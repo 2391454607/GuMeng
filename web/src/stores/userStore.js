@@ -23,88 +23,6 @@ export const useUserStore = defineStore('user', {
 
     actions: {
 
-        // 静默登出方法
-        async silentLogout() {
-            this.clearUserState();
-            Message.error('登录已过期，请重新登录');
-        },
-
-        // 检查用户认证状态
-        async checkAuthStatus() {
-            if (!this.token) return;
-            
-            try {
-                const res = await getUserInfoAPI();
-                if (res.code !== 200) {
-                    await this.silentLogout();
-                }
-            } catch (error) {
-                console.error('验证用户状态失败:', error);
-                await this.silentLogout();
-            }
-        },
-
-        // 初始化用户状态
-        async initializeAuth() {
-            await this.checkAuthStatus();
-            this.setupDailyCleanup();
-        },
-
-        // 设置每日清理
-        setupDailyCleanup() {
-            const now = new Date();
-            const nextCleanup = new Date(now);
-
-            nextCleanup.setHours(4, 0, 0, 0);
-            if (now.getHours() >= 4) {
-                nextCleanup.setDate(nextCleanup.getDate() + 1);
-            }
-
-            const timeUntilCleanup = nextCleanup - now;
-            console.log('下次清理时间：', nextCleanup.toLocaleString());
-
-            if (this.dailyCleanupTimeout) {
-                clearTimeout(this.dailyCleanupTimeout);
-            }
-
-            this.dailyCleanupTimeout = setTimeout(() => {
-                // 检查用户活跃状态
-                const lastActivity = localStorage.getItem('lastActivityTime');
-                const isActive = lastActivity && (Date.now() - parseInt(lastActivity) < 30 * 60 * 1000); // 30分钟内有活动
-
-                if (isActive) {
-                    Message.warning({
-                        content: '系统将在 5 分钟后自动退出登录，请及时保存工作',
-                        duration: 300000 // 5分钟
-                    });
-
-                    setTimeout(() => {
-                        this.silentLogout();
-                        window.location.href = '/'; // 重定向到首页
-                    }, 300000);
-                } else {
-                    this.silentLogout();
-                    window.location.href = '/';
-                }
-
-                this.setupDailyCleanup();
-            }, timeUntilCleanup);
-        },
-
-        // 清理 clearUserState 方法
-        clearUserState() {
-            this.token = '';
-            this.userInfo = {};
-            localStorage.removeItem('token');
-            localStorage.removeItem('userInfo');
-
-            // 清理定时器
-            if (this.dailyCleanupTimeout) {
-                clearTimeout(this.dailyCleanupTimeout);
-                this.dailyCleanupTimeout = null;
-            }
-        },
-
         // setUserInfo 方法
         setUserInfo(userInfo) {
             this.userInfo = userInfo;
@@ -149,17 +67,11 @@ export const useUserStore = defineStore('user', {
             return true;
         },
 
-        // 更新用户活跃时间
-        updateActivityTime() {
-            localStorage.setItem('lastActivityTime', Date.now().toString());
-        },
-
         async login(loginParams) {
             try {
                 const res = await userLoginAPI(loginParams);
                 if (res.code === 200) {
                     this.setToken(res.data);
-                    this.updateActivityTime(); // 登录时记录活跃时间
 
                     const decodedToken = this.parseJwt(res.data);
                     if (decodedToken && decodedToken.claims) {
@@ -227,7 +139,15 @@ export const useUserStore = defineStore('user', {
                 return null;
             }
         },
-        
+
+        // 清理 clearUserState 方法
+        clearUserState() {
+            this.token = '';
+            this.userInfo = {};
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+        },
+
         // 用户登出方法
         async logout() {
           try {
