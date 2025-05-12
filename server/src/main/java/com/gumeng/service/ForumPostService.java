@@ -2,7 +2,7 @@ package com.gumeng.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.gumeng.domain.ForumPost;
+import com.gumeng.domain.forum.ForumPost;
 import com.gumeng.entity.DTO.ForumPostDTO;
 import com.gumeng.entity.vo.ForumPostVO;
 

@@ -2,7 +2,7 @@ package com.gumeng.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.gumeng.domain.ForumPostType;
+import com.gumeng.domain.forum.ForumPostType;
 import com.gumeng.mapper.forum.ForumPostTypeMapper;
 import com.gumeng.service.ForumTopicService;
 import lombok.extern.slf4j.Slf4j;
