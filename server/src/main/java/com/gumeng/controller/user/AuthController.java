@@ -166,7 +166,7 @@ public class AuthController {
             // 存储到 Redis
             ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
             //设置Redis过期时间和令牌一致
-            operations.set(token, token, 12, TimeUnit.HOURS);  //设置Redis过期时间和令牌一致
+            operations.set(token, token, 12, TimeUnit.HOURS);
 
             return HttpResponse.success(token);
         } catch (AuthenticationException e) {
