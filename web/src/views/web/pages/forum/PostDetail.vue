@@ -909,6 +909,7 @@ onMounted(() => {
 
 .author-info {
   display: flex;
+  flex-direction: row;
   align-items: center;
 }
 
@@ -931,12 +932,14 @@ onMounted(() => {
   font-size: 16px;
   font-weight: 500;
   color: #FFFBF0;
-  margin-bottom: 4px;
+  margin-right: 15px;
+  margin-bottom: 0;
 }
 
 .post-time {
   font-size: 14px;
   color: rgba(255, 251, 240, 0.8);
+  min-width: 120px;
 }
 
 .post-actions button {
@@ -1178,12 +1181,14 @@ onMounted(() => {
 .user-name {
   font-weight: 600;
   color: #582F0E;
-  margin-bottom: 4px;
+  margin-right: 15px;
+  margin-bottom: 0;
 }
 
 .comment-time {
   font-size: 12px;
   color: #7F4F24;
+  min-width: 120px;
 }
 
 .comment-text {
