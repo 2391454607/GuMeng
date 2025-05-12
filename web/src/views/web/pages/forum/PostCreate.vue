@@ -20,10 +20,6 @@ const postForm = reactive({
   content: ''
 });
 
-// 自定义话题相关
-const useCustomTopic = ref(false);
-const customTopicName = ref('');
-
 // 敏感词相关
 const checkingSensitiveWords = ref(false);
 const sensitiveWordsError = ref('');
@@ -35,7 +31,7 @@ const rules = {
     { minLength: 2, maxLength: 50, message: '标题长度在2到50个字符之间' }
   ],
   topic: [
-    { required: true, message: '请选择或输入话题' }
+    { required: true, message: '请选择话题' }
   ],
   content: [
     { required: true, message: '请输入内容' },
@@ -47,17 +43,6 @@ const rules = {
 const topics = ref([]);
 const submitting = ref(false);
 const postFormRef = ref(null);
-
-// 切换话题输入模式
-const toggleTopicInputMode = () => {
-  useCustomTopic.value = !useCustomTopic.value;
-  if (!useCustomTopic.value) {
-    postForm.topic = '';
-    customTopicName.value = '';
-  } else {
-    postForm.topic = customTopicName.value;
-  }
-};
 
 // 获取话题列表
 const fetchTopics = async () => {
@@ -85,16 +70,14 @@ const fetchPostDetail = async () => {
       
       postForm.title = post.title;
       
-      // 检查是否是预设话题
-      const foundTopic = topics.value.find(t => t.id == post.topicId);
+      // 检查话题并设置
+      const foundTopic = topics.value.find(t => t.name === post.topic);
       if (foundTopic) {
-        postForm.topic = post.topicId;
-        useCustomTopic.value = false;
+        postForm.topic = foundTopic.id;
       } else {
-        // 自定义话题
-        customTopicName.value = post.topic || '';
-        postForm.topic = post.topic || '';
-        useCustomTopic.value = true;
+        // 如果找不到对应话题，尝试查找默认话题
+        const defaultTopic = topics.value.length > 0 ? topics.value[0].id : '';
+        postForm.topic = defaultTopic;
       }
       
       postForm.content = post.content;
@@ -135,12 +118,7 @@ const submitForm = async () => {
     }
     
     // 手动验证话题
-    if (useCustomTopic.value) {
-      if (!customTopicName.value || customTopicName.value.trim().length < 2) {
-        isValid = false;
-        Message.error('自定义话题长度至少为2个字符');
-      }
-    } else if (!postForm.topic) {
+    if (!postForm.topic) {
       isValid = false;
       Message.error('请选择话题');
     }
@@ -182,15 +160,10 @@ const submitForm = async () => {
       checkingSensitiveWords.value = false;
     }
     
-    // 准备提交数据前确保话题数据正确
-    let topicValue;
-    if (useCustomTopic.value) {
-      topicValue = customTopicName.value.trim();
-    } else {
-      // 查找选定话题的名称而不是传递ID
-      const selectedTopic = topics.value.find(t => t.id === postForm.topic);
-      topicValue = selectedTopic ? selectedTopic.name : postForm.topic;
-    }
+    // 准备话题数据
+    // 查找选定话题的名称
+    const selectedTopic = topics.value.find(t => t.id === postForm.topic);
+    const topicValue = selectedTopic ? selectedTopic.name : '';
     
     const formData = {
       title: postForm.title,
@@ -232,20 +205,6 @@ const goBack = () => {
   router.push('/forum/list');
 };
 
-// 监听器
-watch(customTopicName, (newVal) => {
-  if (useCustomTopic.value) {
-    postForm.topic = newVal;
-  }
-});
-
-watch(() => postForm.topic, (newVal) => {
-  if (newVal === 'custom') {
-    useCustomTopic.value = true;
-    postForm.topic = customTopicName.value;
-  }
-});
-
 onMounted(() => {
   fetchTopics();
   fetchPostDetail();
@@ -281,7 +240,6 @@ onMounted(() => {
       <a-form-item label="话题" field="topic">
         <div class="topic-input-container">
           <a-select 
-            v-if="!useCustomTopic"
             v-model="postForm.topic"
             placeholder="请选择话题分类"
             class="topic-select custom-select"
@@ -293,23 +251,7 @@ onMounted(() => {
               :label="topic.name"
               :value="topic.id"
             />
-            <a-option value="custom" label="自定义话题..."></a-option>
           </a-select>
-          <a-input 
-            v-else
-            v-model="customTopicName"
-            placeholder="请输入自定义话题（2-20字）"
-            class="custom-topic-input custom-input"
-            :maxLength="20"
-            show-word-limit
-          />
-          <a-button 
-            class="toggle-topic-btn" 
-            @click="toggleTopicInputMode"
-            type="outline"
-          >
-            {{ useCustomTopic ? '选择预设话题' : '自定义话题' }}
-          </a-button>
         </div>
       </a-form-item>
       
@@ -397,20 +339,8 @@ onMounted(() => {
   align-items: center;
 }
 
-.topic-select, .custom-topic-input {
-  flex: 1;
-}
-
-.toggle-topic-btn {
-  flex-shrink: 0;
-  background-color: #D4A373; /* 木色 */
-  color: #582F0E; /* 深棕色 */
-  border: 1px solid #A77E58;
-}
-
-.toggle-topic-btn:hover {
-  background-color: #C68B59; /* 深木色 */
-  color: #F9F3E9;
+.topic-select {
+  width: 100%;
 }
 
 .action-buttons {
@@ -502,10 +432,6 @@ onMounted(() => {
   .topic-input-container {
     flex-direction: column;
     align-items: stretch;
-  }
-  
-  .toggle-topic-btn {
-    margin-top: 8px;
   }
   
   .action-buttons {
