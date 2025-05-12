@@ -1,8 +1,5 @@
 package com.gumeng.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.gumeng.domain.ThumbsUp;
-
 /**
 * @author Lorn
 * @description 针对表【thumbs_up(点赞表)】的数据库操作Service
