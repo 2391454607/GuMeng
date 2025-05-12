@@ -23,7 +23,7 @@ const activeTab = ref('all');
 // 分页，一页分四条
 const loading = ref(true);
 const pageNum = ref(1);
-const pageSize = ref(3);
+const pageSize = ref(10);
 const total = ref(0);
 
 // 数据
