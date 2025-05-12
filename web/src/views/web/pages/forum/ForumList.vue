@@ -23,7 +23,7 @@ const activeTab = ref('all');
 // 分页，一页分四条
 const loading = ref(true);
 const pageNum = ref(1);
-const pageSize = ref(4);
+const pageSize = ref(3);
 const total = ref(0);
 
 // 数据
@@ -273,7 +273,7 @@ onMounted(() => {
 
     <!-- 主体区域 -->
     <div class="forum-body">
-      <!-- 左侧话题栏 - 平板和电脑端显示 -->
+      <!-- 左侧话题栏 -->
       <div class="forum-sidebar">
         <div class="topic-header">话题分类</div>
         <div class="topic-list">
@@ -506,16 +506,20 @@ onMounted(() => {
 .forum-body {
   display: flex;
   gap: 20px;
+  min-height: calc(100vh - 260px); /* 确保最小高度足够 */
 }
 
 /* 左侧话题栏 */
 .forum-sidebar {
-  width: 200px;
+  width: 230px; /* 增加宽度 */
   background-color: #FFF7E9;
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   border: 1px solid #D6C6AF;
+  display: flex;  /* 使用flex布局 */
+  flex-direction: column; /* 垂直排列 */
+  min-height: 100%; /* 确保高度至少与右侧内容相同 */
 }
 
 .topic-header {
@@ -531,11 +535,14 @@ onMounted(() => {
 }
 
 .topic-list {
-  padding: 10px 0;
+  padding: 0; /* 减少内边距 */
+  flex: 1; /* 占据剩余空间 */
+  display: flex;
+  flex-direction: column;
 }
 
 .topic-item {
-  padding: 12px 15px;
+  padding: 16px 15px; /* 增加垂直内边距使项目更高 */
   font-size: 14px;
   color: #582F0E;
   cursor: pointer;
