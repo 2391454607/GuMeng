@@ -288,7 +288,7 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #F9F3E9; /* 米色纸张质感背景 */
+  background-color: #fffbf0; /* 修改背景颜色 */
   font-family: "SimSun", "宋体", serif; /* 使用宋体增加复古感 */
 }
 
