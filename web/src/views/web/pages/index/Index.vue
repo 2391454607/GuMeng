@@ -2,6 +2,8 @@
 import {onMounted, onUnmounted, ref} from 'vue'
 import {getCarouselAPI} from "@/api/web/Web.js";
 import Footer from "@/views/web/layout/Footer.vue";
+import Category from "@/views/web/pages/index/Category.vue"
+
 
 const currentSection = ref(0);
 let isScrolling = false;
@@ -97,17 +99,22 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <section class="section">第二屏</section>
+      <section class="section">
+        <Category/>
+      </section>
 
-      <section class="section">第三屏</section>
+      <section class="section">
+        第三屏
+      </section>
 
-      <section class="section">第四屏</section>
+      <section class="section">
+        第四屏
+      </section>
 
       <section class="section">
         <Footer class="footer"></Footer>
       </section>
       
-      <!-- 删除页面指示器部分 -->
     </div>
   </a-layout-content>
 </template>
