@@ -165,7 +165,8 @@ public class AuthController {
             String token = JwtUtil.genToken(claims);
             // 存储到 Redis
             ValueOperations<String, String> operations = stringRedisTemplate.opsForValue();
-            operations.set(token, token, 1, TimeUnit.HOURS);
+            //设置Redis过期时间和令牌一致
+            operations.set(token, token, 12, TimeUnit.HOURS);  //设置Redis过期时间和令牌一致
 
             return HttpResponse.success(token);
         } catch (AuthenticationException e) {
