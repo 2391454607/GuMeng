@@ -324,7 +324,7 @@ const replyToComment = (comment, parent = null) => {
   
   // 滚动到回复框
   nextTick(() => {
-    const replyBox = document.querySelector(`.reply-form`);
+    const replyBox = document.querySelector(`.reply-form-${comment.id}`);
     if (replyBox) {
       replyBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -687,7 +687,7 @@ onMounted(() => {
                 </div>
                 
                 <!-- 回复输入框 -->
-                <div v-if="replyingTo && replyingTo.id === comment.id" class="reply-form">
+                <div v-if="replyingTo && replyingTo.id === comment.id" :class="['reply-form', `reply-form-${comment.id}`]">
                   <a-textarea
                     v-model="replyContent"
                     placeholder="输入您想回复的内容"
@@ -738,6 +738,31 @@ onMounted(() => {
                       </a-button>
                       <a-button v-if="canDeleteComment(child)" type="text" size="small" @click="showDeleteCommentConfirm(child)" class="action-link delete">
                         <icon-delete />删除
+                      </a-button>
+                    </div>
+                    
+                    <!-- 回复输入框 -->
+                    <div v-if="replyingTo && replyingTo.id === child.id" :class="['reply-form', `reply-form-${child.id}`]">
+                      <a-textarea
+                        v-model="replyContent"
+                        placeholder="输入您想回复的内容"
+                        :auto-size="{ minRows: 2, maxRows: 4 }"
+                        class="reply-textarea"
+                      />
+                      <!-- 敏感词错误提示 -->
+                      <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 5px 0;" />
+                      <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
+                        取消
+                      </a-button>
+                      <a-button 
+                        type="primary" 
+                        size="small" 
+                        @click="submitReply" 
+                        :loading="checkingSensitiveWords"
+                        :disabled="!replyContent.trim() || checkingSensitiveWords" 
+                        class="reply-submit-btn"
+                      >
+                        {{ checkingSensitiveWords ? '检测中...' : '回复' }}
                       </a-button>
                     </div>
                   </div>

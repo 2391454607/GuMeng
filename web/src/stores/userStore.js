@@ -32,6 +32,11 @@ export const useUserStore = defineStore('user', {
         isAdmin: (state) => {
             return state.isUserInRoles(['admin', 'superAdmin']);
         },
+        
+        // 添加登录状态计算属性
+        isLogin: (state) => {
+            return !!state.token && Object.keys(state.userInfo).length > 0;
+        },
     },
 
     actions: {

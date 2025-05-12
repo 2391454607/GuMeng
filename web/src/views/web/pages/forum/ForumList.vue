@@ -20,9 +20,10 @@ const searchText = ref('');
 const activeTab = ref('all');
 
 // 数据加载
+// 分页，一页分四条
 const loading = ref(true);
 const pageNum = ref(1);
-const pageSize = ref(6); // 修改为每页6条
+const pageSize = ref(4);
 const total = ref(0);
 
 // 数据
