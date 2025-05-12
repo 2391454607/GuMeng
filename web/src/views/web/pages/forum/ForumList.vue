@@ -88,8 +88,10 @@ const fetchPosts = async () => {
       }
     }
     
+    // console.log('发送分页请求参数:', params);
     const res = await getPostsAPI(params);
     if (res.code === 200) {
+      // console.log('获取到分页数据:', res.data);
       const newPosts = res.data.records || [];
       
       // 处理图片字段和确保评论数正确
@@ -380,8 +382,8 @@ onMounted(() => {
     <div class="debug-button" v-if="showDebugInfo" @click="toggleDebugInfo">
       {{ showDebugInfo ? '隐藏调试信息' : '显示调试信息' }}
     </div>
-  </div>
-  <div>
+    
+    <!-- 页脚 -->
     <Footer class="footer"></Footer>
   </div>
 </template>

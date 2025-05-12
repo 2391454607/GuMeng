@@ -4,9 +4,9 @@ import { http } from "@/utils/http.js";
 export function getPostListAPI(params) {
   // 转换参数名称以匹配后端期望的参数
   const convertedParams = {
-    page: params.pageNum || 1,
-    size: params.pageSize || 10,
-    topic: params.topic || params.topicId || '',
+    page: params.page || 1,
+    size: params.size || 10,
+    topic: params.topic || '',
     keyword: params.keyword || ''
   };
   
