@@ -1,4 +1,4 @@
-package com.gumeng.mapper;
+package com.gumeng.mapper.forum;
 
 import com.gumeng.domain.ThumbsUp;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;

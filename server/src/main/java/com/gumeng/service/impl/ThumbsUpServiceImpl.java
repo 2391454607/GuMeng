@@ -3,7 +3,7 @@ package com.gumeng.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.ThumbsUp;
-import com.gumeng.mapper.ThumbsUpMapper;
+import com.gumeng.mapper.forum.ThumbsUpMapper;
 import com.gumeng.service.ThumbsUpService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

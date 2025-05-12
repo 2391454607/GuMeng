@@ -8,7 +8,7 @@ import com.gumeng.domain.ForumPost;
 import com.gumeng.domain.user.User;
 import com.gumeng.entity.DTO.ForumPostDTO;
 import com.gumeng.entity.vo.ForumPostVO;
-import com.gumeng.mapper.ForumPostMapper;
+import com.gumeng.mapper.forum.ForumPostMapper;
 import com.gumeng.mapper.user.UserMapper;
 import com.gumeng.service.ForumPostService;
 import com.gumeng.service.ThumbsUpService;
