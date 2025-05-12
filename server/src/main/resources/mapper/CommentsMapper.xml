@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.gumeng.mapper.forum.CommentsMapper">
 
-    <resultMap id="BaseResultMap" type="com.gumeng.domain.forum.Comments">
+    <resultMap id="BaseResultMap" type="com.gumeng.domain.Comments">
         <id property="id" column="id" jdbcType="INTEGER"/>
         <result property="userId" column="user_id" jdbcType="INTEGER"/>
         <result property="pageId" column="page_id" jdbcType="INTEGER"/>

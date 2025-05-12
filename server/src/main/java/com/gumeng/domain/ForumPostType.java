@@ -1,4 +1,4 @@
-package com.gumeng.domain.forum;
+package com.gumeng.domain;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;

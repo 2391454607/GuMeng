@@ -1,6 +1,6 @@
 package com.gumeng.mapper.forum;
 
-import com.gumeng.domain.forum.ForumPostType;
+import com.gumeng.domain.ForumPostType;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 

@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.gumeng.domain.forum.ForumPost;
+import com.gumeng.domain.ForumPost;
 import com.gumeng.domain.user.User;
 import com.gumeng.entity.DTO.ForumPostDTO;
 import com.gumeng.entity.vo.ForumPostVO;

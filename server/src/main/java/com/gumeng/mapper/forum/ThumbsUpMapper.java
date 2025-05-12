@@ -1,6 +1,6 @@
 package com.gumeng.mapper.forum;
 
-import com.gumeng.domain.forum.ThumbsUp;
+import com.gumeng.domain.ThumbsUp;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

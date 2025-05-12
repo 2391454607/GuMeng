@@ -1,7 +1,7 @@
 package com.gumeng.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.gumeng.domain.forum.Comments;
+import com.gumeng.domain.Comments;
 import com.gumeng.entity.DTO.CommentDTO;
 import com.gumeng.entity.vo.CommentVO;
 

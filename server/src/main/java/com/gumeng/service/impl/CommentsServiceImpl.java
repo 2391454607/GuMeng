@@ -2,7 +2,7 @@ package com.gumeng.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.gumeng.domain.forum.Comments;
+import com.gumeng.domain.Comments;
 import com.gumeng.domain.user.User;
 import com.gumeng.entity.DTO.CommentDTO;
 import com.gumeng.entity.vo.CommentVO;
