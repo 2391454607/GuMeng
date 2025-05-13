@@ -8,6 +8,7 @@ import {
   batchDeleteCommentsAPI,
   getCommentStatsAPI
 } from "@/api/manage/Comment.js";
+import { getPostDetailAPI } from "@/api/manage/Forum.js";
 
 // 表格数据
 const commentList = ref([]);
@@ -29,18 +30,78 @@ const stats = reactive({
   todayComments: 0
 });
 
+// 帖子话题缓存 - 避免重复请求
+const postTopicCache = reactive({});
+
 // 初始化加载数据
 onMounted(() => {
   getCommentList();
   getCommentStats();
 });
 
+// 获取帖子话题信息
+const fetchPostTopic = async (postId) => {
+  // 如果已经缓存过，直接返回
+  if (postTopicCache[postId]) {
+    return postTopicCache[postId];
+  }
+  
+  try {
+    // 调用获取帖子详情的API
+    const res = await getPostDetailAPI(postId);
+    if (res.code === 200 && res.data) {
+      // 缓存结果
+      postTopicCache[postId] = res.data.topic || '未分类';
+      return res.data.topic || '未分类';
+    }
+  } catch (err) {
+    console.error(`获取帖子${postId}话题出错:`, err);
+  }
+  
+  return '未分类';
+};
+
+// 处理评论列表中的话题分类
+const processCommentTopics = async (comments) => {
+  if (!comments || comments.length === 0) return comments;
+  
+  // 收集所有需要获取话题的帖子ID
+  const postIds = comments
+    .filter(comment => comment.postId && !postTopicCache[comment.postId])
+    .map(comment => comment.postId);
+  
+  // 批量获取帖子话题以提高效率
+  const uniquePostIds = [...new Set(postIds)];
+  const fetchPromises = uniquePostIds.map(fetchPostTopic);
+  
+  try {
+    await Promise.all(fetchPromises);
+    
+    // 更新评论中的话题信息
+    comments.forEach(comment => {
+      if (comment.postId && postTopicCache[comment.postId]) {
+        comment.postTopic = postTopicCache[comment.postId];
+      } else if (comment.postTitle) {
+        comment.postTopic = comment.postTitle;
+      } else {
+        comment.postTopic = '未分类';
+      }
+    });
+  } catch (err) {
+    console.error("处理评论话题信息出错:", err);
+  }
+  
+  return comments;
+};
+
 // 获取评论列表
 const getCommentList = () => {
   loading.value = true;
-  getCommentsAPI(status).then(res => {
+  getCommentsAPI(status).then(async res => {
     if (res.code === 200) {
-      commentList.value = res.data.records;
+      let comments = res.data.records;
+      // 处理评论的话题信息
+      commentList.value = await processCommentTopics(comments);
       total.value = res.data.total;
     } else {
       Message.error(res.msg || "获取评论列表失败");
@@ -89,10 +150,22 @@ const handleReset = () => {
 const commentDetail = ref(null);
 const commentDetailVisible = ref(false);
 
-const viewCommentDetail = (id) => {
-  getCommentDetailAPI(id).then(res => {
+const viewCommentDetail = async (id) => {
+  console.log("查看评论详情:", id);
+  getCommentDetailAPI(id).then(async res => {
     if (res.code === 200) {
-      commentDetail.value = res.data;
+      let detail = res.data;
+      
+      // 获取评论所属帖子的话题分类
+      if (detail.postId) {
+        detail.postTopic = await fetchPostTopic(detail.postId);
+      } else if (detail.postTitle) {
+        detail.postTopic = detail.postTitle;
+      } else {
+        detail.postTopic = '未分类';
+      }
+      
+      commentDetail.value = detail;
       commentDetailVisible.value = true;
     } else {
       Message.error(res.msg || "获取评论详情失败");
@@ -237,7 +310,7 @@ const formatDateTime = (dateTimeStr) => {
             <template #cell="{ record }">
               <div v-if="record.postTitle">
                 <a-tooltip :content="record.postTitle">
-                  <a-tag>{{ record.postId }}</a-tag>
+                  <a-tag color="blue">{{ record.postTopic || record.postTitle || '未分类' }}</a-tag>
                   {{ record.postTitle.length > 10 ? record.postTitle.slice(0, 10) + '...' : record.postTitle }}
                 </a-tooltip>
               </div>
@@ -282,7 +355,7 @@ const formatDateTime = (dateTimeStr) => {
     </div>
 
     <!-- 评论详情弹窗 -->
-    <a-modal v-model:visible="commentDetailVisible" title="评论详情" :footer="false" :width="600">
+    <a-modal :visible="commentDetailVisible" @ok="commentDetailVisible = false" @cancel="commentDetailVisible = false" title="评论详情" :footer="false" :width="600">
       <div v-if="commentDetail" class="comment-detail">
         <div class="comment-user">
           <div class="user-avatar">
@@ -297,7 +370,9 @@ const formatDateTime = (dateTimeStr) => {
         </div>
 
         <div class="comment-post">
-          所属帖子: <a-tag>{{ commentDetail.postId }}</a-tag> {{ commentDetail.postTitle }}
+          所属帖子: 
+          <a-tag color="blue">{{ commentDetail.postTopic || commentDetail.postTitle || '未分类' }}</a-tag> 
+          {{ commentDetail.postTitle }}
         </div>
 
         <div v-if="commentDetail.isReply" class="parent-comment">

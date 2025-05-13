@@ -5,24 +5,43 @@ import {
   getForumPostsAPI,
   getPostDetailAPI,
   deletePostAPI,
+  getAllTopicsAPI
 } from "@/api/manage/Forum.js";
 
 // 表格数据
 const postList = ref([]);
 const loading = ref(true);
+const topics = ref([]);
 
 // 分页参数
 const status = reactive({
   current: 1,
   size: 10,
-  keyword: ""
+  keyword: "",
+  topic: null
 });
 const total = ref(0);
 
 // 初始化加载数据
 onMounted(() => {
   getPostList();
+  getTopics();
 });
+
+// 获取话题列表
+const getTopics = async () => {
+  try {
+    const res = await getAllTopicsAPI();
+    if (res.code === 200) {
+      topics.value = res.data || [];
+    } else {
+      Message.error(res.msg || "获取话题列表失败");
+    }
+  } catch (err) {
+    console.error("获取话题列表出错:", err);
+    Message.error("获取话题列表失败");
+  }
+};
 
 // 获取帖子列表
 const getPostList = () => {
@@ -58,6 +77,7 @@ const handleSearch = () => {
 const handleReset = () => {
   status.current = 1;
   status.keyword = "";
+  status.topic = null;
   getPostList();
 };
 
@@ -66,6 +86,7 @@ const postDetail = ref(null);
 const postDetailVisible = ref(false);
 
 const viewPostDetail = (id) => {
+  console.log("查看帖子详情:", id);
   getPostDetailAPI(id).then(res => {
     if (res.code === 200) {
       postDetail.value = res.data;
@@ -116,6 +137,12 @@ const formatDateTime = (dateTimeStr) => {
     <!-- 搜索区域 -->
     <div class="search-area">
       <a-form :model="status" layout="inline">
+        <a-form-item field="topic" label="话题分类">
+          <a-select v-model="status.topic" placeholder="请选择话题" allow-clear style="width: 160px">
+            <a-option value="">全部话题</a-option>
+            <a-option v-for="item in topics" :key="item.id" :value="item.name">{{ item.name }}</a-option>
+          </a-select>
+        </a-form-item>
         <a-form-item field="keyword" label="关键词">
           <a-input v-model="status.keyword" placeholder="搜索标题或内容" allow-clear style="width: 200px" />
         </a-form-item>
@@ -147,7 +174,11 @@ const formatDateTime = (dateTimeStr) => {
         <template #columns>
           <a-table-column align="center" data-index="id" title="ID" width="60"></a-table-column>
           <a-table-column align="center" data-index="title" title="标题" ellipsis tooltip></a-table-column>
-          <a-table-column align="center" data-index="topic" title="话题"></a-table-column>
+          <a-table-column align="center" data-index="topic" title="话题">
+            <template #cell="{ record }">
+              <a-tag color="blue">{{ record.topic }}</a-tag>
+            </template>
+          </a-table-column>
           <a-table-column align="center" data-index="username" title="发布者"></a-table-column>
           <a-table-column align="center" data-index="createTime" title="发布时间">
             <template #cell="{ record }">
@@ -183,7 +214,7 @@ const formatDateTime = (dateTimeStr) => {
     </div>
 
     <!-- 帖子详情弹窗 -->
-    <a-modal v-model:visible="postDetailVisible" title="帖子详情" :footer="false" :width="700">
+    <a-modal :visible="postDetailVisible" @ok="postDetailVisible = false" @cancel="postDetailVisible = false" title="帖子详情" :footer="false" :width="700">
       <div v-if="postDetail" class="post-detail">
         <h2>{{ postDetail.title }}</h2>
         <div class="post-meta">
