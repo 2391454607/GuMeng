@@ -5,9 +5,6 @@ import {
   getForumPostsAPI,
   getPostDetailAPI,
   deletePostAPI,
-  getAllTopicsAPI,
-  addTopicAPI,
-  deleteTopicAPI
 } from "@/api/manage/Forum.js";
 
 // 表格数据
@@ -18,18 +15,13 @@ const loading = ref(true);
 const status = reactive({
   current: 1,
   size: 10,
-  topic: "",
   keyword: ""
 });
 const total = ref(0);
 
-// 话题数据
-const topicList = ref([]);
-
 // 初始化加载数据
 onMounted(() => {
   getPostList();
-  getTopicList();
 });
 
 // 获取帖子列表
@@ -50,20 +42,6 @@ const getPostList = () => {
   });
 };
 
-// 获取话题列表
-const getTopicList = () => {
-  getAllTopicsAPI().then(res => {
-    if (res.code === 200) {
-      topicList.value = res.data;
-    } else {
-      Message.error(res.msg || "获取话题列表失败");
-    }
-  }).catch(err => {
-    console.error("获取话题列表出错:", err);
-    Message.error("获取话题列表失败");
-  });
-};
-
 // 分页处理
 const handlePageChange = (current) => {
   status.current = current;
@@ -79,7 +57,6 @@ const handleSearch = () => {
 // 重置搜索
 const handleReset = () => {
   status.current = 1;
-  status.topic = "";
   status.keyword = "";
   getPostList();
 };
@@ -117,73 +94,28 @@ const deletePost = (id) => {
   });
 };
 
-// 话题管理相关
-const newTopic = reactive({
-  name: ""
-});
-const addTopicVisible = ref(false);
-
-const showAddTopic = () => {
-  newTopic.name = "";
-  addTopicVisible.value = true;
-};
-
-const addTopic = () => {
-  if (!newTopic.name.trim()) {
-    Message.warning("话题名称不能为空");
-    return;
-  }
-
-  addTopicAPI(newTopic).then(res => {
-    if (res.code === 200) {
-      Message.success("添加成功");
-      getTopicList();
-      addTopicVisible.value = false;
-    } else {
-      Message.error(res.msg || "添加失败");
-    }
-  }).catch(err => {
-    console.error("添加话题出错:", err);
-    Message.error("添加失败");
-  });
-};
-
-const deleteTopic = (id) => {
-  deleteTopicAPI(id).then(res => {
-    if (res.code === 200) {
-      Message.success("删除成功");
-      getTopicList();
-    } else {
-      Message.error(res.msg || "删除失败");
-    }
-  }).catch(err => {
-    console.error("删除话题出错:", err);
-    Message.error("删除失败");
-  });
+// 日期时间格式化函数
+const formatDateTime = (dateTimeStr) => {
+  if (!dateTimeStr) return '';
+  
+  // 将ISO格式时间转换为更友好的格式
+  const date = new Date(dateTimeStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 </script>
 
 <template>
   <div>
-    <div class="top">
-      <a-space>
-        <a-button class="add-button" type="outline" @click="showAddTopic">
-          <template #icon>
-            <icon-plus />
-          </template>
-          添加话题
-        </a-button>
-      </a-space>
-    </div>
-
     <!-- 搜索区域 -->
     <div class="search-area">
       <a-form :model="status" layout="inline">
-        <a-form-item field="topic" label="话题">
-          <a-select v-model="status.topic" placeholder="选择话题" allow-clear style="width: 200px">
-            <a-option v-for="topic in topicList" :key="topic.id" :value="topic.name">{{ topic.name }}</a-option>
-          </a-select>
-        </a-form-item>
         <a-form-item field="keyword" label="关键词">
           <a-input v-model="status.keyword" placeholder="搜索标题或内容" allow-clear style="width: 200px" />
         </a-form-item>
@@ -207,6 +139,7 @@ const deleteTopic = (id) => {
           current: status.current,
           pageSize: status.size,
           showTotal: true,
+          showJumper: true
         }"
           :size="'small'"
           @page-change="handlePageChange"
@@ -216,7 +149,11 @@ const deleteTopic = (id) => {
           <a-table-column align="center" data-index="title" title="标题" ellipsis tooltip></a-table-column>
           <a-table-column align="center" data-index="topic" title="话题"></a-table-column>
           <a-table-column align="center" data-index="username" title="发布者"></a-table-column>
-          <a-table-column align="center" data-index="createTime" title="发布时间"></a-table-column>
+          <a-table-column align="center" data-index="createTime" title="发布时间">
+            <template #cell="{ record }">
+              {{ formatDateTime(record.createTime) }}
+            </template>
+          </a-table-column>
           <a-table-column align="center" data-index="thumbsUpNum" title="点赞数"></a-table-column>
           <a-table-column align="center" data-index="commonNum" title="评论数"></a-table-column>
           <a-table-column align="center" data-index="viewCount" title="浏览量"></a-table-column>
@@ -275,45 +212,6 @@ const deleteTopic = (id) => {
         </div>
       </div>
     </a-modal>
-
-    <!-- 添加话题弹窗 -->
-    <a-modal v-model:visible="addTopicVisible" title="添加话题" @ok="addTopic">
-      <a-form :model="newTopic">
-        <a-form-item field="name" label="话题名称">
-          <a-input v-model="newTopic.name" placeholder="请输入话题名称" />
-        </a-form-item>
-      </a-form>
-    </a-modal>
-
-    <!-- 话题管理列表 -->
-    <div class="topic-list">
-      <a-divider>话题管理</a-divider>
-      <a-table
-          :loading="loading"
-          :bordered="false"
-          :data="topicList"
-          :pagination="false"
-          :size="'small'"
-      >
-        <template #columns>
-          <a-table-column align="center" data-index="id" title="ID" width="60"></a-table-column>
-          <a-table-column align="center" data-index="name" title="话题名称"></a-table-column>
-          <a-table-column align="center" data-index="createTime" title="创建时间"></a-table-column>
-          <a-table-column align="center" title="操作" width="120">
-            <template #cell="{record}">
-              <a-popconfirm content="此操作不可逆，你确定要删除吗？" position="tr" type="warning" @ok="deleteTopic(record.id)">
-                <a-button class="delete-button" status="danger" type="text">
-                  <template #icon>
-                    <icon-delete />
-                  </template>
-                  删除
-                </a-button>
-              </a-popconfirm>
-            </template>
-          </a-table-column>
-        </template>
-      </a-table>
-    </div>
   </div>
 </template>
 

@@ -108,7 +108,7 @@ const submitForm = async () => {
   submitting.value = true;
   
   try {
-    // 手动验证表单，避免使用validate()方法可能导致的问题
+    // 手动验证表单
     let isValid = true;
     
     // 手动验证标题

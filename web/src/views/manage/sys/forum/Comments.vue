@@ -145,6 +145,22 @@ const batchDeleteComments = () => {
 const handleSelectionChange = (rowKeys) => {
   selectedKeys.value = rowKeys;
 };
+
+// 日期时间格式化函数
+const formatDateTime = (dateTimeStr) => {
+  if (!dateTimeStr) return '';
+  
+  // 将ISO格式时间转换为更友好的格式
+  const date = new Date(dateTimeStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
 </script>
 
 <template>
@@ -202,6 +218,7 @@ const handleSelectionChange = (rowKeys) => {
           current: status.current,
           pageSize: status.size,
           showTotal: true,
+          showJumper: true
         }"
           :size="'small'"
           :row-selection="{
@@ -234,7 +251,11 @@ const handleSelectionChange = (rowKeys) => {
             </template>
           </a-table-column>
           <a-table-column align="center" data-index="thumbsUp" title="点赞数"></a-table-column>
-          <a-table-column align="center" data-index="createTime" title="发布时间"></a-table-column>
+          <a-table-column align="center" data-index="createTime" title="发布时间">
+            <template #cell="{ record }">
+              {{ formatDateTime(record.createTime) }}
+            </template>
+          </a-table-column>
           <a-table-column align="center" title="操作" width="180">
             <template #cell="{record}">
               <a-button class="edit-button" type="text" @click="viewCommentDetail(record.commentId)">
