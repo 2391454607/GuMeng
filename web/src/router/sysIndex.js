@@ -20,6 +20,17 @@ const sysRouters = [
         path: "policy",
         name: "Policy",
         component: () => import("@/views/manage/sys/policy/Policy.vue")
+    },
+
+    {
+    path: "forum", 
+    name: "Forum",
+    component: () => import("@/views/manage/sys/forum/Forum.vue")
+    },
+    {
+    path: "comments",
+    name: "Comments",
+    component: () => import("@/views/manage/sys/forum/Comments.vue")
     }
 
 ];

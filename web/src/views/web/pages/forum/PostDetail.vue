@@ -814,7 +814,7 @@ onMounted(() => {
   max-width: 1000px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #F9F3E9;
+  background-color: #fffbf0;
   font-family: "SimSun", "宋体", serif;
 }
 

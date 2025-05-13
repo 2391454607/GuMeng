@@ -12,6 +12,6 @@
 .forum-container {
   width: 100%;
   min-height: calc(100vh - 64px);
-  background-color: #f6f6f6;
+  background-color: #fffbf0;
 }
 </style>

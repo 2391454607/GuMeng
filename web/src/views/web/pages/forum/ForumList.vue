@@ -23,7 +23,7 @@ const activeTab = ref('all');
 // 分页，一页分四条
 const loading = ref(true);
 const pageNum = ref(1);
-const pageSize = ref(3);
+const pageSize = ref(10);
 const total = ref(0);
 
 // 数据
@@ -251,52 +251,31 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- 话题导航 -->
-    <div class="topics-nav">
-      <div 
-        class="topic-item" 
-        :class="{ active: activeTab === 'all' }"
-        @click="switchTopic('all')"
-      >
-        全部话题
-      </div>
-      <div 
-        v-for="topic in topics" 
-        :key="topic.id"
-        class="topic-item"
-        :class="{ active: activeTab === topic.id }"
-        @click="switchTopic(topic.id)"
-      >
-        {{ topic.name }}
+    <!-- 顶部话题导航栏 -->
+    <div class="top-topics-bar">
+      <div class="topics-list">
+        <div 
+          class="topic-item" 
+          :class="{ active: activeTab === 'all' }"
+          @click="switchTopic('all')"
+        >
+          全部话题
+        </div>
+        <div 
+          v-for="topic in topics" 
+          :key="topic.id"
+          class="topic-item"
+          :class="{ active: activeTab === topic.id }"
+          @click="switchTopic(topic.id)"
+        >
+          {{ topic.name }}
+        </div>
       </div>
     </div>
 
     <!-- 主体区域 -->
     <div class="forum-body">
-      <!-- 左侧话题栏 -->
-      <div class="forum-sidebar">
-        <div class="topic-header">话题分类</div>
-        <div class="topic-list">
-          <div 
-            class="topic-item" 
-            :class="{ active: activeTab === 'all' }"
-            @click="switchTopic('all')"
-          >
-            全部话题
-          </div>
-          <div 
-            v-for="topic in topics" 
-            :key="topic.id"
-            class="topic-item"
-            :class="{ active: activeTab === topic.id }"
-            @click="switchTopic(topic.id)"
-          >
-            {{ topic.name }}
-          </div>
-        </div>
-      </div>
-
-      <!-- 右侧帖子列表 -->
+      <!-- 帖子列表 -->
       <div class="forum-content">
         <!-- 加载状态 -->
         <div v-if="loading" class="loading-container">
@@ -395,7 +374,7 @@ onMounted(() => {
   margin: 0 auto;
   padding: 20px;
   font-family: "SimSun", "宋体", serif;
-  background-color: #F9F3E9;
+  background-color: #fffbf0;
   min-height: calc(100vh - 64px);
 }
 
@@ -484,70 +463,29 @@ onMounted(() => {
   color: #F9F3E9;
 }
 
-/* 话题导航 - 移动端 */
-.topics-nav {
-  display: none;
-  background-color: #F1EDDA;
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 20px;
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-  border: 1px solid #D6C6AF;
-}
-
-.topics-nav::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-
-/* 主体区域 */
-.forum-body {
-  display: flex;
-  gap: 20px;
-  min-height: calc(100vh - 260px); /* 确保最小高度足够 */
-}
-
-/* 左侧话题栏 */
-.forum-sidebar {
-  width: 230px; /* 增加宽度 */
+/* 顶部话题导航栏 */
+.top-topics-bar {
   background-color: #FFF7E9;
   border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
   border: 1px solid #D6C6AF;
-  display: flex;  /* 使用flex布局 */
-  flex-direction: column; /* 垂直排列 */
-  min-height: 100%; /* 确保高度至少与右侧内容相同 */
 }
 
-.topic-header {
-  padding: 15px;
-  font-size: 16px;
-  font-weight: bold;
-  color: #582F0E;
-  border-bottom: 1px solid #D6C6AF;
-  background-color: #F1EDDA;
-  text-align: center;
-  letter-spacing: 1px;
-  font-family: "STKaiti", "楷体", serif;
-}
-
-.topic-list {
-  padding: 0; /* 减少内边距 */
-  flex: 1; /* 占据剩余空间 */
+.topics-list {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  padding: 0;
 }
 
 .topic-item {
-  padding: 16px 15px; /* 增加垂直内边距使项目更高 */
+  padding: 12px 20px;
   font-size: 14px;
   color: #582F0E;
   cursor: pointer;
   transition: all 0.3s;
-  border-left: 3px solid transparent;
+  border-bottom: 3px solid transparent;
+  font-weight: 500;
 }
 
 .topic-item:hover {
@@ -556,16 +494,20 @@ onMounted(() => {
 }
 
 .topic-item.active {
-  background-color: #FFF0E5;
   color: #8C1F28;
-  border-left-color: #8C1F28;
+  border-bottom-color: #8C1F28;
   font-weight: bold;
+  background-color: #FFF0E5;
 }
 
-/* 右侧帖子列表 */
+/* 主体区域 */
+.forum-body {
+  min-height: calc(100vh - 270px);
+}
+
+/* 帖子列表 */
 .forum-content {
-  flex: 1;
-  background-color: #FFFBF0;
+  background-color: #fff;
   border-radius: 4px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -801,14 +743,14 @@ onMounted(() => {
     width: 100%;
   }
   
-  /* 显示水平话题导航，隐藏侧边栏 */
-  .topics-nav {
-    display: flex;
-    gap: 10px;
+  .topics-list {
+    overflow-x: auto;
+    flex-wrap: nowrap;
   }
   
-  .forum-sidebar {
-    display: none;
+  .topic-item {
+    white-space: nowrap;
+    padding: 12px 15px;
   }
   
   .post-images {

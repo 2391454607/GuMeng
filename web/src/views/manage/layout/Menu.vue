@@ -9,6 +9,8 @@ import {
   IconUser,
   IconDashboard,
   IconFileImage,
+  IconBook,
+  IconMessage,
 }
   from '@arco-design/web-vue/es/icon';
 
@@ -71,7 +73,9 @@ const iconMap = {
   home: IconHome,
   user: IconUser,
   dashboard: IconDashboard,
-  fileImage: IconFileImage
+  fileImage: IconFileImage,
+  forum: IconBook,
+  comments: IconMessage
 };
 </script>
 
