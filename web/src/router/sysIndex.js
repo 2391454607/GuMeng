@@ -23,8 +23,8 @@ const sysRouters = [
     },
 
     {
-    path: "forum", 
-    name: "Forum",
+    path: "forum",
+    name: "sysForum",
     component: () => import("@/views/manage/sys/forum/Forum.vue")
     },
     {
