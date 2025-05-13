@@ -258,21 +258,23 @@ const formatDateTime = (dateTimeStr) => {
           </a-table-column>
           <a-table-column align="center" title="操作" width="180">
             <template #cell="{record}">
-              <a-button class="edit-button" type="text" @click="viewCommentDetail(record.commentId)">
-                <template #icon>
-                  <icon-eye />
-                </template>
-                查看
-              </a-button>
-
-              <a-popconfirm content="此操作不可逆，你确定要删除吗？" position="tr" type="warning" @ok="deleteComment(record.commentId)">
-                <a-button class="delete-button" status="danger" type="text">
+              <div class="operation-buttons">
+                <a-button class="edit-button" type="text" @click="viewCommentDetail(record.commentId)">
                   <template #icon>
-                    <icon-delete />
+                    <icon-eye />
                   </template>
-                  删除
+                  查看
                 </a-button>
-              </a-popconfirm>
+
+                <a-popconfirm content="此操作不可逆，你确定要删除吗？" position="tr" type="warning" @ok="deleteComment(record.commentId)">
+                  <a-button class="delete-button" status="danger" type="text">
+                    <template #icon>
+                      <icon-delete />
+                    </template>
+                    删除
+                  </a-button>
+                </a-popconfirm>
+              </div>
             </template>
           </a-table-column>
         </template>
@@ -311,7 +313,7 @@ const formatDateTime = (dateTimeStr) => {
         </div>
 
         <div class="comment-meta">
-          <span>时间: {{ commentDetail.createTime }}</span>
+          <span>时间: {{ formatDateTime(commentDetail.createTime) }}</span>
           <span>点赞: {{ commentDetail.thumbsUp }}</span>
         </div>
       </div>
@@ -418,5 +420,12 @@ const formatDateTime = (dateTimeStr) => {
 .delete-button:hover {
   background-color: rgb(var(--danger-1));
   color: rgb(var(--danger-7));
+}
+
+.operation-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 </style>

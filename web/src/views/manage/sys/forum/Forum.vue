@@ -159,21 +159,23 @@ const formatDateTime = (dateTimeStr) => {
           <a-table-column align="center" data-index="viewCount" title="浏览量"></a-table-column>
           <a-table-column align="center" title="操作" width="180">
             <template #cell="{record}">
-              <a-button class="edit-button" type="text" @click="viewPostDetail(record.id)">
-                <template #icon>
-                  <icon-eye />
-                </template>
-                查看
-              </a-button>
-
-              <a-popconfirm content="此操作不可逆，你确定要删除吗？" position="tr" type="warning" @ok="deletePost(record.id)">
-                <a-button class="delete-button" status="danger" type="text">
+              <div class="operation-buttons">
+                <a-button class="edit-button" type="text" @click="viewPostDetail(record.id)">
                   <template #icon>
-                    <icon-delete />
+                    <icon-eye />
                   </template>
-                  删除
+                  查看
                 </a-button>
-              </a-popconfirm>
+
+                <a-popconfirm content="此操作不可逆，你确定要删除吗？" position="tr" type="warning" @ok="deletePost(record.id)">
+                  <a-button class="delete-button" status="danger" type="text">
+                    <template #icon>
+                      <icon-delete />
+                    </template>
+                    删除
+                  </a-button>
+                </a-popconfirm>
+              </div>
             </template>
           </a-table-column>
         </template>
@@ -187,7 +189,7 @@ const formatDateTime = (dateTimeStr) => {
         <div class="post-meta">
           <span>作者: {{ postDetail.username }}</span>
           <span>话题: {{ postDetail.topic }}</span>
-          <span>时间: {{ postDetail.createTime }}</span>
+          <span>时间: {{ formatDateTime(postDetail.createTime) }}</span>
         </div>
         <div class="post-stats">
           <span>点赞: {{ postDetail.thumbsUpNum }}</span>
@@ -268,5 +270,12 @@ const formatDateTime = (dateTimeStr) => {
 .delete-button:hover {
   background-color: rgb(var(--danger-1));
   color: rgb(var(--danger-7));
+}
+
+.operation-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 </style>
