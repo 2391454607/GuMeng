@@ -182,7 +182,7 @@ const formatDateTime = (dateTimeStr) => {
           <a-table-column align="center" data-index="username" title="发布者"></a-table-column>
           <a-table-column align="center" data-index="createTime" title="发布时间">
             <template #cell="{ record }">
-              {{ formatDateTime(record.createTime) }}
+              <span class="time-cell">{{ formatDateTime(record.createTime) }}</span>
             </template>
           </a-table-column>
           <a-table-column align="center" data-index="thumbsUpNum" title="点赞数"></a-table-column>
@@ -220,7 +220,7 @@ const formatDateTime = (dateTimeStr) => {
         <div class="post-meta">
           <span>作者: {{ postDetail.username }}</span>
           <span>话题: {{ postDetail.topic }}</span>
-          <span>时间: {{ formatDateTime(postDetail.createTime) }}</span>
+          <span class="time-cell">时间: {{ formatDateTime(postDetail.createTime) }}</span>
         </div>
         <div class="post-stats">
           <span>点赞: {{ postDetail.thumbsUpNum }}</span>
@@ -308,5 +308,10 @@ const formatDateTime = (dateTimeStr) => {
   justify-content: center;
   align-items: center;
   gap: 8px;
+}
+
+.time-cell {
+  white-space: nowrap;
+  display: inline-block;
 }
 </style>
