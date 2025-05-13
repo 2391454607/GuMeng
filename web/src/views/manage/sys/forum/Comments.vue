@@ -304,7 +304,14 @@ const formatDateTime = (dateTimeStr) => {
       >
         <template #columns>
           <a-table-column align="center" data-index="commentId" title="ID" width="60"></a-table-column>
-          <a-table-column align="center" data-index="content" title="内容" ellipsis tooltip></a-table-column>
+          <!-- 鼠标悬停时展示内容 -->
+          <a-table-column align="center" data-index="content" title="内容" ellipsis tooltip>
+            <template #cell="{ record }">
+              <a-tooltip :content="record.content">
+                <span>{{ record.content }}</span>
+              </a-tooltip>
+            </template>
+          </a-table-column>
           <a-table-column align="center" data-index="username" title="评论者"></a-table-column>
           <a-table-column align="center" data-index="postTitle" title="所属帖子" ellipsis tooltip>
             <template #cell="{ record }">
