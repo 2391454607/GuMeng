@@ -1,4 +1,4 @@
-package com.gumeng.controller.ich;
+package com.gumeng.controller.web;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
