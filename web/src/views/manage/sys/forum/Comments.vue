@@ -96,9 +96,11 @@ const processCommentTopics = async (comments) => {
 
 // 获取评论列表
 const getCommentList = () => {
+  console.log("获取评论列表, 参数:", status);
   loading.value = true;
   getCommentsAPI(status).then(async res => {
     if (res.code === 200) {
+      console.log("获取评论列表结果:", res.data);
       let comments = res.data.records;
       // 处理评论的话题信息
       commentList.value = await processCommentTopics(comments);
@@ -128,6 +130,7 @@ const getCommentStats = () => {
 
 // 分页处理
 const handlePageChange = (current) => {
+  console.log("页码变更为:", current);
   status.current = current;
   getCommentList();
 };
@@ -300,6 +303,7 @@ const formatDateTime = (dateTimeStr) => {
           onlyCurrent: false,
           onChange: handleSelectionChange
         }"
+          row-key="commentId"
           @page-change="handlePageChange"
       >
         <template #columns>
