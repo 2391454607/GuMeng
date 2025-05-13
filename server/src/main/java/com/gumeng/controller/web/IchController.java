@@ -3,7 +3,6 @@ package com.gumeng.controller.web;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.pages.IchCategory;
 import com.gumeng.domain.pages.IchLevel;
-import com.gumeng.domain.pages.IchProject;
 import com.gumeng.entity.vo.IchProjectListVO;
 import com.gumeng.service.IchCategoryService;
 import com.gumeng.service.IchLevelService;
