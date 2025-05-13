@@ -55,7 +55,6 @@ public class AdminCommentsController {
         try {
             // 构建查询条件
             LambdaQueryWrapper<Comments> queryWrapper = new LambdaQueryWrapper<>();
-            queryWrapper.eq(Comments::getDelete, "0"); // 只查询未删除的评论
             
             // 按帖子ID筛选
             if (postId != null) {
@@ -158,8 +157,8 @@ public class AdminCommentsController {
     @GetMapping("/{id}")
     public HttpResponse getCommentDetail(@PathVariable Integer id) {
         Comments comment = commentsService.getById(id);
-        if (comment == null || "1".equals(comment.getDelete())) {
-            return HttpResponse.error("评论不存在或已删除");
+        if (comment == null) {
+            return HttpResponse.error("评论不存在");
         }
         
         // 获取评论相关的用户和帖子信息
@@ -189,7 +188,7 @@ public class AdminCommentsController {
             
             // 获取父评论信息
             Comments parentComment = commentsService.getById(comment.getParent());
-            if (parentComment != null && "0".equals(parentComment.getDelete())) {
+            if (parentComment != null) {
                 User parentUser = userMapper.selectById(parentComment.getUserId());
                 if (parentUser != null) {
                     result.put("parentUsername", parentUser.getUsername());
@@ -208,7 +207,7 @@ public class AdminCommentsController {
      */
     @DeleteMapping("/{id}")
     public HttpResponse deleteComment(@PathVariable Integer id) {
-        boolean result = commentsService.deleteComment(id);
+        boolean result = commentsService.removeById(id);
         return result ? HttpResponse.success() : HttpResponse.error("删除失败，评论不存在");
     }
     
@@ -221,18 +220,8 @@ public class AdminCommentsController {
             return HttpResponse.error("请选择要删除的评论");
         }
         
-        int success = 0;
-        for (Integer id : ids) {
-            if (commentsService.deleteComment(id)) {
-                success++;
-            }
-        }
-        
-        if (success == ids.size()) {
-            return HttpResponse.success("成功删除所有选中评论");
-        } else {
-            return HttpResponse.success(String.format("成功删除%d条评论，失败%d条", success, ids.size() - success));
-        }
+        boolean success = commentsService.removeBatchByIds(ids);
+        return success ? HttpResponse.success("成功删除所有选中评论") : HttpResponse.error("批量删除失败");
     }
     
     /**
@@ -243,13 +232,11 @@ public class AdminCommentsController {
         try {
             // 统计总评论数
             LambdaQueryWrapper<Comments> totalQuery = new LambdaQueryWrapper<>();
-            totalQuery.eq(Comments::getDelete, "0");
             long totalComments = commentsService.count(totalQuery);
             
             // 统计今日评论数
             LambdaQueryWrapper<Comments> todayQuery = new LambdaQueryWrapper<>();
-            todayQuery.eq(Comments::getDelete, "0")
-                    .ge(Comments::getCreateTime, java.time.LocalDate.now().atStartOfDay());
+            todayQuery.ge(Comments::getCreateTime, java.time.LocalDate.now().atStartOfDay());
             long todayComments = commentsService.count(todayQuery);
             
             Map<String, Object> result = new HashMap<>();

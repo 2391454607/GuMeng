@@ -1,12 +1,15 @@
 package com.gumeng.controller.sys;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.entity.vo.ForumPostVO;
 import com.gumeng.domain.forum.ForumPost;
 import com.gumeng.domain.forum.ForumPostType;
+import com.gumeng.domain.forum.Comments;
 import com.gumeng.service.ForumPostService;
 import com.gumeng.service.ForumTopicService;
+import com.gumeng.service.CommentsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +32,9 @@ public class AdminForumController {
     
     @Autowired
     private ForumTopicService forumTopicService;
+    
+    @Autowired
+    private CommentsService commentsService;
     
     /**
      * 获取所有论坛帖子，支持分页查询、话题筛选和关键词搜索
@@ -67,9 +73,18 @@ public class AdminForumController {
      */
     @DeleteMapping("/posts/{id}")
     public HttpResponse deletePost(@PathVariable Integer id) {
-        // 管理员删除帖子直接通过帖子ID删除
-        boolean result = forumPostService.deletePost(id);
-        return result ? HttpResponse.success() : HttpResponse.error("删除失败，帖子不存在");
+        try {
+            // 先查询并删除与该帖子关联的所有评论
+            LambdaQueryWrapper<Comments> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(Comments::getPageId, id);
+            commentsService.remove(queryWrapper);
+            
+            // 然后删除帖子
+            boolean result = forumPostService.removeById(id);
+            return result ? HttpResponse.success() : HttpResponse.error("删除失败，帖子不存在");
+        } catch (Exception e) {
+            return HttpResponse.error("删除失败：" + e.getMessage());
+        }
     }
     
     /**
@@ -100,17 +115,7 @@ public class AdminForumController {
      */
     @DeleteMapping("/topics/{id}")
     public HttpResponse deleteTopic(@PathVariable Long id) {
-        // 获取话题
-        ForumPostType topic = forumTopicService.getById(id);
-        if (topic == null) {
-            return HttpResponse.error("话题不存在");
-        }
-        
-        // 设置为删除状态
-        topic.setDeleted(true);
-        topic.setUpdateTime(java.time.LocalDateTime.now());
-        
-        boolean result = forumTopicService.updateById(topic);
+        boolean result = forumTopicService.removeById(id);
         return result ? HttpResponse.success() : HttpResponse.error("删除话题失败");
     }
 }
