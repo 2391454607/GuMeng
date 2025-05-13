@@ -8,6 +8,7 @@ import com.gumeng.domain.forum.ForumPostType;
 import com.gumeng.service.ForumPostService;
 import com.gumeng.service.ForumTopicService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/sys/forum")
+@PreAuthorize("hasAnyAuthority('admin','superAdmin')")
 public class AdminForumController {
     
     @Autowired

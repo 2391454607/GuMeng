@@ -12,6 +12,7 @@ import com.gumeng.service.CommentsService;
 import com.gumeng.service.ForumPostService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/sys/comments")
+@PreAuthorize("hasAnyAuthority('admin','superAdmin')")
 @Slf4j
 public class AdminCommentsController {
 
