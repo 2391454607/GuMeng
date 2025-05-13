@@ -317,14 +317,14 @@ const formatDateTime = (dateTimeStr) => {
               <span v-else>{{ record.postId || '-' }}</span>
             </template>
           </a-table-column>
-          <a-table-column align="center" data-index="isReply" title="是否回复">
+          <a-table-column align="center" data-index="isReply" title="是否回复" width="100">
             <template #cell="{ record }">
               <a-tag v-if="record.isReply" color="blue">回复评论</a-tag>
               <a-tag v-else color="green">原始评论</a-tag>
             </template>
           </a-table-column>
-          <a-table-column align="center" data-index="thumbsUp" title="点赞数"></a-table-column>
-          <a-table-column align="center" data-index="createTime" title="发布时间">
+          <a-table-column align="center" data-index="thumbsUp" title="点赞数" width="80"></a-table-column>
+          <a-table-column align="center" data-index="createTime" title="发布时间" width="150">
             <template #cell="{ record }">
               <span class="time-cell">{{ formatDateTime(record.createTime) }}</span>
             </template>

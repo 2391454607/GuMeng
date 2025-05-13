@@ -180,14 +180,14 @@ const formatDateTime = (dateTimeStr) => {
             </template>
           </a-table-column>
           <a-table-column align="center" data-index="username" title="发布者"></a-table-column>
-          <a-table-column align="center" data-index="createTime" title="发布时间">
+          <a-table-column align="center" data-index="createTime" title="发布时间" width="150">
             <template #cell="{ record }">
               <span class="time-cell">{{ formatDateTime(record.createTime) }}</span>
             </template>
           </a-table-column>
-          <a-table-column align="center" data-index="thumbsUpNum" title="点赞数"></a-table-column>
-          <a-table-column align="center" data-index="commonNum" title="评论数"></a-table-column>
-          <a-table-column align="center" data-index="viewCount" title="浏览量"></a-table-column>
+          <a-table-column align="center" data-index="thumbsUpNum" title="点赞数" width="80"></a-table-column>
+          <a-table-column align="center" data-index="commonNum" title="评论数" width="80"></a-table-column>
+          <a-table-column align="center" data-index="viewCount" title="浏览量" width="80"></a-table-column>
           <a-table-column align="center" title="操作" width="180">
             <template #cell="{record}">
               <div class="operation-buttons">
