@@ -27,15 +27,16 @@
             p.name,
             c.name AS categoryName,
             l.name AS levelName,
-            cover_image AS coverImage,
-            summary,
-            view_count AS viewCount,
-            create_time AS createTime,
-            update_time AS updateTime
+            p.cover_image AS coverImage,
+            p.summary,
+            p.view_count AS viewCount,
+            p.create_time AS createTime,
+            p.update_time AS updateTime
         FROM
             ich_project p
-        LEFT JOIN ich_category c ON p.category_id = c.id
-        LEFT JOIN ich_level l ON p.level_id = l.id;
+                LEFT JOIN ich_category c ON p.category_id = c.id
+                LEFT JOIN ich_level l ON p.level_id = l.id
+        ORDER BY p.create_time DESC
     </select>
 
 </mapper>

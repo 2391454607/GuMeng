@@ -1,5 +1,6 @@
 package com.gumeng.service.impl;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gumeng.domain.pages.IchProject;
 import com.gumeng.entity.vo.IchProjectListVO;
@@ -22,9 +23,11 @@ public class IchProjectServiceImpl extends ServiceImpl<IchProjectMapper, IchProj
     @Resource
     private IchProjectMapper ichProjectMapper;
 
+
     @Override
-    public List<IchProjectListVO> getIchProject() {
-        return ichProjectMapper.getIchProject();
+    public Page<IchProjectListVO> getIchProject(Integer current, Integer size) {
+        Page<IchProjectListVO> page = new Page<>(current, size);
+        return ichProjectMapper.getIchProject(page);
     }
 }
 

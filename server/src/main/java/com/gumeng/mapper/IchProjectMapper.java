@@ -1,5 +1,6 @@
 package com.gumeng.mapper;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.domain.pages.IchProject;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.gumeng.entity.vo.IchProjectListVO;
@@ -16,8 +17,7 @@ import java.util.List;
 @Mapper
 public interface IchProjectMapper extends BaseMapper<IchProject> {
 
-    List<IchProjectListVO> getIchProject();
-
+    Page<IchProjectListVO> getIchProject(Page<IchProjectListVO> page);
 }
 
 

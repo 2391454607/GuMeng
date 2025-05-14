@@ -1,5 +1,6 @@
 package com.gumeng.controller.web;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.pages.IchCategory;
 import com.gumeng.domain.pages.IchLevel;
@@ -10,6 +11,7 @@ import com.gumeng.service.IchProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -49,8 +51,9 @@ public class IchController {
 
     //获取非遗项目列表
     @GetMapping("/getProject")
-    public HttpResponse getIchProject() {
-        List<IchProjectListVO> ichProjects = ichProjectService.getIchProject();
+    public HttpResponse getIchProject(@RequestParam(defaultValue = "1") Integer current,
+                                      @RequestParam(defaultValue = "10") Integer size) {
+        Page<IchProjectListVO> ichProjects = ichProjectService.getIchProject(current, size);
         return HttpResponse.success(ichProjects);
     }
 

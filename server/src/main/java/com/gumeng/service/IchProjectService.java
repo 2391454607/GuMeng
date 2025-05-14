@@ -1,6 +1,7 @@
 package com.gumeng.service;
 
 import cn.hutool.db.PageResult;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.domain.pages.IchProject;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.gumeng.entity.vo.IchProjectListVO;
@@ -16,6 +17,6 @@ import java.util.List;
 @Service
 public interface IchProjectService extends IService<IchProject> {
 
-    List<IchProjectListVO> getIchProject();
+    Page<IchProjectListVO> getIchProject(Integer current, Integer size);
 
 }
