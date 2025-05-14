@@ -2,6 +2,9 @@ server:
   port: 9120
 
 spring:
+  banner:
+    location: banner.txt
+
   application:
     name: gumeng
 
