@@ -152,7 +152,7 @@ public class IchProjectController {
     }
 
     //删除非遗项目信息
-    @DeleteMapping("/deleteProject/{id}")
+    @PostMapping("/deleteProject/{id}")
     public HttpResponse deleteProject(@PathVariable Integer id) {
         try {
             // 获取项目信息
