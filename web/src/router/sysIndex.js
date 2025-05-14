@@ -31,6 +31,11 @@ const sysRouters = [
     path: "comments",
     name: "Comments",
     component: () => import("@/views/manage/sys/forum/Comments.vue")
+    },
+    {
+        path: "project",
+        name: "Project",
+        component: () => import("@/views/manage/sys/project/Project.vue")
     }
 
 ];
