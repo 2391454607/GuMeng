@@ -108,5 +108,11 @@ custom:
   sensitive-word:
     path: sensitive_word/sensitive-words.txt
 
-
+# 七牛云配置
+qiniu:
+  accessKey: lZSkzZ4ovrprg-GBfsU6XpI4ga-F2Yqzj3bbQxEN
+  secretKey: _xKceL1z0klae_1QxdUfCbXFOeJiPHe4Hki_Ppdn
+  bucket: gmls
+  domain: sw8nkdw7h.hn-bkt.clouddn.com
+  region: huanan  # 区域名
 
