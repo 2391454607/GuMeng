@@ -18,16 +18,15 @@ import java.util.List;
 */
 @Service
 public class IchProjectServiceImpl extends ServiceImpl<IchProjectMapper, IchProject>
-    implements IchProjectService{
+    implements IchProjectService {
 
     @Resource
     private IchProjectMapper ichProjectMapper;
 
-
     @Override
-    public Page<IchProjectListVO> getIchProject(Integer current, Integer size) {
+    public Page<IchProjectListVO> getIchProject(Integer current, Integer size, Integer levelId, Integer categoryId) {
         Page<IchProjectListVO> page = new Page<>(current, size);
-        return ichProjectMapper.getIchProject(page);
+        return ichProjectMapper.getIchProject(page, levelId, categoryId);
     }
 }
 

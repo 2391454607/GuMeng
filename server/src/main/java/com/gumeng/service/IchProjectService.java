@@ -16,7 +16,5 @@ import java.util.List;
 */
 @Service
 public interface IchProjectService extends IService<IchProject> {
-
-    Page<IchProjectListVO> getIchProject(Integer current, Integer size);
-
+    Page<IchProjectListVO> getIchProject(Integer current, Integer size, Integer levelId, Integer categoryId);
 }

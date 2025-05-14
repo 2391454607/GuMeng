@@ -22,7 +22,7 @@ import java.util.List;
  * 日期：2025/3/26 上午10:30
  */
 @RestController
-@RequestMapping("/web/ich") //给当前控制器下的所有接口添加前缀
+@RequestMapping("/web/ich")
 public class IchController {
 
     @Autowired
@@ -51,11 +51,12 @@ public class IchController {
 
     //获取非遗项目列表
     @GetMapping("/getProject")
-    public HttpResponse getIchProject(@RequestParam(defaultValue = "1") Integer current,
-                                      @RequestParam(defaultValue = "10") Integer size) {
-        Page<IchProjectListVO> ichProjects = ichProjectService.getIchProject(current, size);
+    public HttpResponse getIchProject(
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) Integer levelId,
+            @RequestParam(required = false) Integer categoryId) {
+        Page<IchProjectListVO> ichProjects = ichProjectService.getIchProject(current, size, levelId, categoryId);
         return HttpResponse.success(ichProjects);
     }
-
-
 }

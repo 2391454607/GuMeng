@@ -35,10 +35,13 @@ public class IchProjectController {
     private IchLevelService ichLevelService;
 
     //获取非遗项目信息
-    @GetMapping("/getIchProject")
-    public HttpResponse getIchProject(@RequestParam(defaultValue = "1") Integer current,
-                                      @RequestParam(defaultValue = "10") Integer size) {
-        Page<IchProjectListVO> ichProjects = ichProjectService.getIchProject(current, size);
+    @GetMapping("/getProject")
+    public HttpResponse getIchProject(
+            @RequestParam(defaultValue = "1") Integer current,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) Integer levelId,
+            @RequestParam(required = false) Integer categoryId) {
+        Page<IchProjectListVO> ichProjects = ichProjectService.getIchProject(current, size, levelId, categoryId);
         return HttpResponse.success(ichProjects);
     }
 

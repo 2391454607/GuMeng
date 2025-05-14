@@ -5,6 +5,7 @@ import com.gumeng.domain.pages.IchProject;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.gumeng.entity.vo.IchProjectListVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -16,8 +17,9 @@ import java.util.List;
 */
 @Mapper
 public interface IchProjectMapper extends BaseMapper<IchProject> {
-
-    Page<IchProjectListVO> getIchProject(Page<IchProjectListVO> page);
+    Page<IchProjectListVO> getIchProject(Page<IchProjectListVO> page, 
+                                       @Param("levelId") Integer levelId,
+                                       @Param("categoryId") Integer categoryId);
 }
 
 
