@@ -2,6 +2,7 @@ package com.gumeng.utils;
 
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Response;
+import com.qiniu.storage.BucketManager;
 import com.qiniu.storage.Configuration;
 import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
@@ -40,5 +41,18 @@ public class QiniuUtils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public boolean delete(String fileName) {
+        try {
+            Configuration cfg = new Configuration(Region.huanan());
+            Auth auth = Auth.create(accessKey, secretKey);
+            BucketManager bucketManager = new BucketManager(auth, cfg);
+            bucketManager.delete(bucket, fileName);
+            return true;
+        } catch (QiniuException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

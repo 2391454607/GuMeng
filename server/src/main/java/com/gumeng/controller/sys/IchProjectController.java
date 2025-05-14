@@ -104,6 +104,81 @@ public class IchProjectController {
         }
     }
 
+    //修改非遗项目信息
+    @PostMapping("/updateProject")
+    public HttpResponse updateProject(@RequestParam(value = "file", required = false) MultipartFile file,
+                                    @RequestParam("projectInfo") String projectInfo) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            IchProject ichProject = mapper.readValue(projectInfo, IchProject.class);
+
+            IchProject oldProject = ichProjectService.getById(ichProject.getId());
+            if (oldProject == null) {
+                return HttpResponse.error("项目不存在");
+            }
+
+            if (file != null && !file.isEmpty()) {
+                // 如果原来有图片，先删除
+                if (oldProject.getCoverImage() != null && !oldProject.getCoverImage().isEmpty()) {
+                    String oldFileName = oldProject.getCoverImage().substring(oldProject.getCoverImage().lastIndexOf("/") + 1);
+                    qiniuUtils.delete(oldFileName);
+                }
+
+                // 上传新文件
+                String originalFilename = file.getOriginalFilename();
+                String fileName = System.currentTimeMillis() + "_" + originalFilename;
+                String url = qiniuUtils.upload(file.getBytes(), fileName);
+
+                if (url != null && !url.isEmpty()) {
+                    ichProject.setCoverImage(url);
+                } else {
+                    return HttpResponse.error("文件上传失败");
+                }
+            } else {
+                ichProject.setCoverImage(oldProject.getCoverImage());
+            }
+
+            ichProject.setUpdateTime(LocalDateTime.now());
+            boolean result = ichProjectService.updateById(ichProject);
+            if (result) {
+                return HttpResponse.success("项目信息更新成功");
+            }
+            return HttpResponse.error("项目信息更新失败");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return HttpResponse.error("操作失败：" + e.getMessage());
+        }
+    }
+
+    //删除非遗项目信息
+    @DeleteMapping("/deleteProject/{id}")
+    public HttpResponse deleteProject(@PathVariable Integer id) {
+        try {
+            // 获取项目信息
+            IchProject project = ichProjectService.getById(id);
+            if (project == null) {
+                return HttpResponse.error("项目不存在");
+            }
+
+            // 如果有封面图片，删除七牛云上的文件
+            if (project.getCoverImage() != null && !project.getCoverImage().isEmpty()) {
+                String fileName = project.getCoverImage().substring(project.getCoverImage().lastIndexOf("/") + 1);
+                qiniuUtils.delete(fileName);
+            }
+
+            // 删除项目信息
+            boolean result = ichProjectService.removeById(id);
+            if (result) {
+                return HttpResponse.success("项目删除成功");
+            }
+            return HttpResponse.error("项目删除失败");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return HttpResponse.error("删除失败：" + e.getMessage());
+        }
+    }
 
 
 }
