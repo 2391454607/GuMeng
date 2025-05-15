@@ -135,7 +135,6 @@ const viewDetail = (id) => {
 
 <style scoped>
 .project-title{
-  width: 100vw;
   height: calc(100vh - 700px);
   display: flex;
   align-items: center;
