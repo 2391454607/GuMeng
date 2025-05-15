@@ -2,7 +2,7 @@
 import Footer from "@/views/web/layout/Footer.vue";
 import {onMounted, reactive, ref} from 'vue';
 import {getProjectList} from "@/api/web/IchProject.js";
-import { IconSearch } from '@arco-design/web-vue/es/icon';
+import { IconSearch, IconLoading } from '@arco-design/web-vue/es/icon';
 import { Message } from "@arco-design/web-vue";
 import { useRouter } from 'vue-router';
 
@@ -34,13 +34,45 @@ onMounted(()=>{
   })
 })
 
+// 搜索关键词状态
+const searchKeyword = ref('');
+
+// 搜索处理方法
+const handleSearch = () => {
+  loading.value = true;
+  // 将搜索条件添加到查询参数中
+  const params = {
+    ...status,
+    keyword: searchKeyword.value,
+    area: selectedCategories.value.地域 === '全部' ? '' : selectedCategories.value.地域,
+    level: selectedCategories.value.级别 === '全部' ? '' : selectedCategories.value.级别,
+    category: selectedCategories.value.类型 === '全部' ? '' : selectedCategories.value.类型
+  };
+
+  getProjectList(params).then((res) => {
+    ichProject.value = res.data.records;
+    total.value = res.data.total;
+    loading.value = false;
+  });
+}
+// 添加选中处理方法
+const handleCategorySelect = (categoryName, item) => {
+  selectedCategories.value[categoryName] = item;
+  // 这里可以添加筛选逻辑
+}
+
 const categories = ref([
-  { name: '地域', items: ['四川', '云南', '福建'] },
-  { name: '级别', items: ['国家级', '省级', '市级', '县级'] },
-  { name: '类型', items: ['民间文学', '传统音乐', '传统舞蹈', '传统戏剧', '曲艺', '传统体育、游艺与杂技', '传统美术', '民俗', '传统技艺', '传统医药'] }
+  { name: '所在地区', items: ['全部', '四川', '云南', '福建'] },
+  { name: '保护级别', items: ['全部','国家级', '省级', '市级', '县级'] },
+  { name: '非遗类型', items: ['全部','民间文学', '传统音乐', '传统舞蹈', '传统戏剧', '曲艺', '传统体育、游艺与杂技', '传统美术', '民俗', '传统技艺', '传统医药'] }
 ]);
 
-const router = useRouter();
+// 添加选中状态管理
+const selectedCategories = ref({
+  所在地区: '全部',
+  保护级别: '全部',
+  非遗类型: '全部'
+});
 
 // 添加查看详情方法
 const viewDetail = (id) => {
@@ -49,18 +81,27 @@ const viewDetail = (id) => {
 
 </script>
 
-<!-- 修改搜索框模板部分 -->
+
 <template>
 
   <div class="project-title">
-    123
+    <div class="title-content">
+      <h1>非遗百科</h1>
+      <p>传承文化精髓 · 守护非遗瑰宝</p>
+    </div>
   </div>
 
   <div class="information-container">
     <div class="search-section">
       <div class="search-wrapper">
         <IconSearch class="search-icon"/>
-        <input type="text" placeholder="请输入关键词搜索" class="search-input">
+        <input 
+          v-model="searchKeyword"
+          type="text" 
+          placeholder="请输入关键词搜索" 
+          class="search-input"
+          @keyup.enter="handleSearch"
+        >
       </div>
     </div>
 
@@ -71,55 +112,58 @@ const viewDetail = (id) => {
         <div class="category-items">
           <span v-for="item in category.items"
                 :key="item"
-                class="category-item">
+                :class="['category-item', { 'category-item-active': selectedCategories[category.name] === item }]"
+                @click="handleCategorySelect(category.name, item)">
             {{ item }}
           </span>
         </div>
       </div>
     </div>
 
-    <!-- 修改文章列表部分 -->
-    <div class="project-grid">
-      <a-card
-        v-for="project in ichProject"
-        :key="project.id"
-        class="project-card"
-        :bordered="false"
-        hoverable
-      >
-        <div class="project-image">
-          <img :src="project.coverImage" :alt="project.name">
-          <div class="project-overlay" @click="viewDetail(project.id)">
-            <div class="overlay-content">
-              <icon-eye class="overlay-icon" />
-              <span>查看详情</span>
+    <a-spin :loading="loading" size="32" tip="加载中">
+      <template #icon><icon-loading /></template>
+      <div class="project-grid">
+        <a-card
+          v-for="project in ichProject"
+          :key="project.id"
+          class="project-card"
+          :bordered="false"
+          hoverable
+        >
+          <div class="project-image">
+            <img :src="project.coverImage" :alt="project.name">
+            <div class="project-overlay" @click="viewDetail(project.id)">
+              <div class="overlay-content">
+                <icon-eye class="overlay-icon" />
+                <span>查看详情</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="project-content">
-          <h3>{{ project.name }}</h3>
-          <p>{{ project.summary }}</p>
-          <div class="project-tags">
-            <a-tag>{{ project.levelName }}</a-tag>
-            <a-tag>{{ project.categoryName }}</a-tag>
+          <div class="project-content">
+            <h3>{{ project.name }}</h3>
+            <p>{{ project.summary }}</p>
+            <div class="project-tags">
+              <a-tag>{{ project.levelName }}</a-tag>
+              <a-tag>{{ project.categoryName }}</a-tag>
+            </div>
+  
+            <div class="project-card-bottom">
+              <div class="create-time">
+                {{ new Date(project.createTime).toLocaleDateString() }}
+              </div>
+              <div>
+                <a-space class="view-count">
+                  <icon-eye />
+                  {{ project.viewCount }}
+                </a-space>
+              </div>
+            </div>
           </div>
+        </a-card>
+      </div>
+    </a-spin>
 
-          <div class="project-card-bottom">
-            <div class="create-time">
-              {{ new Date(project.createTime).toLocaleDateString() }}
-            </div>
-            <div>
-              <a-space class="view-count">
-                <icon-eye />
-                {{ project.viewCount }}
-              </a-space>
-            </div>
-          </div>
-        </div>
-      </a-card>
-    </div>
-
-    <!-- 添加分页器 -->
+    <!-- 分页器 -->
     <div class="pagination-container">
       <a-pagination
         :total="total"
@@ -134,23 +178,50 @@ const viewDetail = (id) => {
 </template>
 
 <style scoped>
-.project-title{
-  height: calc(100vh - 700px);
+.project-title {
+  min-height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-image: url('/image/information.png');
+  background-size: 100% 100%;  /* 完全覆盖 */
+  background-position: center;
+  background-repeat: no-repeat;
 }
+
+.title-content {
+  text-align: center;
+  padding: 20px;
+  z-index: 2;
+  width: 100%;
+}
+
+.title-content h1 {
+  font-size: clamp(2em, 4vw, 2.8em);  /* 响应式字体大小 */
+  color: #8C1F28;
+  margin-bottom: 15px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: "STKaiti", "楷体", serif;
+}
+
+.title-content p {
+  font-size: clamp(1em, 2vw, 1.2em);  /* 响应式字体大小 */
+  color: #594433;
+  font-family: "STFangsong", "仿宋", serif;
+  letter-spacing: 2px;
+}
+
 
 .information-container {
   padding: 20px;
   max-width: 100vw;
   min-height: calc(100vh - 169px);
   margin: 0 auto;
-  background-color: #fff;
+  background-color: #FFF7E9;
 }
 
 .search-section {
-  margin: 20px 0;
   display: flex;
   justify-content: center;
 }
@@ -191,7 +262,7 @@ const viewDetail = (id) => {
 }
 
 .categories-section {
-  margin: 20px 0;
+  margin: 20px 0 0 20px;
 }
 
 .category-group {
@@ -220,6 +291,11 @@ const viewDetail = (id) => {
   color: #d32f2f;
 }
 
+.category-item-active {
+  background: #d32f2f;
+  color: #fff;
+}
+
 .category-item:hover {
   background: #d32f2f;
   color: #fff;
@@ -227,17 +303,36 @@ const viewDetail = (id) => {
 
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  margin: 20px 0;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin: 20px auto;
+  width: 100vw;
+  padding: 0 20px;
 }
 
 .project-card {
   border: 1px solid #ffcdd2;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
   transition: transform 0.3s;
   background: #fff;
+  height: 100%;  /* 确保所有卡片高度一致 */
+  display: flex;
+  flex-direction: column;
+}
+
+.project-content {
+  padding: 20px;
+  flex: 1;  /* 让内容区域占据剩余空间 */
+  display: flex;
+  flex-direction: column;
+}
+
+.project-content p {
+  flex: 1;  /* 让描述文字占据剩余空间 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
 }
 
 .project-card:hover {
@@ -258,7 +353,7 @@ const viewDetail = (id) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(33, 33, 33, 0.75);  /* 修改为灰色遮罩 */
+  background: rgba(33, 33, 33, 0.75);  /* 灰色遮罩 */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -378,5 +473,24 @@ const viewDetail = (id) => {
 
 :deep(.arco-pagination-total) {
   color: #86909c;
+}
+
+/* 加载动画相关样式 */
+:deep(.arco-spin) {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+:deep(.arco-spin-icon) {
+  color: #C2101C;
+  font-size: 24px;
+}
+
+/* 加载提示文字样式 */
+:deep(.arco-spin-tip) {
+  color: #C2101C;
+  font-size: 14px;
+  margin-top: 8px;
 }
 </style>
