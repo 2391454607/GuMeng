@@ -153,6 +153,27 @@ const delOk = (record) => {
   })
   del.value = false;
 };
+
+// 添加选项数据
+const levelOptions = [
+  { label: '国家级', value: '1' },
+  { label: '省级', value: '2' },
+  { label: '市级', value: '3' },
+  { label: '县级', value: '4' }
+];
+
+const categoryOptions = [
+  { label: '民间文学', value: '1' },
+  { label: '传统音乐', value: '2' },
+  { label: '传统舞蹈', value: '3' },
+  { label: '传统戏剧', value: '4' },
+  { label: '曲艺', value: '5' },
+  { label: '传统体育、游艺与杂技', value: '6' },
+  { label: '传统美术', value: '7' },
+  { label: '民俗', value: '8' },
+  { label: '传统技艺', value: '9' },
+  { label: '传统医药', value: '10' }
+];
 </script>
 
 <template>
@@ -286,10 +307,26 @@ const delOk = (record) => {
         <a-input v-model="newProject.name" placeholder="请输入项目名称"/>
       </a-form-item>
       <a-form-item field="levelName" label="保护级别">
-        <a-input v-model="newProject.levelName" placeholder="请输入保护级别"/>
+        <a-select
+          v-model="newProject.levelName"
+          placeholder="请选择保护级别"
+          :filter-option="false"
+        >
+          <a-option v-for="option in levelOptions" :key="option.value" :value="option.label">
+            {{ option.label }}
+          </a-option>
+        </a-select>
       </a-form-item>
       <a-form-item field="categoryName" label="项目类别">
-        <a-input v-model="newProject.categoryName" placeholder="请输入项目类别"/>
+        <a-select
+          v-model="newProject.categoryName"
+          placeholder="请选择项目类别"
+          :filter-option="false"
+        >
+          <a-option v-for="option in categoryOptions" :key="option.value" :value="option.label">
+            {{ option.label }}
+          </a-option>
+        </a-select>
       </a-form-item>
       <a-form-item field="summary" label="封面图片">
         <a-input v-model="newProject.summary" placeholder="请输入封面图片"/>
@@ -310,10 +347,26 @@ const delOk = (record) => {
         <a-input v-model="updateProjectData.name" placeholder="请输入项目名称"/>
       </a-form-item>
       <a-form-item field="levelName" label="保护级别">
-        <a-input v-model="updateProjectData.levelName" placeholder="请输入保护级别"/>
+        <a-select
+          v-model="updateProjectData.levelName"
+          placeholder="请选择保护级别"
+          :filter-option="false"
+        >
+          <a-option v-for="option in levelOptions" :key="option.value" :value="option.label">
+            {{ option.label }}
+          </a-option>
+        </a-select>
       </a-form-item>
       <a-form-item field="categoryName" label="项目类别">
-        <a-input v-model="updateProjectData.categoryName" placeholder="请输入项目类别"/>
+        <a-select
+          v-model="updateProjectData.categoryName"
+          placeholder="请选择项目类别"
+          :filter-option="false"
+        >
+          <a-option v-for="option in categoryOptions" :key="option.value" :value="option.label">
+            {{ option.label }}
+          </a-option>
+        </a-select>
       </a-form-item>
       <a-form-item field="summary" label="封面图片">
         <a-input v-model="updateProjectData.summary" placeholder="请输入发布机构"/>
