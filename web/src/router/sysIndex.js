@@ -36,7 +36,16 @@ const sysRouters = [
         path: "project",
         name: "Project",
         component: () => import("@/views/manage/sys/project/Project.vue")
-    }
+    },
+    {
+        path: 'log',
+        name: 'SysLog',
+        component: () => import('@/views/manage/sys/LogManage.vue'),
+        meta: {
+            requiresAuth: true,
+            roles: ['admin', 'superAdmin']
+        }
+    },
 
 ];
 
