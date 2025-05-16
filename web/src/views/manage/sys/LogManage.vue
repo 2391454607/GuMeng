@@ -57,7 +57,11 @@
               </a-tag>
             </template>
           </a-table-column>
-          <a-table-column title="操作时间" data-index="createTime" :width="180" />
+          <a-table-column title="操作时间" data-index="createTime" :width="180">
+            <template #cell="{ record }">
+              <span class="time-cell">{{ formatDateTime(record.createTime) }}</span>
+            </template>
+          </a-table-column>
           <a-table-column title="操作" :width="120">
             <template #cell="{ record }">
               <a-button type="text" @click="handleDelete(record.id)" status="danger">删除</a-button>
@@ -241,24 +245,19 @@ const onPageSizeChange = (pageSize) => {
   fetchLogs();
 };
 
-// 格式化日期时间
-const formatDateTime = (date) => {
-  if (!date) return null;
-
-  // 处理ISO格式的字符串 (如 2025-05-16T09:09:09)
-  let d;
-  if (typeof date === 'string' && date.includes('T')) {
-    d = new Date(date.replace('T', ' ').substring(0, 19));
-  } else {
-    d = new Date(date);
-  }
-
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const hours = String(d.getHours()).padStart(2, '0');
-  const minutes = String(d.getMinutes()).padStart(2, '0');
-  const seconds = String(d.getSeconds()).padStart(2, '0');
+// 日期时间格式化函数
+const formatDateTime = (dateTimeStr) => {
+  if (!dateTimeStr) return '';
+  
+  // 将ISO格式时间转换为更友好的格式
+  const date = new Date(dateTimeStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
