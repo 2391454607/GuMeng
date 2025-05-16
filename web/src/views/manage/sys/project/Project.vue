@@ -1,14 +1,353 @@
 <script setup>
+import {onMounted, reactive, ref} from "vue";
+import {addProjectAPI, deleteProjectAPI, getIchProjectAPI, updateProjectAPI} from "@/api/manage/IchProject.js";
+import {Message} from "@arco-design/web-vue";
 
+//分页器状态
+const status = reactive({
+  current: 1,
+  size: 10,
+  levelId: null,
+  categoryId: null
+})
+const total = ref(0);
+// 分页处理函数
+const handlePageChange = (current) => {
+  status.current = current;
+  loading.value = true;
+  getIchProjectAPI(status).then(res => {
+    ProjectList.value = res.data.records;
+    total.value = res.data.total;
+    loading.value = false;
+  });
+};
+
+//表格数据
+const ProjectList = ref([])
+const loading = ref(true);
+
+onMounted(()=>{
+  getIchProjectAPI(status).then(res=>{
+    ProjectList.value = res.data.records;
+    total.value = res.data.total;
+    loading.value = false;
+  })
+})
+
+// 添加查看状态和数据
+const viewProject = ref(false);
+const viewProjectData = reactive({
+  id: "",
+  name: "",
+  levelName: "",
+  categoryName: "",
+  summary: "",
+  coverImage: "",
+  viewCount: 0,
+  createTime: ""
+});
+
+// 添加查看方法
+const viewProjectClick = (record) => {
+  viewProjectData.id = record.id;
+  viewProjectData.name = record.name;
+  viewProjectData.levelName = record.levelName;
+  viewProjectData.categoryName = record.categoryName;
+  viewProjectData.summary = record.summary;
+  viewProjectData.coverImage = record.coverImage;
+  viewProjectData.viewCount = record.viewCount;
+  viewProjectData.createTime = record.createTime;
+  viewProjectData.updateTime = record.updateTime;
+  viewProject.value = true;
+};
+
+//定义新增的表单数据
+const newProject = reactive({
+  id: "",
+  name: "",
+  levelName: "",
+  categoryName: "",
+  summary: "",
+  coverImage: "",
+});
+const addProject = ref(false);
+const ProjectAddClick = async () => {
+  addProject.value = true;
+};
+
+const addOk = async () => {
+  addProjectAPI(newProject).then((res) => {
+    if (res.code === 200) {
+      Message.success(res.msg)
+      loading.value = true;
+      //更新列表
+      getIchProjectAPI(status).then((res) => {
+        ProjectList.value = res.data;
+        loading.value = false;
+      })
+    } else {
+      Message.error(res.msg)
+    }
+  })
+  addProject.value = false;
+};
+
+//修改操作
+const updateProject = ref(false);
+// 用于存储正在编辑数据
+const updateProjectData = reactive({
+  id: "",
+  name: "",
+  levelName: "",
+  categoryName: "",
+  summary: "",
+  coverImage: "",
+});
+
+const updateProjectClick = async (record) => {
+  // 将当前行数据赋值填充到表单中
+  updateProjectData.id = record.id;
+  updateProjectData.name = record.name;
+  updateProjectData.levelName = record.levelName;
+  updateProjectData.categoryName = record.categoryName;
+  updateProjectData.summary = record.summary;
+  updateProjectData.coverImage = record.coverImage;
+  updateProject.value = true;
+};
+const updateOk = () => {
+  console.log(updateProjectData)
+  updateProjectAPI(updateProjectData).then(res => {
+    if (res.code === 200) {
+      Message.success(res.msg)
+      loading.value = true;
+      //更新列表
+      getIchProjectAPI(status).then((res) => {
+        ProjectList.value = res.data;
+        loading.value = false;
+      })
+    } else {
+      Message.error(res.msg)
+    }
+  })
+  updateProject.value = false;
+};
+
+// 删除操作
+const del = ref(false);
+const delClick = () => {
+  del.value = true;
+};
+const delOk = (record) => {
+  deleteProjectAPI( {id:record.id} ).then((res) => {
+    if (res.code === 200) {
+      Message.success(res.msg)
+      loading.value = true;
+      //更新轮播图列表
+      getIchProjectAPI(status).then((res) => {
+        ProjectList.value = res.data;
+        loading.value = false
+      })
+    } else {
+      Message.error(res.msg)
+    }
+  })
+  del.value = false;
+};
 </script>
 
 <template>
 
-  非遗项目管理
+  <div>
+    <div class="top">
+
+      <div class="add">
+        <a-button class="add-button" type="outline" @click="ProjectAddClick">
+          <template #icon>
+            <icon-plus/>
+          </template>
+          新增
+        </a-button>
+      </div>
+
+    </div>
+
+    <div class="form">
+      <a-table
+          v-model:loading="loading"
+          :bordered="false"
+          :data="ProjectList"
+          :pagination="{
+          total: total,
+          current: status.current,
+          pageSize: status.size,
+          showTotal: true,
+        }"
+          :size="'small'"
+          @page-change="handlePageChange"
+      >
+        <template #columns>
+          <a-table-column align="center" data-index="id" title="ID"></a-table-column>
+          <a-table-column align="center" data-index="coverImage" title="封面图片">
+            <template #cell="{ record }">
+              <a-image
+                  :src="record.coverImage"
+                  :preview="true"
+                  :width="100"
+                  :height="60"
+                  fit="cover"
+              />
+            </template>
+          </a-table-column>
+          <a-table-column align="center" data-index="name" title="项目名称"></a-table-column>
+          <a-table-column align="center" data-index="levelName" title="保护级别"></a-table-column>
+          <a-table-column align="center" data-index="categoryName" title="项目类别"></a-table-column>
+          <a-table-column align="center" data-index="viewCount" title="浏览量"></a-table-column>
+          <a-table-column align="center" data-index="optional" title="操作">
+            <template #cell="{record}" class="option">
+
+              <a-button class="edit-button" type="text" @click="viewProjectClick(record)">
+                <template #icon>
+                  <icon-eye/>
+                </template>
+                查看
+              </a-button>
+
+              <a-button class="edit-button" type="text" @click="updateProjectClick(record)">
+                <template #icon>
+                  <icon-edit/>
+                </template>
+                修改
+              </a-button>
+
+              <a-popconfirm content="此操作不可逆，你确定要删除吗？" position="tr" type="warning" @ok="delOk(record)">
+                <a-button class="delete-button" status="danger" type="text" @click="delClick">
+                  <template #icon>
+                    <icon-delete/>
+                  </template>
+                  删除
+                </a-button>
+              </a-popconfirm>
+            </template>
+          </a-table-column>
+
+        </template>
+      </a-table>
+    </div>
+  </div>
+
+  <!-- 查看详情的模态框 -->
+  <a-modal v-model:visible="viewProject" @ok="viewProject = false">
+    <template #title>
+      查看非遗项目详情
+    </template>
+    <a-form :model="viewProjectData" :style="{ width: '450px' }">
+      <a-form-item field="id" label="ID">
+        {{ viewProjectData.id }}
+      </a-form-item>
+      <a-form-item field="name" label="项目名称">
+        {{ viewProjectData.name }}
+      </a-form-item>
+      <a-form-item field="levelName" label="保护级别">
+        {{ viewProjectData.levelName }}
+      </a-form-item>
+      <a-form-item field="categoryName" label="项目类别">
+        {{ viewProjectData.categoryName }}
+      </a-form-item>
+      <a-form-item field="summary" label="项目简介">
+        {{ viewProjectData.summary }}
+      </a-form-item>
+      <a-form-item field="coverImage" label="封面图片">
+        <a-image
+            :src="viewProjectData.coverImage"
+            :preview="true"
+            :width="200"
+            fit="cover"
+        />
+      </a-form-item>
+      <a-form-item field="viewCount" label="浏览量">
+        {{ viewProjectData.viewCount }}
+      </a-form-item>
+      <a-form-item field="createTime" label="创建时间">
+        {{ viewProjectData.createTime }}
+      </a-form-item>
+      <a-form-item field="updateTime" label="修改时间">
+        {{ viewProjectData.updateTime }}
+      </a-form-item>
+    </a-form>
+  </a-modal>
+
+  <!--新增-->
+  <a-modal v-model:visible="addProject" @ok="addOk">
+    <template #title>
+      新增政策信息
+    </template>
+    <a-form :model="newProject" :style="{ width: '450px' }">
+      <a-form-item field="name" label="项目名称">
+        <a-input v-model="newProject.name" placeholder="请输入项目名称"/>
+      </a-form-item>
+      <a-form-item field="levelName" label="保护级别">
+        <a-input v-model="newProject.levelName" placeholder="请输入保护级别"/>
+      </a-form-item>
+      <a-form-item field="categoryName" label="项目类别">
+        <a-input v-model="newProject.categoryName" placeholder="请输入项目类别"/>
+      </a-form-item>
+      <a-form-item field="summary" label="封面图片">
+        <a-input v-model="newProject.summary" placeholder="请输入封面图片"/>
+      </a-form-item>
+    </a-form>
+  </a-modal>
+
+  <!--修改-->
+  <a-modal v-model:visible="updateProject" @ok="updateOk">
+    <template #title>
+      修改非遗项目信息
+    </template>
+    <a-form :model="updateProjectData" :style="{ width: '450px' }">
+      <a-form-item field="id" label="ID">
+        <a-input v-model="updateProjectData.id" disabled/>
+      </a-form-item>
+      <a-form-item field="name" label="项目名称">
+        <a-input v-model="updateProjectData.name" placeholder="请输入项目名称"/>
+      </a-form-item>
+      <a-form-item field="levelName" label="保护级别">
+        <a-input v-model="updateProjectData.levelName" placeholder="请输入保护级别"/>
+      </a-form-item>
+      <a-form-item field="categoryName" label="项目类别">
+        <a-input v-model="updateProjectData.categoryName" placeholder="请输入项目类别"/>
+      </a-form-item>
+      <a-form-item field="summary" label="封面图片">
+        <a-input v-model="updateProjectData.summary" placeholder="请输入发布机构"/>
+      </a-form-item>
+    </a-form>
+  </a-modal>
+
 
 
 </template>
 
 <style scoped>
+.form {
+  margin: 20px;
 
+}
+
+.top {
+  display: flex;
+  justify-content: end;
+
+}
+
+.add{
+  margin-top: 30px;
+  margin-right: 20px;
+}
+
+.delete-button {
+  color: rgb(var(--danger-6));
+
+  &:hover {
+    background-color: rgb(var(--danger-1));
+    color: rgb(var(--danger-7));
+  }
+}
 </style>
