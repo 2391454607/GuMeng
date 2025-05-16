@@ -108,13 +108,5 @@ custom:
   sensitive-word:
     path: sensitive_word/sensitive-words.txt
 
-  # 纯真IP库配置
-  ip:
-    qqwry:
-      enabled: true  # 是否启用纯真IP库
-      path: chunZhenIp/qqwry.dat  # 纯真IP库路径
-      autoLoad: true  # 是否自动加载
-      charset: gbk  # 编码格式
-
 
 

@@ -10,8 +10,7 @@ const webRouters = [
     {
         path: "/information",
         name: "Information",
-        //component: ()=> import("@/views/web/pages/information/Information.vue")
-        component: () => import("@/views/error/Error404.vue")
+        component: ()=> import("@/views/web/pages/information/Information.vue")
     },
     {
         path: "/forum",
