@@ -123,13 +123,6 @@
             <version>2.15.2</version>
         </dependency>
 
-        <!-- 纯真IP库Java实现 -->
-        <dependency>
-            <groupId>com.github.jarod</groupId>
-            <artifactId>qqwry-java</artifactId>
-            <version>0.8.0</version>
-        </dependency>
-
         <!-- Hutool 工具包 -->
         <dependency>
             <groupId>cn.hutool</groupId>
