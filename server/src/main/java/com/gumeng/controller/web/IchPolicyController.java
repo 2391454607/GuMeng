@@ -3,6 +3,7 @@ package com.gumeng.controller.web;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gumeng.annotation.LogOperation;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.Policy;
 import com.gumeng.service.PolicyService;
@@ -27,6 +28,7 @@ public class IchPolicyController {
     @Autowired
     private PolicyService policyService;
 
+    @LogOperation(module = "相关政策", operation = "获取政策列表")
     //获取政策列表
     @GetMapping("/getList")
     public HttpResponse getPolicy(
@@ -42,6 +44,7 @@ public class IchPolicyController {
         return HttpResponse.success(policyPage);
     }
 
+    @LogOperation(module = "相关政策", operation = "查询政策")
     //根据id查询政策
     @GetMapping("/getInfo")
     public HttpResponse policyInfo(@RequestParam Integer id) {
@@ -49,6 +52,7 @@ public class IchPolicyController {
         return HttpResponse.success(policy);
     }
 
+    @LogOperation(module = "相关政策", operation = "下载文件")
     // 根据ID下载PDF文件
     @GetMapping("/download")
     public HttpResponse downloadPolicy(@RequestParam Integer id) {

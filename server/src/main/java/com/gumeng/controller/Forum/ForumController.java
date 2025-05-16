@@ -1,6 +1,7 @@
 package com.gumeng.controller.Forum;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gumeng.annotation.LogOperation;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.entity.DTO.ForumPostDTO;
 import com.gumeng.entity.vo.ForumPostVO;
@@ -53,6 +54,7 @@ public class ForumController {
     /**
      * 获取帖子列表
      */
+    @LogOperation(module = "论坛", operation = "获取帖子列表")
     @GetMapping("/getPosts")
     public HttpResponse getPosts(
             @RequestParam(value = "page", defaultValue = "1") Integer page,
@@ -78,6 +80,7 @@ public class ForumController {
     /**
      * 获取帖子详情
      */
+    @LogOperation(module = "论坛", operation = "查看帖子详情")
     @GetMapping("/posts/{id}")
     public HttpResponse getPostDetail(@PathVariable Integer id) {
         ForumPostVO post = forumPostService.getPostDetail(id);
@@ -90,6 +93,7 @@ public class ForumController {
     /**
      * 创建帖子
      */
+    @LogOperation(module = "论坛", operation = "创建新帖子")
     @PostMapping("/posts")
     public HttpResponse createPost(@RequestBody @Valid ForumPostDTO postDTO) {
         Integer postId = forumPostService.createPost(postDTO);
@@ -99,6 +103,7 @@ public class ForumController {
     /**
      * 删除帖子
      */
+    @LogOperation(module = "论坛", operation = "删除帖子")
     @DeleteMapping("/posts/{id}")
     public HttpResponse deletePost(@PathVariable Integer id) {
         boolean result = forumPostService.deletePost(id);
@@ -108,6 +113,7 @@ public class ForumController {
     /**
      * 点赞帖子
      */
+    @LogOperation(module = "论坛", operation = "点赞帖子")
     @PostMapping("/posts/{id}/like")
     public HttpResponse likePost(@PathVariable Integer id) {
         boolean result = forumPostService.likePost(id);
@@ -117,6 +123,7 @@ public class ForumController {
     /**
      * 取消点赞帖子
      */
+    @LogOperation(module = "论坛", operation = "取消点赞")
     @PostMapping("/posts/{id}/unlike")
     public HttpResponse unlikePost(@PathVariable Integer id) {
         boolean result = forumPostService.unlikePost(id);
@@ -126,6 +133,7 @@ public class ForumController {
     /**
      * 获取话题列表
      */
+    @LogOperation(module = "论坛", operation = "获取话题列表")
     @GetMapping("/getTopics")
     public HttpResponse getTopics() {
         return HttpResponse.success(forumTopicService.getTopicList());
@@ -134,6 +142,7 @@ public class ForumController {
     /**
      * 检测文本是否包含敏感词
      */
+    @LogOperation(module = "论坛", operation = "敏感词检测")
     @PostMapping("/checkSensitiveWords")
     public HttpResponse checkSensitiveWords(@RequestBody Map<String, String> params) {
         String text = params.get("text");

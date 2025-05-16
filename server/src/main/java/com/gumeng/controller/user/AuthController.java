@@ -3,6 +3,7 @@ package com.gumeng.controller.user;
 import com.anji.captcha.model.common.ResponseModel;
 import com.anji.captcha.model.vo.CaptchaVO;
 import com.anji.captcha.service.CaptchaService;
+import com.gumeng.annotation.LogOperation;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.user.User;
 import com.gumeng.entity.DTO.UserRegisterDTO;
@@ -93,6 +94,7 @@ public class AuthController {
         }
     }
 
+    @LogOperation(module = "注册", operation = "用户注册")
     //用户注册
     @PostMapping("/register")
     public HttpResponse register(@RequestBody @Validated UserRegisterDTO user) {
@@ -132,6 +134,7 @@ public class AuthController {
         return HttpResponse.success(captchaService.check(captchaVO));
     }
 
+    @LogOperation(module = "登录" , operation = "用户登录")
     //用户登录
     @PostMapping("/login")
     public HttpResponse login(@RequestBody Map<String,String> loginRequest) {
@@ -177,7 +180,7 @@ public class AuthController {
             }
         }
     }
-
+    @LogOperation(module = "登出", operation = "用户登出")
     //用户登出
     @PostMapping("/logout")
     public HttpResponse logout(@RequestHeader("Authorization") String token) {
