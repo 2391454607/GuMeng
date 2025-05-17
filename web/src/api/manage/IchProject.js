@@ -6,16 +6,16 @@ export const getIchProjectAPI = async ({current: current,size: size,levelId: lev
 }
 
 //新增非遗项目
-export const addProjectAPI = async (data) => {
-    return http.post('/sys/addProject',data)
+export const addProjectAPI = async (formData) => {
+    return http.post('/sys/addProject',formData)
 }
 
 //修改非遗项目
-export const updateProjectAPI = async (data) => {
-    return http.post('/sys/updateProject',data)
+export const updateProjectAPI = async (formData) => {
+    return http.post('/sys/updateProject',formData)
 }
 
 //删除
 export const deleteProjectAPI = async (id) => {
-    return http.delete(`/sys/deleteProject/${id}`)
+    return http.post(`/sys/deleteProject?${id}`)
 }

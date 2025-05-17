@@ -26,6 +26,10 @@ request.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+      // 如果是 FormData，则删除 Content-Type（让浏览器自动生成 boundary）
+      if (config.data instanceof FormData) {
+          delete config.headers['Content-Type'];
+      }
     return config;
   },
   (error) => {
@@ -43,10 +47,9 @@ request.interceptors.response.use(
     },
     (error) => {
         if (error.response && error.response.status === 401) {
-            // token 过期或无效，清除本地存储并跳转到401页面
+            // token 过期或无效，清除本地存储
             localStorage.removeItem('token');
             localStorage.removeItem('userInfo');
-            window.location.href = '/401';
         }
         console.error("请求失败:", error);
         return Promise.reject(error);

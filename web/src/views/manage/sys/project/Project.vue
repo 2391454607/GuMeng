@@ -3,6 +3,27 @@ import {onMounted, reactive, ref} from "vue";
 import {addProjectAPI, deleteProjectAPI, getIchProjectAPI, updateProjectAPI} from "@/api/manage/IchProject.js";
 import {Message} from "@arco-design/web-vue";
 
+//表格数据
+const ProjectList = ref([])
+// 封装加载数据的方法
+const loading = ref();
+const loadData = async () => {
+  loading.value = true;
+  try {
+    const res = await getIchProjectAPI(status);
+    ProjectList.value = res.data.records;
+    total.value = res.data.total;
+  } catch (error) {
+    Message.error('数据加载失败：' + error.message);
+  } finally {
+    loading.value = false;
+  }
+};
+//初始化页面
+onMounted(()=>{
+  loadData();
+})
+
 //分页器状态
 const status = reactive({
   current: 1,
@@ -12,27 +33,80 @@ const status = reactive({
 })
 const total = ref(0);
 // 分页处理函数
-const handlePageChange = (current) => {
+const handlePageChange = async (current) => {
   status.current = current;
-  loading.value = true;
-  getIchProjectAPI(status).then(res => {
-    ProjectList.value = res.data.records;
-    total.value = res.data.total;
-    loading.value = false;
-  });
+  await loadData();
 };
 
-//表格数据
-const ProjectList = ref([])
-const loading = ref(true);
+// 添加选项数据
+const levelOptions = [
+  { label: '国家级', value: '1' },
+  { label: '省级', value: '2' },
+  { label: '市级', value: '3' },
+  { label: '县级', value: '4' }
+];
 
-onMounted(()=>{
-  getIchProjectAPI(status).then(res=>{
-    ProjectList.value = res.data.records;
-    total.value = res.data.total;
-    loading.value = false;
-  })
-})
+const categoryOptions = [
+  { label: '民间文学', value: '1' },
+  { label: '传统音乐', value: '2' },
+  { label: '传统舞蹈', value: '3' },
+  { label: '传统戏剧', value: '4' },
+  { label: '曲艺', value: '5' },
+  { label: '传统体育、游艺与杂技', value: '6' },
+  { label: '传统美术', value: '7' },
+  { label: '民俗', value: '8' },
+  { label: '传统技艺', value: '9' },
+  { label: '传统医药', value: '10' }
+];
+
+//定义新增的表单数据
+const addProject = ref(false);
+const ProjectAddClick = async () => {
+  addProject.value = true;
+};
+
+const newProject = reactive({
+  name: "",
+  levelId: "",
+  categoryId: "",
+  summary: "",
+  file: null,
+});
+const imgFile = ref([])
+
+const getFile = (file) => {
+  imgFile.value = file.target.files[0];
+  console.log(imgFile.value)
+}
+
+const addOk = async () => {
+  if (!imgFile.value) {
+    Message.warning('请上传封面图片')
+    return
+  }
+
+  const formData = new FormData()
+  formData.append('file', imgFile.value)
+  formData.append('projectInfo', JSON.stringify({
+    name: newProject.name,
+    levelId: newProject.levelId,
+    categoryId: newProject.categoryId,
+    summary: newProject.summary
+  }))
+
+  try {
+    const res = await addProjectAPI(formData);
+    if (res.code === 200) {
+      Message.success(res.msg);
+      await loadData();
+    } else {
+      Message.error(res.msg);
+    }
+  } catch(error) {
+    Message.error('提交失败：' + error.message);
+  }
+  addProject.value = false;
+};
 
 // 添加查看状态和数据
 const viewProject = ref(false);
@@ -61,36 +135,6 @@ const viewProjectClick = (record) => {
   viewProject.value = true;
 };
 
-//定义新增的表单数据
-const newProject = reactive({
-  id: "",
-  name: "",
-  levelName: "",
-  categoryName: "",
-  summary: "",
-  coverImage: "",
-});
-const addProject = ref(false);
-const ProjectAddClick = async () => {
-  addProject.value = true;
-};
-
-const addOk = async () => {
-  addProjectAPI(newProject).then((res) => {
-    if (res.code === 200) {
-      Message.success(res.msg)
-      loading.value = true;
-      //更新列表
-      getIchProjectAPI(status).then((res) => {
-        ProjectList.value = res.data;
-        loading.value = false;
-      })
-    } else {
-      Message.error(res.msg)
-    }
-  })
-  addProject.value = false;
-};
 
 //修改操作
 const updateProject = ref(false);
@@ -98,11 +142,19 @@ const updateProject = ref(false);
 const updateProjectData = reactive({
   id: "",
   name: "",
+  levelId: "",
   levelName: "",
+  categoryId: "",
   categoryName: "",
   summary: "",
   coverImage: "",
+  file: null
 });
+
+// 文件处理函数
+const getUpdateFile = (file) => {
+  updateProjectData.file = file.target.files[0];
+};
 
 const updateProjectClick = async (record) => {
   // 将当前行数据赋值填充到表单中
@@ -110,25 +162,39 @@ const updateProjectClick = async (record) => {
   updateProjectData.name = record.name;
   updateProjectData.levelName = record.levelName;
   updateProjectData.categoryName = record.categoryName;
+  // 根据名称找到对应的ID
+  updateProjectData.levelId = levelOptions.find(option => option.label === record.levelName)?.value || '';
+  updateProjectData.categoryId = categoryOptions.find(option => option.label === record.categoryName)?.value || '';
   updateProjectData.summary = record.summary;
   updateProjectData.coverImage = record.coverImage;
   updateProject.value = true;
 };
-const updateOk = () => {
-  console.log(updateProjectData)
-  updateProjectAPI(updateProjectData).then(res => {
+
+const updateOk = async () => {
+  const formData = new FormData();
+  if (updateProjectData.file) {
+    formData.append('file', updateProjectData.file);
+  }
+
+  formData.append('projectInfo', JSON.stringify({
+    id: updateProjectData.id,
+    name: updateProjectData.name,
+    levelId: updateProjectData.levelId,
+    categoryId: updateProjectData.categoryId,
+    summary: updateProjectData.summary
+  }));
+
+  try {
+    const res = await updateProjectAPI(formData);
     if (res.code === 200) {
-      Message.success(res.msg)
-      loading.value = true;
-      //更新列表
-      getIchProjectAPI(status).then((res) => {
-        ProjectList.value = res.data;
-        loading.value = false;
-      })
+      Message.success(res.msg);
+      await loadData();
     } else {
-      Message.error(res.msg)
+      Message.error(res.msg);
     }
-  })
+  } catch (error) {
+    Message.error('更新失败：' + error.message);
+  }
   updateProject.value = false;
 };
 
@@ -137,43 +203,21 @@ const del = ref(false);
 const delClick = () => {
   del.value = true;
 };
-const delOk = (record) => {
-  deleteProjectAPI( {id:record.id} ).then((res) => {
+const delOk = async (record) => {
+  try {
+    const res = await deleteProjectAPI(`id=${record.id}`);
     if (res.code === 200) {
-      Message.success(res.msg)
-      loading.value = true;
-      //更新轮播图列表
-      getIchProjectAPI(status).then((res) => {
-        ProjectList.value = res.data;
-        loading.value = false
-      })
+      Message.success(res.msg);
+      await loadData();
     } else {
-      Message.error(res.msg)
+      Message.error(res.msg);
     }
-  })
+  } catch (error) {
+    Message.error('删除失败：' + error.message);
+  }
   del.value = false;
 };
 
-// 添加选项数据
-const levelOptions = [
-  { label: '国家级', value: '1' },
-  { label: '省级', value: '2' },
-  { label: '市级', value: '3' },
-  { label: '县级', value: '4' }
-];
-
-const categoryOptions = [
-  { label: '民间文学', value: '1' },
-  { label: '传统音乐', value: '2' },
-  { label: '传统舞蹈', value: '3' },
-  { label: '传统戏剧', value: '4' },
-  { label: '曲艺', value: '5' },
-  { label: '传统体育、游艺与杂技', value: '6' },
-  { label: '传统美术', value: '7' },
-  { label: '民俗', value: '8' },
-  { label: '传统技艺', value: '9' },
-  { label: '传统医药', value: '10' }
-];
 </script>
 
 <template>
@@ -300,7 +344,7 @@ const categoryOptions = [
   <!--新增-->
   <a-modal v-model:visible="addProject" @ok="addOk">
     <template #title>
-      新增政策信息
+      新增非遗项目信息
     </template>
     <a-form :model="newProject" :style="{ width: '450px' }">
       <a-form-item field="name" label="项目名称">
@@ -308,28 +352,31 @@ const categoryOptions = [
       </a-form-item>
       <a-form-item field="levelName" label="保护级别">
         <a-select
-          v-model="newProject.levelName"
+          v-model="newProject.levelId"
           placeholder="请选择保护级别"
           :filter-option="false"
         >
-          <a-option v-for="option in levelOptions" :key="option.value" :value="option.label">
+          <a-option v-for="option in levelOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </a-option>
         </a-select>
       </a-form-item>
       <a-form-item field="categoryName" label="项目类别">
         <a-select
-          v-model="newProject.categoryName"
+          v-model="newProject.categoryId"
           placeholder="请选择项目类别"
           :filter-option="false"
         >
-          <a-option v-for="option in categoryOptions" :key="option.value" :value="option.label">
+          <a-option v-for="option in categoryOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </a-option>
         </a-select>
       </a-form-item>
-      <a-form-item field="summary" label="封面图片">
-        <a-input v-model="newProject.summary" placeholder="请输入封面图片"/>
+      <a-form-item field="summary" label="项目简介">
+        <a-input v-model="newProject.summary" placeholder="请输入项目简介"/>
+      </a-form-item>
+      <a-form-item field="file" label="封面图片">
+        <input accept="image/*" type="file" @change="getFile($event)"/>
       </a-form-item>
     </a-form>
   </a-modal>
@@ -346,30 +393,42 @@ const categoryOptions = [
       <a-form-item field="name" label="项目名称">
         <a-input v-model="updateProjectData.name" placeholder="请输入项目名称"/>
       </a-form-item>
+      <!--修改模态框中的选择器部分-->
       <a-form-item field="levelName" label="保护级别">
         <a-select
-          v-model="updateProjectData.levelName"
+          v-model="updateProjectData.levelId"
           placeholder="请选择保护级别"
           :filter-option="false"
         >
-          <a-option v-for="option in levelOptions" :key="option.value" :value="option.label">
+          <a-option v-for="option in levelOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </a-option>
         </a-select>
       </a-form-item>
       <a-form-item field="categoryName" label="项目类别">
         <a-select
-          v-model="updateProjectData.categoryName"
+          v-model="updateProjectData.categoryId"
           placeholder="请选择项目类别"
           :filter-option="false"
         >
-          <a-option v-for="option in categoryOptions" :key="option.value" :value="option.label">
+          <a-option v-for="option in categoryOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </a-option>
         </a-select>
       </a-form-item>
-      <a-form-item field="summary" label="封面图片">
-        <a-input v-model="updateProjectData.summary" placeholder="请输入发布机构"/>
+      <a-form-item field="summary" label="项目简介">
+        <a-input v-model="updateProjectData.summary" placeholder="请输入项目简介"/>
+      </a-form-item>
+      <a-form-item field="coverImage" label="封面图片">
+        <a-image
+            :src="updateProjectData.coverImage"
+            :preview="true"
+            :width="200"
+            fit="cover"
+        />
+      </a-form-item>
+      <a-form-item field="file" label="更换图片">
+        <input accept="image/*" type="file" @change="getUpdateFile($event)"/>
       </a-form-item>
     </a-form>
   </a-modal>
