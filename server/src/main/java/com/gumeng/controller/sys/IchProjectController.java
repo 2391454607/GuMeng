@@ -176,8 +176,8 @@ public class IchProjectController {
     }
 
     //删除非遗项目信息
-    @PostMapping("/deleteProject/{id}")
-    public HttpResponse deleteProject(@PathVariable Integer id) {
+    @PostMapping("/deleteProject")
+    public HttpResponse deleteProject(@RequestParam Integer id) {
         try {
             // 获取项目信息
             IchProject project = ichProjectService.getById(id);
