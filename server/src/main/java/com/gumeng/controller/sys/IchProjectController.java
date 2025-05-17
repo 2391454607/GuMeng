@@ -63,7 +63,7 @@ public class IchProjectController {
         return ichLevelService.getIchLevel();
     }
 
-    //新增非遗项目信息和文件
+    //新增非遗项目信息和图片文件
     @PostMapping("/addProject")
     public HttpResponse addIchProject(@RequestParam("file") MultipartFile file,
                                       @RequestParam("projectInfo") String projectInfo) {
@@ -74,6 +74,18 @@ public class IchProjectController {
 
             // 处理文件上传
             if (!file.isEmpty()) {
+                // 验证文件类型是否为图片
+                String contentType = file.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    return HttpResponse.error("只允许上传图片文件");
+                }
+
+                // 验证文件大小（如果需要在代码中再次验证）
+                long fileSize = file.getSize();
+                if (fileSize > 10 * 1024 * 1024) { // 10MB
+                    return HttpResponse.error("文件大小不能超过10MB");
+                }
+                
                 String originalFilename = file.getOriginalFilename();
                 String fileName = System.currentTimeMillis() + "_" + originalFilename;
 
@@ -118,6 +130,18 @@ public class IchProjectController {
             }
 
             if (file != null && !file.isEmpty()) {
+                // 验证文件类型是否为图片
+                String contentType = file.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    return HttpResponse.error("只允许上传图片文件");
+                }
+
+                // 验证文件大小（如果需要在代码中再次验证）
+                long fileSize = file.getSize();
+                if (fileSize > 10 * 1024 * 1024) { // 10MB
+                    return HttpResponse.error("文件大小不能超过10MB");
+                }
+                
                 // 如果原来有图片，先删除
                 if (oldProject.getCoverImage() != null && !oldProject.getCoverImage().isEmpty()) {
                     String oldFileName = oldProject.getCoverImage().substring(oldProject.getCoverImage().lastIndexOf("/") + 1);
