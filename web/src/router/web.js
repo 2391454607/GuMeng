@@ -47,8 +47,7 @@ const webRouters = [
     {
         path: "/interaction",
         name: "Interaction",
-        //component: () => import("@/views/web/pages/interaction/Interaction.vue")
-        component: () => import("@/views/error/Error404.vue")
+        component: () => import("@/views/web/pages/interaction/Interaction.vue")
     },
     {
         path: "/showroom",
