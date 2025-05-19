@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI, checkSensitiveWordsAPI } from '@/api/forum';
 import { useUserStore } from '@/stores/userStore.js';
+import Footer from "@/views/web/layout/Footer.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -212,74 +213,79 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="create-post-container">
-    <div class="page-header">
-      <a-button @click="goBack" class="back-btn">
-        <i class="iconfont icon-arrow-left"></i> 返回
-      </a-button>
-      <div class="header-title">{{ isEdit ? '编辑帖子' : '发布帖子' }}</div>
+  <div>
+    <div class="create-post-container">
+      <div class="page-header">
+        <a-button @click="goBack" class="back-btn">
+          <i class="iconfont icon-arrow-left"></i> 返回
+        </a-button>
+        <div class="header-title">{{ isEdit ? '编辑帖子' : '发布帖子' }}</div>
+      </div>
+      
+      <a-form
+        ref="postFormRef"
+        :model="postForm"
+        :rules="rules"
+        label-position="top"
+        class="post-form"
+      >
+        <a-form-item label="标题" field="title">
+          <a-input 
+            v-model="postForm.title"
+            placeholder="请输入帖子标题（2-50字）"
+            :maxLength="50"
+            show-word-limit
+            class="custom-input"
+          />
+        </a-form-item>
+        
+        <a-form-item label="话题" field="topic">
+          <div class="topic-input-container">
+            <a-select 
+              v-model="postForm.topic"
+              placeholder="请选择话题分类"
+              class="topic-select custom-select"
+              allow-clear
+            >
+              <a-option
+                v-for="topic in topics"
+                :key="topic.id"
+                :label="topic.name"
+                :value="topic.id"
+              />
+            </a-select>
+          </div>
+        </a-form-item>
+        
+        <a-form-item label="内容" field="content">
+          <a-textarea
+            v-model="postForm.content"
+            :rows="10"
+            placeholder="请输入帖子内容（10-2000字）"
+            :maxLength="2000"
+            show-word-limit
+            class="custom-textarea"
+          />
+        </a-form-item>
+        
+        <!-- 敏感词错误提示 -->
+        <a-form-item v-if="sensitiveWordsError">
+          <a-alert type="error" :content="sensitiveWordsError" />
+        </a-form-item>
+        
+        <a-form-item>
+          <div class="action-buttons">
+            <a-button type="primary" @click="submitForm" :loading="submitting" class="submit-btn">
+              {{ isEdit ? '保存修改' : '发布帖子' }}
+            </a-button>
+            <a-button @click="goBack" class="cancel-btn">取消</a-button>
+          </div>
+        </a-form-item>
+      </a-form>
     </div>
     
-    <a-form
-      ref="postFormRef"
-      :model="postForm"
-      :rules="rules"
-      label-position="top"
-      class="post-form"
-    >
-      <a-form-item label="标题" field="title">
-        <a-input 
-          v-model="postForm.title"
-          placeholder="请输入帖子标题（2-50字）"
-          :maxLength="50"
-          show-word-limit
-          class="custom-input"
-        />
-      </a-form-item>
-      
-      <a-form-item label="话题" field="topic">
-        <div class="topic-input-container">
-          <a-select 
-            v-model="postForm.topic"
-            placeholder="请选择话题分类"
-            class="topic-select custom-select"
-            allow-clear
-          >
-            <a-option
-              v-for="topic in topics"
-              :key="topic.id"
-              :label="topic.name"
-              :value="topic.id"
-            />
-          </a-select>
-        </div>
-      </a-form-item>
-      
-      <a-form-item label="内容" field="content">
-        <a-textarea
-          v-model="postForm.content"
-          :rows="10"
-          placeholder="请输入帖子内容（10-2000字）"
-          :maxLength="2000"
-          show-word-limit
-          class="custom-textarea"
-        />
-      </a-form-item>
-      
-      <!-- 敏感词错误提示 -->
-      <a-form-item v-if="sensitiveWordsError">
-        <a-alert type="error" :content="sensitiveWordsError" />
-      </a-form-item>
-      
-      <a-form-item>
-        <div class="action-buttons">
-          <a-button type="primary" @click="submitForm" :loading="submitting" class="submit-btn">
-            {{ isEdit ? '保存修改' : '发布帖子' }}
-          </a-button>
-          <a-button @click="goBack" class="cancel-btn">取消</a-button>
-        </div>
-      </a-form-item>
-    </a-form>
+    <!-- 页脚 -->
+    <Footer class="footer"></Footer>
   </div>
 </template>
 
@@ -290,6 +296,9 @@ onMounted(() => {
   padding: 20px;
   background-color: #fffbf0; /* 修改背景颜色 */
   font-family: "SimSun", "宋体", serif; /* 使用宋体增加复古感 */
+  min-height: calc(100vh - 176px);
+  display: flex;
+  flex-direction: column;
 }
 
 .page-header {
@@ -442,5 +451,10 @@ onMounted(() => {
   .submit-btn, .cancel-btn {
     width: 100%;
   }
+}
+
+.footer{
+  display: flex;
+  bottom: 0;
 }
 </style>
