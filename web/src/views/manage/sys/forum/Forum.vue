@@ -228,9 +228,9 @@ const getGridClass = (imageCount) => {
     </div>
 
     <!-- 帖子详情弹窗 -->
-    <a-modal :visible="postDetailVisible" @ok="postDetailVisible = false" @cancel="postDetailVisible = false" title="帖子详情" :footer="false" :width="700">
+    <a-modal :visible="postDetailVisible" @ok="postDetailVisible = false" @cancel="postDetailVisible = false" title="帖子详情" :footer="false" :width="600">
       <div v-if="postDetail" class="post-detail">
-        <h2>{{ postDetail.title }}</h2>
+        <h2 class="post-title">{{ postDetail.title }}</h2>
         <div class="post-meta">
           <span>作者: {{ postDetail.username }}</span>
           <span>话题: {{ postDetail.topic }}</span>
@@ -280,34 +280,48 @@ const getGridClass = (imageCount) => {
 }
 
 .post-detail {
-  padding: 10px;
+  padding: 5px;
+}
+
+.post-title {
+  font-size: 18px;
+  margin-bottom: 10px;
 }
 
 .post-meta, .post-stats {
   display: flex;
-  gap: 20px;
-  margin: 10px 0;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin: 8px 0;
   color: #666;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .post-content {
-  margin: 20px 0;
-  padding: 15px;
+  margin: 15px 0;
+  padding: 12px;
   background: #f8f8f8;
   border-radius: 4px;
-  min-height: 100px;
+  min-height: 80px;
+  font-size: 14px;
+  max-height: 300px;
+  overflow-y: auto;
 }
 
 .post-images {
-  margin: 20px 0;
+  margin: 15px 0;
+}
+
+.post-images h3 {
+  font-size: 15px;
+  margin-bottom: 10px;
 }
 
 .image-grid {
   display: grid;
-  grid-gap: 10px;
+  grid-gap: 6px;
   width: 100%;
-  max-width: 650px;
+  max-width: 520px;
 }
 
 .image-wrapper {
@@ -351,23 +365,18 @@ const getGridClass = (imageCount) => {
 
 /* 根据图片数量定义网格布局 */
 .grid-1 {
-  grid-template-columns: minmax(0, 250px);
-  max-width: 250px;
+  grid-template-columns: minmax(0, 220px);
+  max-width: 220px;
 }
 
 .grid-2 {
   grid-template-columns: repeat(2, 1fr);
-  max-width: 450px;
+  max-width: 400px;
 }
 
-.grid-3, .grid-4, .grid-5, .grid-6 {
+.grid-3, .grid-4, .grid-5, .grid-6, .grid-7, .grid-8, .grid-9 {
   grid-template-columns: repeat(3, 1fr);
-  max-width: 550px;
-}
-
-.grid-7, .grid-8, .grid-9 {
-  grid-template-columns: repeat(3, 1fr);
-  max-width: 600px;
+  max-width: 500px;
 }
 
 .delete-button {
