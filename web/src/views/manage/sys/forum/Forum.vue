@@ -90,6 +90,14 @@ const viewPostDetail = (id) => {
   getPostDetailAPI(id).then(res => {
     if (res.code === 200) {
       postDetail.value = res.data;
+      
+      // 处理图片字符串为数组
+      if (postDetail.value.images && typeof postDetail.value.images === 'string') {
+        postDetail.value.images = postDetail.value.images.split(',').filter(img => img);
+      } else if (!postDetail.value.images) {
+        postDetail.value.images = [];
+      }
+      
       postDetailVisible.value = true;
     } else {
       Message.error(res.msg || "获取帖子详情失败");
@@ -129,6 +137,12 @@ const formatDateTime = (dateTimeStr) => {
   const seconds = String(date.getSeconds()).padStart(2, '0');
   
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
+// 添加计算图片网格样式的函数
+const getGridClass = (imageCount) => {
+  if (imageCount <= 0) return '';
+  return `grid-${Math.min(imageCount, 9)}`;
 };
 </script>
 
@@ -228,20 +242,22 @@ const formatDateTime = (dateTimeStr) => {
           <span>浏览: {{ postDetail.viewCount }}</span>
         </div>
         <div class="post-content" v-html="postDetail.content"></div>
+        
+        <!-- 图片展示部分 -->
         <div class="post-images" v-if="postDetail.images && postDetail.images.length > 0">
           <h3>附图</h3>
-          <div class="image-list">
-            <a-image
-                v-for="(img, index) in postDetail.images"
-                :key="index"
-                :src="img"
-                :width="150"
-                fit="cover"
-                :preview="{
-                src: img
-              }"
-            />
-          </div>
+          <a-image-preview-group infinite>
+            <div class="image-grid" :class="getGridClass(postDetail.images.length)">
+              <div v-for="(img, index) in postDetail.images" :key="index" class="image-wrapper">
+                <a-image 
+                  :src="img" 
+                  :alt="`图片${index+1}`"
+                  fit="contain"
+                  class="post-image"
+                />
+              </div>
+            </div>
+          </a-image-preview-group>
         </div>
       </div>
     </a-modal>
@@ -283,15 +299,75 @@ const formatDateTime = (dateTimeStr) => {
   min-height: 100px;
 }
 
-.image-list {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 10px;
+.post-images {
+  margin: 20px 0;
 }
 
-.topic-list {
-  margin: 20px;
+.image-grid {
+  display: grid;
+  grid-gap: 10px;
+  width: 100%;
+  max-width: 650px;
+}
+
+.image-wrapper {
+  position: relative;
+  padding-bottom: 70%; /* 进一步降低高度，减少空白 */
+  height: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  border: none; /* 移除边框 */
+  background-color: transparent; /* 移除背景色 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.post-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+:deep(.arco-image) {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.arco-image-img) {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* 根据图片数量定义网格布局 */
+.grid-1 {
+  grid-template-columns: minmax(0, 250px);
+  max-width: 250px;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 450px;
+}
+
+.grid-3, .grid-4, .grid-5, .grid-6 {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 550px;
+}
+
+.grid-7, .grid-8, .grid-9 {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 600px;
 }
 
 .delete-button {
