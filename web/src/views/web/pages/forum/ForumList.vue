@@ -220,146 +220,148 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="forum-container">
-    <!-- 顶部区域 -->
-    <div class="forum-header">
-      <div class="forum-title">
-        <span class="main-title">非遗论坛</span>
-        <span class="sub-title">传承非遗文化，共建交流社区</span>
-      </div>
-      <div class="forum-search-post">
-        <div class="search-box">
-          <a-input
-            v-model="searchText"
-            placeholder="搜索帖子..."
-            allow-clear
-            @press-enter="handleSearch"
-            class="custom-input"
-          >
-            <template #prefix>
-              <icon-search />
-            </template>
-          </a-input>
-          <a-button type="primary" @click="handleSearch" class="search-btn">
-            搜索
+  <div>
+    <div class="forum-container">
+      <!-- 顶部区域 -->
+      <div class="forum-header">
+        <div class="forum-title">
+          <span class="main-title">非遗论坛</span>
+          <span class="sub-title">传承非遗文化，共建交流社区</span>
+        </div>
+        <div class="forum-search-post">
+          <div class="search-box">
+            <a-input
+              v-model="searchText"
+              placeholder="搜索帖子..."
+              allow-clear
+              @press-enter="handleSearch"
+              class="custom-input"
+            >
+              <template #prefix>
+                <icon-search />
+              </template>
+            </a-input>
+            <a-button type="primary" @click="handleSearch" class="search-btn">
+              搜索
+            </a-button>
+          </div>
+          <a-button type="primary" @click="createPost" class="post-btn">
+            <icon-plus />
+            发布帖子
           </a-button>
         </div>
-        <a-button type="primary" @click="createPost" class="post-btn">
-          <icon-plus />
-          发布帖子
-        </a-button>
       </div>
-    </div>
 
-    <!-- 顶部话题导航栏 -->
-    <div class="top-topics-bar">
-      <div class="topics-list">
-        <div 
-          class="topic-item" 
-          :class="{ active: activeTab === 'all' }"
-          @click="switchTopic('all')"
-        >
-          全部话题
-        </div>
-        <div 
-          v-for="topic in topics" 
-          :key="topic.id"
-          class="topic-item"
-          :class="{ active: activeTab === topic.id }"
-          @click="switchTopic(topic.id)"
-        >
-          {{ topic.name }}
+      <!-- 顶部话题导航栏 -->
+      <div class="top-topics-bar">
+        <div class="topics-list">
+          <div 
+            class="topic-item" 
+            :class="{ active: activeTab === 'all' }"
+            @click="switchTopic('all')"
+          >
+            全部话题
+          </div>
+          <div 
+            v-for="topic in topics" 
+            :key="topic.id"
+            class="topic-item"
+            :class="{ active: activeTab === topic.id }"
+            @click="switchTopic(topic.id)"
+          >
+            {{ topic.name }}
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 主体区域 -->
-    <div class="forum-body">
-      <!-- 帖子列表 -->
-      <div class="forum-content">
-        <!-- 加载状态 -->
-        <div v-if="loading" class="loading-container">
-          <a-skeleton :rows="10" animation />
-        </div>
-        
-        <!-- 空状态 -->
-        <div v-else-if="posts.length === 0" class="empty-container">
-          <a-empty description="暂无帖子">
-            <template #extra>
-              <a-button type="primary" @click="createPost">立即发布</a-button>
-            </template>
-          </a-empty>
-        </div>
-        
+      <!-- 主体区域 -->
+      <div class="forum-body">
         <!-- 帖子列表 -->
-        <div v-else class="post-list">
-          <div v-for="post in posts" :key="post.id" class="post-item" @click="goToDetail(post.id)">
-            <!-- 帖子内容 -->
-            <div class="post-info">
-              <div class="post-author">
-                <img :src="post.authorAvatar || '/avatar/default-avatar.png'" alt="头像" class="author-avatar" />
-                <span class="author-name">{{ post.authorName }}</span>
-                <span class="post-time">{{ formatDate(post.createTime) }}</span>
-              </div>
-              <h3 class="post-title">{{ post.title }}</h3>
-              <p class="post-content">{{ post.content }}</p>
-              
-              <!-- 帖子图片 -->
-              <div v-if="post.images && post.images.length > 0" class="post-images">
-                <div 
-                  v-for="(image, index) in post.images.slice(0, 3)" 
-                  :key="index" 
-                  class="post-image-wrapper"
-                >
-                  <img :src="image" :alt="`图片${index+1}`" class="post-image" />
+        <div class="forum-content">
+          <!-- 加载状态 -->
+          <div v-if="loading" class="loading-container">
+            <a-skeleton :rows="10" animation />
+          </div>
+          
+          <!-- 空状态 -->
+          <div v-else-if="posts.length === 0" class="empty-container">
+            <a-empty description="暂无帖子">
+              <template #extra>
+                <a-button type="primary" @click="createPost">立即发布</a-button>
+              </template>
+            </a-empty>
+          </div>
+          
+          <!-- 帖子列表 -->
+          <div v-else class="post-list">
+            <div v-for="post in posts" :key="post.id" class="post-item" @click="goToDetail(post.id)">
+              <!-- 帖子内容 -->
+              <div class="post-info">
+                <div class="post-author">
+                  <img :src="post.authorAvatar || '/avatar/default-avatar.png'" alt="头像" class="author-avatar" />
+                  <span class="author-name">{{ post.authorName }}</span>
+                  <span class="post-time">{{ formatDate(post.createTime) }}</span>
                 </div>
-                <div v-if="post.images.length > 3" class="post-image-more">
-                  +{{ post.images.length - 3 }}
+                <h3 class="post-title">{{ post.title }}</h3>
+                <p class="post-content">{{ post.content }}</p>
+                
+                <!-- 帖子图片 -->
+                <div v-if="post.images && post.images.length > 0" class="post-images">
+                  <div 
+                    v-for="(image, index) in post.images.slice(0, 3)" 
+                    :key="index" 
+                    class="post-image-wrapper"
+                  >
+                    <img :src="image" :alt="`图片${index+1}`" class="post-image" />
+                  </div>
+                  <div v-if="post.images.length > 3" class="post-image-more">
+                    +{{ post.images.length - 3 }}
+                  </div>
                 </div>
-              </div>
-              
-              <!-- 帖子底部信息 -->
-              <div class="post-footer">
-                <div class="post-stats">
-                  <span class="stat-item topic-badge">
-                    <span class="topic-tag">{{ post.topic }}</span>
-                  </span>
-                  <span class="stat-item">
-                    <icon-eye />
-                    {{ post.viewCount || 0 }}
-                  </span>
-                  <span class="stat-item" @click.stop="handleLikePost(post)" :class="{ 'liked': post.isLiked }">
-                    <icon-heart-fill v-if="post.isLiked" />
-                    <icon-heart v-else />
-                    {{ post.thumbsUpNum || 0 }}
-                  </span>
-                  <span class="stat-item">
-                    <icon-message />
-                    {{ post.commonNum || 0 }}
-                  </span>
+                
+                <!-- 帖子底部信息 -->
+                <div class="post-footer">
+                  <div class="post-stats">
+                    <span class="stat-item topic-badge">
+                      <span class="topic-tag">{{ post.topic }}</span>
+                    </span>
+                    <span class="stat-item">
+                      <icon-eye />
+                      {{ post.viewCount || 0 }}
+                    </span>
+                    <span class="stat-item" @click.stop="handleLikePost(post)" :class="{ 'liked': post.isLiked }">
+                      <icon-heart-fill v-if="post.isLiked" />
+                      <icon-heart v-else />
+                      {{ post.thumbsUpNum || 0 }}
+                    </span>
+                    <span class="stat-item">
+                      <icon-message />
+                      {{ post.commonNum || 0 }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <!-- 分页 -->
-          <div class="pagination-container" v-if="total > 0">
-            <a-pagination
-              :current="pageNum"
-              :total="total"
-              :page-size="pageSize"
-              show-total
-              show-jumper
-              @change="handlePageChange"
-            />
+            
+            <!-- 分页 -->
+            <div class="pagination-container" v-if="total > 0">
+              <a-pagination
+                :current="pageNum"
+                :total="total"
+                :page-size="pageSize"
+                show-total
+                show-jumper
+                @change="handlePageChange"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 调试按钮 -->
-    <div class="debug-button" v-if="showDebugInfo" @click="toggleDebugInfo">
-      {{ showDebugInfo ? '隐藏调试信息' : '显示调试信息' }}
+      <!-- 调试按钮 -->
+      <div class="debug-button" v-if="showDebugInfo" @click="toggleDebugInfo">
+        {{ showDebugInfo ? '隐藏调试信息' : '显示调试信息' }}
+      </div>
     </div>
     
     <!-- 页脚 -->
@@ -375,7 +377,7 @@ onMounted(() => {
   padding: 20px;
   font-family: "SimSun", "宋体", serif;
   background-color: #fffbf0;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 176px);
 }
 
 /* 顶部区域 */

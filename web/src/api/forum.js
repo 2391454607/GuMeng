@@ -120,10 +120,32 @@ export function getTopicsAPI() {
 
 // 上传图片
 export function uploadImageAPI(file, type = 'post') {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('type', type);
-  return http.post('/file/upload/image', formData);
+  // 如果传入的是文件对象，需要创建FormData
+  if (file instanceof File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (type) {
+      formData.append('type', type);
+    }
+    return http.post('/forum/file/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  }
+  
+  // 如果传入的已经是FormData，直接发送
+  if (file instanceof FormData) {
+    return http.post('/forum/file/upload', file, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  }
+  
+  // 其他情况
+  console.error('uploadImageAPI 参数错误:', file);
+  return Promise.reject(new Error('上传参数错误'));
 }
 
 /**

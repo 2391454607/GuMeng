@@ -24,6 +24,7 @@ import {
 } from '@/api/forum';
 import { useUserStore } from '@/stores/userStore.js';
 import { formatDate } from '@/utils/format';
+import Footer from "@/views/web/layout/Footer.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -528,284 +529,294 @@ const handleLikeComment = async (comment) => {
   }
 };
 
+// 获取图片展示样式
+const getGridClass = (imageCount) => {
+  return `grid-${Math.min(imageCount, 9)}`;
+};
+
 onMounted(() => {
   fetchPostDetail();
 });
 </script>
 
 <template>
-  <div class="post-detail-container">
-    <!-- 返回按钮 -->
-    <div class="back-nav">
-      <a-button @click="goBack" class="back-btn">
-        <icon-left />返回论坛
-      </a-button>
-    </div>
+  <div>
+    <div class="post-detail-container">
+      <!-- 返回按钮 -->
+      <div class="back-nav">
+        <a-button @click="goBack" class="back-btn">
+          <icon-left />返回论坛
+        </a-button>
+      </div>
 
-    <!-- 加载状态 -->
-    <div v-if="loading" class="loading-container">
-      <a-skeleton :animation="true" :rows="15" />
-    </div>
+      <!-- 加载状态 -->
+      <div v-if="loading" class="loading-container">
+        <a-skeleton :animation="true" :rows="15" />
+      </div>
 
-    <!-- 错误状态 -->
-    <div v-else-if="error" class="error-container">
-      <a-result status="error" title="获取帖子详情失败" subtitle="请稍后重试">
-        <template #extra>
-          <a-button type="primary" @click="fetchPostDetail">重试</a-button>
-        </template>
-      </a-result>
-    </div>
-
-    <!-- 帖子内容 -->
-    <template v-else>
-      <a-card class="post-card">
-        <div class="post-header">
-          <div class="post-topic" v-if="post.topic">
-            <span class="topic-tag">{{ post.topic }}</span>
-          </div>
-          <h1 class="post-title">{{ post.title }}</h1>
-          <div class="post-meta">
-            <div class="author-info">
-              <img :src="post.avatar || '/avatar/default-avatar.png'" alt="作者头像" class="author-avatar">
-              <div class="author-detail">
-                <div class="author-name">{{ post.username }}</div>
-                <div class="post-time">{{ formatDate(post.createTime) }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="post-body">
-          <div class="content-text">{{ post.content }}</div>
-          
-          <!-- 图片展示 -->
-          <div v-if="post.images && post.images.length > 0" class="post-images">
-            <a-image-preview-group infinite>
-              <div class="image-grid" :class="'grid-' + Math.min(post.images.length, 4)">
-                <a-image 
-                  v-for="(img, index) in post.images" 
-                  :key="index" 
-                  :src="img" 
-                  :alt="`图片${index+1}`"
-                  fit="cover"
-                  class="post-image"
-                />
-              </div>
-            </a-image-preview-group>
-          </div>
-        </div>
-        
-        <div class="post-footer">
-          <div class="post-stats">
-            <span class="views">
-              <icon-eye />
-              <span>{{ post.viewCount || 0 }} 阅读</span>
-            </span>
-          </div>
-          <div class="interaction-actions">
-            <a-button type="outline" @click="showDeleteConfirm = true" class="action-btn" v-if="canDelete">
-              <icon-delete />
-              删除
-            </a-button>
-            <a-button 
-              :type="post.isLiked ? 'primary' : 'outline'" 
-              @click="handleLike" 
-              class="action-btn" 
-              :class="{ 'liked': post.isLiked }"
-            >
-              <icon-heart-fill v-if="post.isLiked" />
-              <icon-heart v-else />
-              {{ post.thumbsUpNum || 0 }} 点赞
-            </a-button>
-          </div>
-        </div>
-      </a-card>
-
-      <!-- 评论区 -->
-      <div id="comment-section" class="comment-section">
-        <a-card>
-          <template #title>
-            <div class="section-header">
-              <h2 class="section-title">评论区 ({{ totalCommentCount }})</h2>
-            </div>
+      <!-- 错误状态 -->
+      <div v-else-if="error" class="error-container">
+        <a-result status="error" title="获取帖子详情失败" subtitle="请稍后重试">
+          <template #extra>
+            <a-button type="primary" @click="fetchPostDetail">重试</a-button>
           </template>
-          
-          <!-- 评论输入框 -->
-          <div class="comment-container">
-            <a-textarea
-              v-model="commentContent"
-              placeholder="留下你的精彩评论吧"
-              :disabled="!isLogin"
-              :auto-size="{ minRows: 3, maxRows: 5 }"
-              class="comment-textarea"
-            />
-            <!-- 敏感词错误提示 -->
-            <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 10px 0;" />
-            <a-button 
-              type="primary" 
-              @click="submitComment" 
-              :loading="checkingSensitiveWords"
-              :disabled="!commentContent.trim() || !userStore.isLogin || checkingSensitiveWords" 
-              class="comment-submit-btn"
-            >
-              {{ userStore.isLogin ? (checkingSensitiveWords ? '检测中...' : '发表评论') : '请先登录' }}
-            </a-button>
-          </div>
-          
-          <!-- 评论列表 -->
-          <div v-if="comments.length === 0" class="empty-comments">
-            <a-empty description="暂无评论，快来发表第一条评论吧！" />
-          </div>
-          <div v-else class="comments-list">
-            <div v-for="comment in comments" :key="comment.id" class="comment-item">
-              <div class="comment-content">
-                <div class="comment-author">
-                  <img :src="comment.userPic || '@/assets/avatar/default-avatar.png'" alt="头像" class="comment-avatar" />
-                  <div class="author-info">
-                    <div class="user-name">{{ comment.username }}</div>
-                    <div class="comment-time">{{ formatDate(comment.createTime) }}</div>
-                  </div>
-                </div>
-                <div class="comment-text">
-                  <template v-if="comment.forUsername">
-                    <span class="reply-to">回复 <span class="reply-name">@{{ comment.forUsername }}</span>：</span>
-                  </template>
-                  <span>{{ comment.content }}</span>
-                </div>
-                <div class="comment-actions">
-                  <a-button type="text" size="small" @click="replyToComment(comment)" class="action-link">
-                    <icon-message />回复
-                  </a-button>
-                  <a-button type="text" size="small" @click="handleLikeComment(comment)" class="action-link" :class="{ 'active': comment.isLiked }">
-                    <icon-heart-fill v-if="comment.isLiked" />
-                    <icon-heart v-else />
-                    {{ comment.thumbsUp || 0 }}
-                  </a-button>
-                  <a-button v-if="canDeleteComment(comment)" type="text" size="small" @click="showDeleteCommentConfirm(comment)" class="action-link delete">
-                    <icon-delete />删除
-                  </a-button>
-                </div>
-                
-                <!-- 回复输入框 -->
-                <div v-if="replyingTo && replyingTo.id === comment.id" :class="['reply-form', `reply-form-${comment.id}`]">
-                  <a-textarea
-                    v-model="replyContent"
-                    placeholder="输入您想回复的内容"
-                    :auto-size="{ minRows: 2, maxRows: 4 }"
-                    class="reply-textarea"
-                  />
-                  <!-- 敏感词错误提示 -->
-                  <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 5px 0;" />
-                  <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
-                    取消
-                  </a-button>
-                  <a-button 
-                    type="primary" 
-                    size="small" 
-                    @click="submitReply" 
-                    :loading="checkingSensitiveWords"
-                    :disabled="!replyContent.trim() || checkingSensitiveWords" 
-                    class="reply-submit-btn"
-                  >
-                    {{ checkingSensitiveWords ? '检测中...' : '回复' }}
-                  </a-button>
-                </div>
-                
-                <!-- 子评论 -->
-                <div v-if="comment.children && comment.children.length > 0" class="child-comments">
-                  <div v-for="child in comment.children" :key="child.id" class="child-comment-item">
-                    <div class="comment-author">
-                      <img :src="child.userPic || '@/assets/avatar/default-avatar.png'" alt="头像" class="reply-avatar" />
-                      <div class="author-info">
-                        <div class="user-name">{{ child.username }}</div>
-                        <div class="comment-time">{{ formatDate(child.createTime) }}</div>
-                      </div>
-                    </div>
-                    <div class="comment-text">
-                      <template v-if="child.forUsername">
-                        <span class="reply-to">回复 <span class="reply-name">@{{ child.forUsername }}</span>：</span>
-                      </template>
-                      <span>{{ child.content }}</span>
-                    </div>
-                    <div class="comment-actions">
-                      <a-button type="text" size="small" @click="replyToComment(child, comment)" class="action-link">
-                        <icon-message />回复
-                      </a-button>
-                      <a-button type="text" size="small" @click="handleLikeComment(child)" class="action-link" :class="{ 'active': child.isLiked }">
-                        <icon-heart-fill v-if="child.isLiked" />
-                        <icon-heart v-else />
-                        {{ child.thumbsUp || 0 }}
-                      </a-button>
-                      <a-button v-if="canDeleteComment(child)" type="text" size="small" @click="showDeleteCommentConfirm(child)" class="action-link delete">
-                        <icon-delete />删除
-                      </a-button>
-                    </div>
-                    
-                    <!-- 回复输入框 -->
-                    <div v-if="replyingTo && replyingTo.id === child.id" :class="['reply-form', `reply-form-${child.id}`]">
-                      <a-textarea
-                        v-model="replyContent"
-                        placeholder="输入您想回复的内容"
-                        :auto-size="{ minRows: 2, maxRows: 4 }"
-                        class="reply-textarea"
-                      />
-                      <!-- 敏感词错误提示 -->
-                      <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 5px 0;" />
-                      <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
-                        取消
-                      </a-button>
-                      <a-button 
-                        type="primary" 
-                        size="small" 
-                        @click="submitReply" 
-                        :loading="checkingSensitiveWords"
-                        :disabled="!replyContent.trim() || checkingSensitiveWords" 
-                        class="reply-submit-btn"
-                      >
-                        {{ checkingSensitiveWords ? '检测中...' : '回复' }}
-                      </a-button>
-                    </div>
-                  </div>
+        </a-result>
+      </div>
+
+      <!-- 帖子内容 -->
+      <template v-else>
+        <a-card class="post-card">
+          <div class="post-header">
+            <div class="post-topic" v-if="post.topic">
+              <span class="topic-tag">{{ post.topic }}</span>
+            </div>
+            <h1 class="post-title">{{ post.title }}</h1>
+            <div class="post-meta">
+              <div class="author-info">
+                <img :src="post.avatar || '/avatar/default-avatar.png'" alt="作者头像" class="author-avatar">
+                <div class="author-detail">
+                  <div class="author-name">{{ post.username }}</div>
+                  <div class="post-time">{{ formatDate(post.createTime) }}</div>
                 </div>
               </div>
             </div>
           </div>
+
+          <div class="post-body">
+            <div class="content-text">{{ post.content }}</div>
+            
+            <!-- 图片展示 -->
+            <div v-if="post.images && post.images.length > 0" class="post-images">
+              <a-image-preview-group infinite>
+                <div class="image-grid" :class="getGridClass(post.images.length)">
+                  <div v-for="(img, index) in post.images" :key="index" class="image-wrapper">
+                    <a-image 
+                      :src="img" 
+                      :alt="`图片${index+1}`"
+                      fit="contain"
+                      class="post-image"
+                    />
+                  </div>
+                </div>
+              </a-image-preview-group>
+            </div>
+          </div>
           
-          <!-- 加载更多 -->
-          <div v-if="hasMore" class="load-more">
-            <a-button @click="loadMoreComments">
-              加载更多评论
-            </a-button>
+          <div class="post-footer">
+            <div class="post-stats">
+              <span class="views">
+                <icon-eye />
+                <span>{{ post.viewCount || 0 }} 阅读</span>
+              </span>
+            </div>
+            <div class="interaction-actions">
+              <a-button type="outline" @click="showDeleteConfirm = true" class="action-btn" v-if="canDelete">
+                <icon-delete />
+                删除
+              </a-button>
+              <a-button 
+                :type="post.isLiked ? 'primary' : 'outline'" 
+                @click="handleLike" 
+                class="action-btn" 
+                :class="{ 'liked': post.isLiked }"
+              >
+                <icon-heart-fill v-if="post.isLiked" />
+                <icon-heart v-else />
+                {{ post.thumbsUpNum || 0 }} 点赞
+              </a-button>
+            </div>
           </div>
         </a-card>
-      </div>
-    </template>
+
+        <!-- 评论区 -->
+        <div id="comment-section" class="comment-section">
+          <a-card>
+            <template #title>
+              <div class="section-header">
+                <h2 class="section-title">评论区 ({{ totalCommentCount }})</h2>
+              </div>
+            </template>
+            
+            <!-- 评论输入框 -->
+            <div class="comment-container">
+              <a-textarea
+                v-model="commentContent"
+                placeholder="留下你的精彩评论吧"
+                :disabled="!isLogin"
+                :auto-size="{ minRows: 3, maxRows: 5 }"
+                class="comment-textarea"
+              />
+              <!-- 敏感词错误提示 -->
+              <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 10px 0;" />
+              <a-button 
+                type="primary" 
+                @click="submitComment" 
+                :loading="checkingSensitiveWords"
+                :disabled="!commentContent.trim() || !userStore.isLogin || checkingSensitiveWords" 
+                class="comment-submit-btn"
+              >
+                {{ userStore.isLogin ? (checkingSensitiveWords ? '检测中...' : '发表评论') : '请先登录' }}
+              </a-button>
+            </div>
+            
+            <!-- 评论列表 -->
+            <div v-if="comments.length === 0" class="empty-comments">
+              <a-empty description="暂无评论，快来发表第一条评论吧！" />
+            </div>
+            <div v-else class="comments-list">
+              <div v-for="comment in comments" :key="comment.id" class="comment-item">
+                <div class="comment-content">
+                  <div class="comment-author">
+                    <img :src="comment.userPic || '@/assets/avatar/default-avatar.png'" alt="头像" class="comment-avatar" />
+                    <div class="author-info">
+                      <div class="user-name">{{ comment.username }}</div>
+                      <div class="comment-time">{{ formatDate(comment.createTime) }}</div>
+                    </div>
+                  </div>
+                  <div class="comment-text">
+                    <template v-if="comment.forUsername">
+                      <span class="reply-to">回复 <span class="reply-name">@{{ comment.forUsername }}</span>：</span>
+                    </template>
+                    <span>{{ comment.content }}</span>
+                  </div>
+                  <div class="comment-actions">
+                    <a-button type="text" size="small" @click="replyToComment(comment)" class="action-link">
+                      <icon-message />回复
+                    </a-button>
+                    <a-button type="text" size="small" @click="handleLikeComment(comment)" class="action-link" :class="{ 'active': comment.isLiked }">
+                      <icon-heart-fill v-if="comment.isLiked" />
+                      <icon-heart v-else />
+                      {{ comment.thumbsUp || 0 }}
+                    </a-button>
+                    <a-button v-if="canDeleteComment(comment)" type="text" size="small" @click="showDeleteCommentConfirm(comment)" class="action-link delete">
+                      <icon-delete />删除
+                    </a-button>
+                  </div>
+                  
+                  <!-- 回复输入框 -->
+                  <div v-if="replyingTo && replyingTo.id === comment.id" :class="['reply-form', `reply-form-${comment.id}`]">
+                    <a-textarea
+                      v-model="replyContent"
+                      placeholder="输入您想回复的内容"
+                      :auto-size="{ minRows: 2, maxRows: 4 }"
+                      class="reply-textarea"
+                    />
+                    <!-- 敏感词错误提示 -->
+                    <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 5px 0;" />
+                    <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
+                      取消
+                    </a-button>
+                    <a-button 
+                      type="primary" 
+                      size="small" 
+                      @click="submitReply" 
+                      :loading="checkingSensitiveWords"
+                      :disabled="!replyContent.trim() || checkingSensitiveWords" 
+                      class="reply-submit-btn"
+                    >
+                      {{ checkingSensitiveWords ? '检测中...' : '回复' }}
+                    </a-button>
+                  </div>
+                  
+                  <!-- 子评论 -->
+                  <div v-if="comment.children && comment.children.length > 0" class="child-comments">
+                    <div v-for="child in comment.children" :key="child.id" class="child-comment-item">
+                      <div class="comment-author">
+                        <img :src="child.userPic || '@/assets/avatar/default-avatar.png'" alt="头像" class="reply-avatar" />
+                        <div class="author-info">
+                          <div class="user-name">{{ child.username }}</div>
+                          <div class="comment-time">{{ formatDate(child.createTime) }}</div>
+                        </div>
+                      </div>
+                      <div class="comment-text">
+                        <template v-if="child.forUsername">
+                          <span class="reply-to">回复 <span class="reply-name">@{{ child.forUsername }}</span>：</span>
+                        </template>
+                        <span>{{ child.content }}</span>
+                      </div>
+                      <div class="comment-actions">
+                        <a-button type="text" size="small" @click="replyToComment(child, comment)" class="action-link">
+                          <icon-message />回复
+                        </a-button>
+                        <a-button type="text" size="small" @click="handleLikeComment(child)" class="action-link" :class="{ 'active': child.isLiked }">
+                          <icon-heart-fill v-if="child.isLiked" />
+                          <icon-heart v-else />
+                          {{ child.thumbsUp || 0 }}
+                        </a-button>
+                        <a-button v-if="canDeleteComment(child)" type="text" size="small" @click="showDeleteCommentConfirm(child)" class="action-link delete">
+                          <icon-delete />删除
+                        </a-button>
+                      </div>
+                      
+                      <!-- 回复输入框 -->
+                      <div v-if="replyingTo && replyingTo.id === child.id" :class="['reply-form', `reply-form-${child.id}`]">
+                        <a-textarea
+                          v-model="replyContent"
+                          placeholder="输入您想回复的内容"
+                          :auto-size="{ minRows: 2, maxRows: 4 }"
+                          class="reply-textarea"
+                        />
+                        <!-- 敏感词错误提示 -->
+                        <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 5px 0;" />
+                        <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
+                          取消
+                        </a-button>
+                        <a-button 
+                          type="primary" 
+                          size="small" 
+                          @click="submitReply" 
+                          :loading="checkingSensitiveWords"
+                          :disabled="!replyContent.trim() || checkingSensitiveWords" 
+                          class="reply-submit-btn"
+                        >
+                          {{ checkingSensitiveWords ? '检测中...' : '回复' }}
+                        </a-button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 加载更多 -->
+            <div v-if="hasMore" class="load-more">
+              <a-button @click="loadMoreComments">
+                加载更多评论
+              </a-button>
+            </div>
+          </a-card>
+        </div>
+      </template>
+      
+      <!-- 删除评论确认框 -->
+      <a-modal
+        :visible="deleteCommentModalVisible"
+        @before-ok="confirmDeleteComment"
+        @before-cancel="() => { deleteCommentModalVisible = false }"
+        @close="deleteCommentModalVisible = false"
+        title="确认删除"
+        simple
+        :width="350"
+      >
+        <p style="margin: 0; padding: 5px 0;">确定要删除这条评论吗？此操作无法撤销。</p>
+      </a-modal>
+      
+      <!-- 删除帖子确认框 -->
+      <a-modal
+        :visible="showDeleteConfirm"
+        @before-ok="deletePost"
+        @before-cancel="() => { showDeleteConfirm = false }"
+        @close="showDeleteConfirm = false"
+        title="确认删除"
+        simple
+        :width="350"
+      >
+        <p style="margin: 0; padding: 5px 0;">确定要删除这篇帖子吗？此操作无法撤销。</p>
+      </a-modal>
+    </div>
     
-    <!-- 删除评论确认框 -->
-    <a-modal
-      :visible="deleteCommentModalVisible"
-      @before-ok="confirmDeleteComment"
-      @before-cancel="() => { deleteCommentModalVisible = false }"
-      @close="deleteCommentModalVisible = false"
-      title="确认删除"
-      simple
-      :width="350"
-    >
-      <p style="margin: 0; padding: 5px 0;">确定要删除这条评论吗？此操作无法撤销。</p>
-    </a-modal>
-    
-    <!-- 删除帖子确认框 -->
-    <a-modal
-      :visible="showDeleteConfirm"
-      @before-ok="deletePost"
-      @before-cancel="() => { showDeleteConfirm = false }"
-      @close="showDeleteConfirm = false"
-      title="确认删除"
-      simple
-      :width="350"
-    >
-      <p style="margin: 0; padding: 5px 0;">确定要删除这篇帖子吗？此操作无法撤销。</p>
-    </a-modal>
+    <!-- 页脚 -->
+    <Footer class="footer"></Footer>
   </div>
 </template>
 
@@ -816,6 +827,7 @@ onMounted(() => {
   padding: 20px;
   background-color: #fffbf0;
   font-family: "SimSun", "宋体", serif;
+  min-height: calc(100vh - 176px);
 }
 
 .back-nav {
@@ -964,43 +976,78 @@ onMounted(() => {
 
 .post-images {
   margin-bottom: 24px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .image-grid {
   display: grid;
-  grid-gap: 16px;
+  grid-gap: 8px;
+  width: 100%;
+  max-width: 700px;
+  margin: 0;
 }
 
-.grid-1 {
-  grid-template-columns: 1fr;
-}
-
-.grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.grid-4 {
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+.image-wrapper {
+  position: relative;
+  padding-bottom: 75%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid #E4D9C3;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .post-image {
-  border-radius: 8px;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  min-height: 200px;
-  object-fit: cover;
-  cursor: pointer;
-  border: 1px solid #E4D9C3;
+  object-fit: contain;
   transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+:deep(.arco-image) {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.arco-image-img) {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .post-image:hover {
   transform: scale(1.02);
+}
+
+/* 根据图片数量定义网格布局 */
+.grid-1 {
+  grid-template-columns: minmax(0, 300px);
+  max-width: 300px;
+}
+
+.grid-2, .grid-4 {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 500px;
+}
+
+.grid-3, .grid-5, .grid-6, .grid-7, .grid-8, .grid-9 {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 600px;
 }
 
 .post-footer {
@@ -1351,5 +1398,10 @@ onMounted(() => {
   .post-image {
     min-height: 150px;
   }
+}
+
+.footer{
+  display: flex;
+  bottom: 0;
 }
 </style>
