@@ -6,9 +6,26 @@ import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI, checkSens
 import { useUserStore } from '@/stores/userStore.js';
 import Footer from "@/views/web/layout/Footer.vue";
 
+// 导入自定义Markdown编辑器和查看器
+import { Editor, Viewer } from '@/views/web/pages/forum/bytemd';
+// 导入ByteMD插件
+import gfm from '@bytemd/plugin-gfm'
+import highlight from '@bytemd/plugin-highlight'
+import gemoji from '@bytemd/plugin-gemoji'
+import zhHans from 'bytemd/locales/zh_Hans.json'
+// 导入ByteMD样式
+import 'bytemd/dist/index.css'
+
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
+
+// ByteMD插件
+const plugins = [
+  gfm(),
+  highlight(),
+  gemoji(),
+]
 
 // 判断是新建还是编辑
 const isEdit = computed(() => route.name === 'EditPost');
@@ -33,6 +50,29 @@ const uploadProgress = ref(0); // 上传进度
 const checkingSensitiveWords = ref(false);
 const sensitiveWordsError = ref('');
 
+// ByteMD编辑器上传图片处理函数
+const handleUploadBytemdImages = async (files) => {
+  try {
+    const urls = [];
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await uploadImageAPI(formData);
+      if (res.code === 200 && res.data) {
+        urls.push(res.data);
+      } else {
+        Message.warning(`图片 ${file.name} 上传失败`);
+      }
+    }
+    return urls;
+  } catch (err) {
+    console.error('上传编辑器图片出错:', err);
+    Message.error('上传图片失败，请稍后重试');
+    return [];
+  }
+}
+
 // 表单校验规则
 const rules = {
   title: [
@@ -44,7 +84,7 @@ const rules = {
   ],
   content: [
     { required: true, message: '请输入内容' },
-    { minLength: 10, maxLength: 2000, message: '内容长度在10到2000个字符之间' }
+    { minLength: 10, maxLength: 10000, message: '内容长度在10到10000个字符之间' }
   ]
 };
 
@@ -90,6 +130,8 @@ const fetchPostDetail = async () => {
       }
       
       postForm.content = post.content;
+      // 同时更新editorValue      
+      editorValue.value = post.content;
       
       // 处理已有的图片
       if (post.images && post.images.length > 0) {
@@ -255,9 +297,9 @@ const submitForm = async () => {
     }
     
     // 手动验证内容
-    if (!postForm.content || postForm.content.length < 10 || postForm.content.length > 2000) {
+    if (!postForm.content || postForm.content.length < 10 || postForm.content.length > 10000) {
       isValid = false;
-      Message.error('内容长度在10到2000个字符之间');
+      Message.error('内容长度在10到10000个字符之间');
     }
     
     if (!isValid) {
@@ -351,9 +393,45 @@ const goBack = () => {
   router.push('/forum/list');
 };
 
+// 创建预览区域
+const editorValue = ref('');  // 用于存储编辑器内容
+// 计算编辑器内容的字数
+const contentWordCount = computed(() => {
+  return editorValue.value ? editorValue.value.length : 0;
+});
+
+// 监听编辑器内容变化
+watch(editorValue, (newVal) => {
+  postForm.content = newVal;
+  console.log('编辑器内容已更新，字数:', contentWordCount.value);
+}, { immediate: true, deep: true });
+
+// 处理编辑器内容变化的事件处理函数
+const handleEditorChange = (value) => {
+  editorValue.value = value;
+  postForm.content = value;
+  console.log('编辑器内容变更，当前字数:', value.length);
+  
+  // 手动更新状态栏字数统计
+  updateWordCount();
+};
+
+// 更新编辑器状态栏的字数统计
+const updateWordCount = () => {
+  setTimeout(() => {
+    const statusElement = document.querySelector('.bytemd-status-left');
+    if (statusElement) {
+      statusElement.innerHTML = `字数: ${contentWordCount.value}`;
+    }
+  }, 10);
+};
+
 onMounted(() => {
   fetchTopics();
   fetchPostDetail();
+  
+  // 初始化时设置状态栏
+  updateWordCount();
 });
 </script>
 
@@ -403,18 +481,25 @@ onMounted(() => {
         </a-form-item>
         
         <a-form-item label="内容" field="content">
-          <a-textarea
-            v-model="postForm.content"
-            :rows="10"
-            placeholder="请输入帖子内容（10-2000字）"
-            :maxLength="2000"
-            show-word-limit
-            class="custom-textarea"
-          />
+          <!-- 自定义Markdown编辑器 -->
+          <div class="markdown-editor-wrapper">
+            <Editor
+              :value="editorValue"
+              :plugins="plugins"
+              :locale="zhHans"
+              placeholder="请输入帖子内容（支持Markdown格式）"
+              :uploadImages="handleUploadBytemdImages"
+              @change="handleEditorChange"
+              :split="true"
+            />
+          </div>
+          <div class="editor-tip">
+            支持Markdown格式，可以直接粘贴或拖拽图片到编辑器中上传
+          </div>
         </a-form-item>
         
         <!-- 图片上传区域 -->
-        <a-form-item label="添加图片">
+        <a-form-item label="附加图片">
           <div class="image-upload-container">
             <div class="image-previews">
               <div 
@@ -776,5 +861,87 @@ onMounted(() => {
 .footer{
   display: flex;
   bottom: 0;
+}
+
+/* 自定义Markdown编辑器样式 */
+.markdown-editor-wrapper {
+  border: 1px solid #D6C6AF;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #FFFDF7;
+  height: 500px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-tip {
+  font-size: 12px;
+  color: #7F4F24;
+  margin-top: 8px;
+}
+
+/* Markdown预览样式增强 */
+:deep(.markdown-body) {
+  font-family: "SimSun", "宋体", serif;
+  color: #582F0E;
+}
+
+:deep(.markdown-body h1),
+:deep(.markdown-body h2),
+:deep(.markdown-body h3),
+:deep(.markdown-body h4),
+:deep(.markdown-body h5),
+:deep(.markdown-body h6) {
+  color: #8C1F28;
+  font-family: "STKaiti", "楷体", serif;
+  margin-top: 24px;
+  margin-bottom: 16px;
+  font-weight: 600;
+  border-bottom: 1px solid #E4D9C3;
+  padding-bottom: 0.3em;
+}
+
+:deep(.markdown-body a) {
+  color: #8C1F28;
+  text-decoration: none;
+}
+
+:deep(.markdown-body a:hover) {
+  text-decoration: underline;
+}
+
+:deep(.markdown-body blockquote) {
+  padding: 0 1em;
+  color: #6B5B45;
+  border-left: 0.25em solid #E4D9C3;
+}
+
+:deep(.markdown-body pre) {
+  background-color: #FFF7E9;
+  border: 1px solid #E4D9C3;
+  border-radius: 4px;
+}
+
+:deep(.markdown-body code) {
+  background-color: #FFF7E9;
+  color: #8C1F28;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+:deep(.markdown-body img) {
+  max-width: 100%;
+  box-sizing: content-box;
+  border-radius: 4px;
+  border: 1px solid #E4D9C3;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 768px) {
+  .markdown-editor-wrapper {
+    height: 300px;
+  }
 }
 </style>
