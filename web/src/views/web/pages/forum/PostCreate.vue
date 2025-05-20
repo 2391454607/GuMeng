@@ -2,7 +2,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
-import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI, checkSensitiveWordsAPI } from '@/api/forum';
+import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI, checkSensitiveWordsAPI, uploadImageAPI } from '@/api/forum';
 import { useUserStore } from '@/stores/userStore.js';
 import Footer from "@/views/web/layout/Footer.vue";
 
@@ -18,8 +18,16 @@ const postId = computed(() => route.params.id);
 const postForm = reactive({
   title: '',
   topic: '',
-  content: ''
+  content: '',
+  images: [] // 添加图片数组字段
 });
+
+// 图片上传相关
+const fileInputRef = ref(null);
+const uploading = ref(false);
+const imageFiles = ref([]); // 存储选择的图片文件
+const previewImages = ref([]); // 存储图片预览URL
+const uploadProgress = ref(0); // 上传进度
 
 // 敏感词相关
 const checkingSensitiveWords = ref(false);
@@ -82,6 +90,19 @@ const fetchPostDetail = async () => {
       }
       
       postForm.content = post.content;
+      
+      // 处理已有的图片
+      if (post.images && post.images.length > 0) {
+        // 如果是字符串，分割成数组
+        if (typeof post.images === 'string') {
+          postForm.images = post.images.split(',').filter(img => img);
+        } else {
+          postForm.images = post.images;
+        }
+        
+        // 设置预览图片
+        previewImages.value = [...postForm.images];
+      }
     } else {
       Message.error(res.msg || '获取帖子详情失败');
       goBack();
@@ -90,6 +111,115 @@ const fetchPostDetail = async () => {
     console.error('获取帖子详情出错:', err);
     Message.error('获取帖子详情失败，请稍后重试');
     goBack();
+  }
+};
+
+// 触发文件选择
+const triggerFileInput = () => {
+  if (fileInputRef.value) {
+    fileInputRef.value.click();
+  }
+};
+
+// 处理图片选择
+const handleFileChange = (event) => {
+  const files = event.target.files;
+  if (!files.length) return;
+  
+  // 检查已有图片数量
+  if (previewImages.value.length + files.length > 9) {
+    Message.warning('最多只能上传9张图片');
+    return;
+  }
+  
+  // 检查文件类型和大小
+  const validFiles = Array.from(files).filter(file => {
+    const isImage = file.type.startsWith('image/');
+    const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB限制
+    
+    if (!isImage) {
+      Message.warning(`文件 ${file.name} 不是有效的图片格式`);
+    }
+    
+    if (!isValidSize) {
+      Message.warning(`文件 ${file.name} 超过5MB大小限制`);
+    }
+    
+    return isImage && isValidSize;
+  });
+  
+  if (!validFiles.length) return;
+  
+  // 添加到文件列表
+  imageFiles.value = [...imageFiles.value, ...validFiles];
+  
+  // 创建预览
+  validFiles.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      previewImages.value.push(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  });
+  
+  // 清除input的value，允许重复选择同一文件
+  event.target.value = '';
+};
+
+// 删除预览图片
+const removeImage = (index) => {
+  // 如果是已上传的图片
+  if (index < postForm.images.length) {
+    postForm.images.splice(index, 1);
+  }
+  
+  // 如果是新选择的图片
+  const newImageIndex = index - postForm.images.length;
+  if (newImageIndex >= 0 && newImageIndex < imageFiles.value.length) {
+    imageFiles.value.splice(newImageIndex, 1);
+  }
+  
+  // 无论是哪种情况，都从预览中移除
+  previewImages.value.splice(index, 1);
+};
+
+// 上传图片
+const uploadImages = async () => {
+  if (!imageFiles.value.length) return [];
+  
+  try {
+    uploading.value = true;
+    const uploadedUrls = [];
+    
+    // 逐个上传文件
+    for (let i = 0; i < imageFiles.value.length; i++) {
+      const file = imageFiles.value[i];
+      
+      // 创建FormData对象
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // 上传到服务器
+      const res = await uploadImageAPI(formData);
+      
+      if (res.code === 200 && res.data) {
+        uploadedUrls.push(res.data);
+      } else {
+        Message.warning(`图片 ${file.name} 上传失败`);
+      }
+      
+      // 更新进度
+      uploadProgress.value = Math.round(((i + 1) / imageFiles.value.length) * 100);
+    }
+    
+    return uploadedUrls;
+  } catch (err) {
+    console.error('上传图片出错:', err);
+    Message.error('上传图片失败，请稍后重试');
+    return [];
+  } finally {
+    uploading.value = false;
+    uploadProgress.value = 0;
   }
 };
 
@@ -161,6 +291,20 @@ const submitForm = async () => {
       checkingSensitiveWords.value = false;
     }
     
+    // 上传新选择的图片
+    let newUploadedImages = [];
+    if (imageFiles.value.length > 0) {
+      newUploadedImages = await uploadImages();
+      if (!newUploadedImages.length && imageFiles.value.length > 0) {
+        Message.error('图片上传失败，请稍后重试');
+        submitting.value = false;
+        return;
+      }
+    }
+    
+    // 合并已有图片和新上传的图片
+    const allImages = [...postForm.images, ...newUploadedImages];
+    
     // 准备话题数据
     // 查找选定话题的名称
     const selectedTopic = topics.value.find(t => t.id === postForm.topic);
@@ -169,7 +313,8 @@ const submitForm = async () => {
     const formData = {
       title: postForm.title,
       content: postForm.content,
-      topic: topicValue
+      topic: topicValue,
+      images: allImages.join(',') // 将图片URL数组转换为逗号分隔的字符串
     };
     
     console.log('提交表单数据:', formData);
@@ -268,6 +413,62 @@ onMounted(() => {
           />
         </a-form-item>
         
+        <!-- 图片上传区域 -->
+        <a-form-item label="添加图片">
+          <div class="image-upload-container">
+            <div class="image-previews">
+              <div 
+                v-for="(image, index) in previewImages" 
+                :key="index"
+                class="image-preview-item"
+              >
+                <img :src="image" alt="预览图片" class="preview-image" />
+                <div class="image-actions">
+                  <a-button 
+                    type="primary" 
+                    status="danger" 
+                    size="mini" 
+                    circle 
+                    class="delete-btn"
+                    @click.stop="removeImage(index)"
+                  >
+                    <i class="icon-delete"></i>
+                    <span class="delete-icon">×</span>
+                  </a-button>
+                </div>
+              </div>
+              
+              <div 
+                v-if="previewImages.length < 9"
+                class="image-upload-trigger"
+                @click="triggerFileInput"
+              >
+                <i class="upload-icon">+</i>
+                <div class="upload-text">添加图片</div>
+              </div>
+            </div>
+            
+            <input 
+              type="file" 
+              ref="fileInputRef"
+              accept="image/*" 
+              multiple 
+              class="file-input" 
+              @change="handleFileChange"
+            />
+            
+            <div class="upload-tips">
+              支持.jpg/.png/.gif等格式，单张图片不超过5MB，最多上传9张
+            </div>
+            
+            <!-- 上传进度条 -->
+            <div v-if="uploading" class="upload-progress">
+              <a-progress :percent="uploadProgress" />
+              <div class="progress-text">正在上传图片: {{ uploadProgress }}%</div>
+            </div>
+          </div>
+        </a-form-item>
+        
         <!-- 敏感词错误提示 -->
         <a-form-item v-if="sensitiveWordsError">
           <a-alert type="error" :content="sensitiveWordsError" />
@@ -275,7 +476,13 @@ onMounted(() => {
         
         <a-form-item>
           <div class="action-buttons">
-            <a-button type="primary" @click="submitForm" :loading="submitting" class="submit-btn">
+            <a-button 
+              type="primary" 
+              @click="submitForm" 
+              :loading="submitting || uploading" 
+              :disabled="submitting || uploading"
+              class="submit-btn"
+            >
               {{ isEdit ? '保存修改' : '发布帖子' }}
             </a-button>
             <a-button @click="goBack" class="cancel-btn">取消</a-button>
@@ -357,6 +564,109 @@ onMounted(() => {
   justify-content: center;
   gap: 20px;
   margin-top: 20px;
+}
+
+/* 图片上传相关样式 */
+.image-upload-container {
+  margin-bottom: 15px;
+}
+
+.image-previews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.image-preview-item {
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #D6C6AF;
+  background-color: #FFFDF7;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-actions {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  display: flex;
+  gap: 5px;
+}
+
+.delete-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(140, 31, 40, 0.8);
+  border-color: transparent;
+}
+
+.delete-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.image-upload-trigger {
+  width: 120px;
+  height: 120px;
+  border: 1px dashed #D6C6AF;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #FFFDF7;
+  transition: all 0.3s;
+}
+
+.image-upload-trigger:hover {
+  border-color: #8C1F28;
+  background-color: #FFF7E9;
+}
+
+.upload-icon {
+  font-size: 28px;
+  color: #8C1F28;
+  margin-bottom: 5px;
+}
+
+.upload-text {
+  font-size: 12px;
+  color: #582F0E;
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-tips {
+  font-size: 12px;
+  color: #7F4F24;
+  margin-top: 5px;
+}
+
+.upload-progress {
+  margin-top: 15px;
+}
+
+.progress-text {
+  font-size: 14px;
+  color: #582F0E;
+  margin-top: 5px;
+  text-align: center;
 }
 
 /* 自定义输入框样式 */
@@ -450,6 +760,16 @@ onMounted(() => {
   
   .submit-btn, .cancel-btn {
     width: 100%;
+  }
+  
+  .image-previews {
+    gap: 10px;
+  }
+  
+  .image-preview-item,
+  .image-upload-trigger {
+    width: calc(33.333% - 7px);
+    height: 100px;
   }
 }
 
