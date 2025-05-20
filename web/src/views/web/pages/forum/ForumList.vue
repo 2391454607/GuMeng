@@ -617,18 +617,20 @@ onMounted(() => {
   border-radius: 4px;
   overflow: hidden;
   position: relative;
-  border: 2px solid #E4D9C3;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
 }
 
 .post-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   transition: transform 0.3s;
-}
-
-.post-image-wrapper:hover .post-image {
-  transform: scale(1.05);
 }
 
 .post-image-more {
@@ -637,11 +639,11 @@ onMounted(() => {
   justify-content: center;
   width: 120px;
   height: 120px;
-  background-color: rgba(88, 47, 14, 0.6);
+  background-color: rgba(88, 47, 14, 0.5);
   color: #FFF7E9;
   font-size: 18px;
   border-radius: 4px;
-  border: 2px solid #E4D9C3;
+  border: none;
 }
 
 .post-footer {
