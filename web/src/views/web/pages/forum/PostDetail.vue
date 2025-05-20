@@ -986,6 +986,7 @@ onMounted(() => {
   width: 100%;
   max-width: 700px;
   margin: 0;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 }
 
 .image-wrapper {
@@ -994,8 +995,7 @@ onMounted(() => {
   height: 0;
   overflow: hidden;
   border-radius: 4px;
-  border: 1px solid #E4D9C3;
-  background-color: transparent;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1040,7 +1040,7 @@ onMounted(() => {
   max-width: 300px;
 }
 
-.grid-2, .grid-4 {
+.grid-2 {
   grid-template-columns: repeat(2, 1fr);
   max-width: 500px;
 }
