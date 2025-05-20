@@ -529,6 +529,11 @@ const handleLikeComment = async (comment) => {
   }
 };
 
+// 获取图片展示样式
+const getGridClass = (imageCount) => {
+  return `grid-${Math.min(imageCount, 9)}`;
+};
+
 onMounted(() => {
   fetchPostDetail();
 });
@@ -583,15 +588,15 @@ onMounted(() => {
             <!-- 图片展示 -->
             <div v-if="post.images && post.images.length > 0" class="post-images">
               <a-image-preview-group infinite>
-                <div class="image-grid" :class="'grid-' + Math.min(post.images.length, 4)">
-                  <a-image 
-                    v-for="(img, index) in post.images" 
-                    :key="index" 
-                    :src="img" 
-                    :alt="`图片${index+1}`"
-                    fit="cover"
-                    class="post-image"
-                  />
+                <div class="image-grid" :class="getGridClass(post.images.length)">
+                  <div v-for="(img, index) in post.images" :key="index" class="image-wrapper">
+                    <a-image 
+                      :src="img" 
+                      :alt="`图片${index+1}`"
+                      fit="contain"
+                      class="post-image"
+                    />
+                  </div>
                 </div>
               </a-image-preview-group>
             </div>
@@ -971,43 +976,78 @@ onMounted(() => {
 
 .post-images {
   margin-bottom: 24px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .image-grid {
   display: grid;
-  grid-gap: 16px;
+  grid-gap: 8px;
+  width: 100%;
+  max-width: 700px;
+  margin: 0;
 }
 
-.grid-1 {
-  grid-template-columns: 1fr;
-}
-
-.grid-2 {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.grid-3 {
-  grid-template-columns: repeat(3, 1fr);
-}
-
-.grid-4 {
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(2, 1fr);
+.image-wrapper {
+  position: relative;
+  padding-bottom: 75%;
+  height: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid #E4D9C3;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .post-image {
-  border-radius: 8px;
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  min-height: 200px;
-  object-fit: cover;
-  cursor: pointer;
-  border: 1px solid #E4D9C3;
+  object-fit: contain;
   transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+:deep(.arco-image) {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.arco-image-img) {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .post-image:hover {
   transform: scale(1.02);
+}
+
+/* 根据图片数量定义网格布局 */
+.grid-1 {
+  grid-template-columns: minmax(0, 300px);
+  max-width: 300px;
+}
+
+.grid-2, .grid-4 {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 500px;
+}
+
+.grid-3, .grid-5, .grid-6, .grid-7, .grid-8, .grid-9 {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 600px;
 }
 
 .post-footer {
