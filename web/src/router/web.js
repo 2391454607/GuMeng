@@ -80,6 +80,12 @@ const webRouters = [
             name: "Commodity",
             component: () => import("@/views/error/Error404.vue")
         }
+    },
+    {
+        path: '/games',
+        name: 'Games',
+        component: () => import('@/views/web/pages/games/Games.vue'),
+        meta: { requiresAuth: false }
     }
 ];
 

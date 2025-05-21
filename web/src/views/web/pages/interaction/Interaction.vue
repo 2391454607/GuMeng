@@ -3,9 +3,15 @@ import { ref } from 'vue';
 import { Message } from '@arco-design/web-vue';
 import { IconRobot, IconComputer, IconUser } from '@arco-design/web-vue/es/icon';
 import Footer from "@/views/web/layout/Footer.vue";
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const handleClick = (type) => {
   Message.success(`即将体验${type}`);
+  if (type === '非遗小游戏') {
+    router.push({ name: 'Games' });
+  }
 };
 </script>
 
@@ -32,7 +38,11 @@ const handleClick = (type) => {
         </div>
         <h2>非遗小游戏</h2>
         <p>趣味互动游戏，寓教于乐，让您在游戏中了解非遗文化知识。</p>
-        <a-button type="outline" class="feature-button" @click="handleClick('非遗小游戏')">
+        <a-button
+          type="outline"
+          class="feature-button"
+          @click.stop="handleClick('非遗小游戏')"
+        >
           开始游戏
           <template #icon><icon-right /></template>
         </a-button>
