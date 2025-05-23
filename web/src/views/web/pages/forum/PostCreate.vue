@@ -53,22 +53,80 @@ const sensitiveWordsError = ref('');
 // ByteMD编辑器上传图片处理函数
 const handleUploadBytemdImages = async (files) => {
   try {
+    // 检查已有图片数量
+    const imageRegex = /!\[.*?\]\((.*?)\)/g;
+    const matches = [...(editorValue.value || '').matchAll(imageRegex)];
+    const currentImages = matches.length;
+    
+    if (currentImages + files.length > 9) {
+      Message.warning('最多只能上传9张图片');
+      return [];
+    }
+    
+    // 检查文件类型和大小
+    const validFiles = Array.from(files).filter(file => {
+      const isImage = file.type.startsWith('image/');
+      const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB限制
+      
+      if (!isImage) {
+        Message.warning(`文件 ${file.name} 不是有效的图片格式`);
+      }
+      
+      if (!isValidSize) {
+        Message.warning(`文件 ${file.name} 超过5MB大小限制`);
+      }
+      
+      return isImage && isValidSize;
+    });
+    
+    if (!validFiles.length) return [];
+    
+    // 开始上传
+    uploading.value = true;
     const urls = [];
-    for (const file of files) {
+    
+    // 逐个上传文件
+    for (let i = 0; i < validFiles.length; i++) {
+      const file = validFiles[i];
+      
+      // 创建FormData对象
       const formData = new FormData();
       formData.append('file', file);
       
-      const res = await uploadImageAPI(formData);
-      if (res.code === 200 && res.data) {
-        urls.push(res.data);
-      } else {
-        Message.warning(`图片 ${file.name} 上传失败`);
+      try {
+        // 上传到服务器
+        const res = await uploadImageAPI(formData);
+        
+        if (res.code === 200 && res.data) {
+          // 将URL添加到结果数组 - 这些URL将直接被ByteMD使用
+          urls.push(res.data);
+          
+          // 确保URL也被添加到表单数据中
+          if (!postForm.images.includes(res.data)) {
+            postForm.images.push(res.data);
+          }
+        } else {
+          Message.warning(`图片 ${file.name} 上传失败`);
+        }
+      } catch (error) {
+        console.error('上传单张图片失败:', error);
+        Message.error(`图片 ${file.name} 上传失败`);
       }
+      
+      // 更新进度
+      uploadProgress.value = Math.round(((i + 1) / validFiles.length) * 100);
     }
+    
+    uploading.value = false;
+    uploadProgress.value = 0;
+    
+    // 返回URL数组，ByteMD将使用这些URL创建图片Markdown语法
     return urls;
   } catch (err) {
     console.error('上传编辑器图片出错:', err);
     Message.error('上传图片失败，请稍后重试');
+    uploading.value = false;
+    uploadProgress.value = 0;
     return [];
   }
 }
@@ -344,8 +402,18 @@ const submitForm = async () => {
       }
     }
     
-    // 合并已有图片和新上传的图片
-    const allImages = [...postForm.images, ...newUploadedImages];
+    // 提取内容中所有的图片URL，确保图片不重复提交
+    const imageRegex = /!\[.*?\]\((.*?)\)/g;
+    const contentMatches = [...(postForm.content.matchAll(imageRegex))];
+    const contentImageUrls = contentMatches.map(match => match[1]);
+    
+    // 合并所有图片URL并去重
+    const allImageUrls = [...new Set([...postForm.images, ...newUploadedImages, ...contentImageUrls])];
+    
+    // 过滤出服务器的图片地址（即去除base64和其他非服务器图片）
+    const serverImageUrls = allImageUrls.filter(url => 
+      url.startsWith('http') && !url.includes('base64')
+    );
     
     // 准备话题数据
     // 查找选定话题的名称
@@ -354,9 +422,9 @@ const submitForm = async () => {
     
     const formData = {
       title: postForm.title,
-      content: postForm.content,
+      content: postForm.content, // 保持原始Markdown格式
       topic: topicValue,
-      images: allImages.join(',') // 将图片URL数组转换为逗号分隔的字符串
+      images: serverImageUrls.join(',') // 将去重后的图片URL数组转换为逗号分隔的字符串
     };
     
     console.log('提交表单数据:', formData);
@@ -397,7 +465,12 @@ const goBack = () => {
 const editorValue = ref('');  // 用于存储编辑器内容
 // 计算编辑器内容的字数
 const contentWordCount = computed(() => {
-  return editorValue.value ? editorValue.value.length : 0;
+  // 如果没有内容返回0
+  if (!editorValue.value) return 0;
+  
+  // 去除markdown图片语法后计算字数
+  const textOnly = editorValue.value.replace(/!\[.*?\]\(.*?\)/g, '图片');
+  return textOnly.length;
 });
 
 // 监听编辑器内容变化
@@ -421,9 +494,21 @@ const updateWordCount = () => {
   setTimeout(() => {
     const statusElement = document.querySelector('.bytemd-status-left');
     if (statusElement) {
-      statusElement.innerHTML = `字数: ${contentWordCount.value}`;
+      // 去除图片标记后的内容长度
+      const textContent = editorValue.value.replace(/!\[.*?\]\(.*?\)/g, '图片');
+      statusElement.innerHTML = `字数: ${textContent.length}`;
     }
   }, 10);
+};
+
+// 处理编辑器标题变化
+const handleTitleChange = (value) => {
+  postForm.title = value;
+};
+
+// 处理编辑器话题变化
+const handleTopicChange = (value) => {
+  postForm.topic = value;
 };
 
 onMounted(() => {
@@ -436,144 +521,73 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="create-post-page">
     <div class="create-post-container">
       <div class="page-header">
-        <a-button @click="goBack" class="back-btn">
-          <i class="iconfont icon-arrow-left"></i> 返回
-        </a-button>
+        <div class="header-left">
+          <a-button @click="goBack" class="back-btn">
+            <i class="iconfont icon-arrow-left"></i> 返回
+          </a-button>
+        </div>
         <div class="header-title">{{ isEdit ? '编辑帖子' : '发布帖子' }}</div>
+        <div class="header-right">
+          <!-- 只保留发布按钮 -->
+          <a-button 
+            type="primary" 
+            @click="submitForm" 
+            :loading="submitting || uploading" 
+            :disabled="submitting || uploading"
+            class="submit-btn"
+          >
+            {{ isEdit ? '保存修改' : '发布帖子' }}
+          </a-button>
+        </div>
       </div>
       
-      <a-form
-        ref="postFormRef"
-        :model="postForm"
-        :rules="rules"
-        label-position="top"
-        class="post-form"
-      >
-        <a-form-item label="标题" field="title">
-          <a-input 
-            v-model="postForm.title"
-            placeholder="请输入帖子标题（2-50字）"
-            :maxLength="50"
-            show-word-limit
-            class="custom-input"
-          />
-        </a-form-item>
-        
-        <a-form-item label="话题" field="topic">
-          <div class="topic-input-container">
-            <a-select 
-              v-model="postForm.topic"
-              placeholder="请选择话题分类"
-              class="topic-select custom-select"
-              allow-clear
-            >
-              <a-option
-                v-for="topic in topics"
-                :key="topic.id"
-                :label="topic.name"
-                :value="topic.id"
+      <div class="main-content">
+        <a-form
+          ref="postFormRef"
+          :model="postForm"
+          :rules="rules"
+          class="post-form"
+        >
+          <!-- 集成式Markdown编辑器 -->
+          <a-form-item field="content" class="editor-form-item">
+            <div class="markdown-editor-wrapper">
+              <Editor
+                :value="editorValue"
+                :plugins="plugins"
+                :locale="zhHans"
+                placeholder="请输入帖子内容（支持Markdown格式）"
+                :uploadImages="handleUploadBytemdImages"
+                @change="handleEditorChange"
+                :split="true"
+                :title="postForm.title"
+                :topicId="postForm.topic"
+                :topics="topics"
+                @titleChange="handleTitleChange"
+                @topicChange="handleTopicChange"
               />
-            </a-select>
-          </div>
-        </a-form-item>
-        
-        <a-form-item label="内容" field="content">
-          <!-- 自定义Markdown编辑器 -->
-          <div class="markdown-editor-wrapper">
-            <Editor
-              :value="editorValue"
-              :plugins="plugins"
-              :locale="zhHans"
-              placeholder="请输入帖子内容（支持Markdown格式）"
-              :uploadImages="handleUploadBytemdImages"
-              @change="handleEditorChange"
-              :split="true"
-            />
-          </div>
-          <div class="editor-tip">
-            支持Markdown格式，可以直接粘贴或拖拽图片到编辑器中上传
-          </div>
-        </a-form-item>
-        
-        <!-- 图片上传区域 -->
-        <a-form-item label="附加图片">
-          <div class="image-upload-container">
-            <div class="image-previews">
-              <div 
-                v-for="(image, index) in previewImages" 
-                :key="index"
-                class="image-preview-item"
-              >
-                <img :src="image" alt="预览图片" class="preview-image" />
-                <div class="image-actions">
-                  <a-button 
-                    type="primary" 
-                    status="danger" 
-                    size="mini" 
-                    circle 
-                    class="delete-btn"
-                    @click.stop="removeImage(index)"
-                  >
-                    <i class="icon-delete"></i>
-                    <span class="delete-icon">×</span>
-                  </a-button>
-                </div>
-              </div>
-              
-              <div 
-                v-if="previewImages.length < 9"
-                class="image-upload-trigger"
-                @click="triggerFileInput"
-              >
-                <i class="upload-icon">+</i>
-                <div class="upload-text">添加图片</div>
-              </div>
             </div>
-            
-            <input 
-              type="file" 
-              ref="fileInputRef"
-              accept="image/*" 
-              multiple 
-              class="file-input" 
-              @change="handleFileChange"
-            />
-            
-            <div class="upload-tips">
-              支持.jpg/.png/.gif等格式，单张图片不超过5MB，最多上传9张
-            </div>
-            
+          </a-form-item>
+        </a-form>
+        
+        <!-- 敏感词错误提示，保留该部分 -->
+        <div class="sidebar" v-if="sensitiveWordsError || uploading">
+          <div class="sidebar-content">
             <!-- 上传进度条 -->
             <div v-if="uploading" class="upload-progress">
               <a-progress :percent="uploadProgress" />
               <div class="progress-text">正在上传图片: {{ uploadProgress }}%</div>
             </div>
+            
+            <!-- 敏感词错误提示 -->
+            <div v-if="sensitiveWordsError" class="sensitive-words-alert">
+              <a-alert type="error" :content="sensitiveWordsError" />
+            </div>
           </div>
-        </a-form-item>
-        
-        <!-- 敏感词错误提示 -->
-        <a-form-item v-if="sensitiveWordsError">
-          <a-alert type="error" :content="sensitiveWordsError" />
-        </a-form-item>
-        
-        <a-form-item>
-          <div class="action-buttons">
-            <a-button 
-              type="primary" 
-              @click="submitForm" 
-              :loading="submitting || uploading" 
-              :disabled="submitting || uploading"
-              class="submit-btn"
-            >
-              {{ isEdit ? '保存修改' : '发布帖子' }}
-            </a-button>
-            <a-button @click="goBack" class="cancel-btn">取消</a-button>
-          </div>
-        </a-form-item>
-      </a-form>
+        </div>
+      </div>
     </div>
     
     <!-- 页脚 -->
@@ -582,31 +596,56 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.create-post-page {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #FFF7E9;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23D6C6AF' fill-opacity='0.05'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z'/%3E%3C/g%3E%3C/svg%3E");
+  overflow-x: hidden;
+}
+
 .create-post-container {
-  max-width: 1200px;
+  width: 98%;
+  max-width: 1900px;
   margin: 0 auto;
-  padding: 20px;
-  background-color: #fffbf0; /* 修改背景颜色 */
-  font-family: "SimSun", "宋体", serif; /* 使用宋体增加复古感 */
-  min-height: calc(100vh - 176px);
+  padding: 0;
   display: flex;
   flex-direction: column;
 }
 
 .page-header {
-  margin-bottom: 20px;
-  background-color: #8C1F28; /* 暗红色 */
-  padding: 16px 20px;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background-color: #8C1F28;
+  padding: 14px 20px;
   display: flex;
   align-items: center;
   color: #F9F3E9;
   position: relative;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  margin-bottom: 15px;
+  border-radius: 0 0 8px 8px;
+}
+
+.header-left {
+  width: 80px;
+}
+
+.header-title {
+  font-size: 20px;
+  font-weight: bold;
+  flex: 1;
+  text-align: center;
+  letter-spacing: 2px;
+  font-family: "STKaiti", "楷体", serif;
+}
+
+.header-right {
+  width: 120px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .back-btn {
-  margin-right: 16px;
   background-color: transparent;
   border: 1px solid #F9F3E9;
   color: #F9F3E9;
@@ -616,61 +655,117 @@ onMounted(() => {
   background-color: rgba(249, 243, 233, 0.1);
 }
 
-.header-title {
-  font-size: 20px;
-  font-weight: bold;
-  flex: 1;
-  text-align: center;
-  letter-spacing: 2px;
+/* 主内容区布局 */
+.main-content {
+  display: flex;
+  height: calc(100vh - 130px);
+  position: relative;
 }
 
 .post-form {
-  background-color: #FFFBF0; /* 浅米色 */
-  padding: 30px;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 1px solid #D6C6AF; /* 棕边框 */
-  max-width: 800px;
-  margin: 0 auto;
+  flex: 1;
+  overflow: hidden;
+  margin-right: 15px;
+  min-width: 0; /* 确保flex子项不会溢出 */
 }
 
-.topic-input-container {
+.editor-form-item {
+  height: 100%;
+}
+
+/* 移除表单项内边距 */
+:deep(.arco-form-item-content) {
+  margin-bottom: 0;
+}
+
+.markdown-editor-wrapper {
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid #D6C6AF;
+  border-radius: 8px;
   display: flex;
-  gap: 10px;
-  align-items: center;
+  flex-direction: column;
+  min-height: 550px !important; /* 确保编辑器容器有足够的高度 */
 }
 
-.topic-select {
-  width: 100%;
+/* 确保ByteMD编辑器不会被缩放行为影响 */
+:deep(.bytemd) {
+  height: 100% !important;
+  min-height: 500px !important;
+  max-height: none !important;
+  resize: none !important; /* 禁用调整大小功能 */
 }
 
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-top: 20px;
+:deep(.CodeMirror) {
+  height: auto !important;
+  min-height: 500px !important;
+}
+
+:deep(.bytemd-preview) {
+  height: auto !important;
+  min-height: 500px !important;
+}
+
+/* 确保编辑与预览区域高度固定 */
+:deep(.bytemd-split .bytemd-editor),
+:deep(.bytemd-split .bytemd-preview) {
+  height: 500px !important;
+  min-height: 500px !important;
+  overflow-y: auto !important;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+  width: 300px;
+  background-color: #FFFDF7;
+  overflow-y: auto;
+  padding: 0;
+  flex-shrink: 0;
+  margin-left: 15px;
+}
+
+.sidebar-content {
+  padding: 15px;
+  background-color: #FFFDF7;
+  border-radius: 8px;
+  border: 1px solid #D6C6AF;
+}
+
+.sidebar-title {
+  font-family: "STKaiti", "楷体", serif;
+  color: #582F0E;
+  margin-top: 0;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #E4D9C3;
+  padding-bottom: 10px;
 }
 
 /* 图片上传相关样式 */
 .image-upload-container {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .image-previews {
   display: flex;
   flex-wrap: wrap;
-  gap: 15px;
+  gap: 10px;
   margin-bottom: 15px;
 }
 
 .image-preview-item {
-  width: 120px;
-  height: 120px;
+  width: 80px;
+  height: 80px;
   border-radius: 8px;
   overflow: hidden;
   position: relative;
   border: 1px solid #D6C6AF;
   background-color: #FFFDF7;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.image-preview-item:hover {
+  transform: scale(1.05);
 }
 
 .preview-image {
@@ -688,8 +783,8 @@ onMounted(() => {
 }
 
 .delete-btn {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   padding: 0;
   display: flex;
   align-items: center;
@@ -699,13 +794,13 @@ onMounted(() => {
 }
 
 .delete-icon {
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1;
 }
 
 .image-upload-trigger {
-  width: 120px;
-  height: 120px;
+  width: 80px;
+  height: 80px;
   border: 1px dashed #D6C6AF;
   border-radius: 8px;
   display: flex;
@@ -723,9 +818,9 @@ onMounted(() => {
 }
 
 .upload-icon {
-  font-size: 28px;
+  font-size: 24px;
   color: #8C1F28;
-  margin-bottom: 5px;
+  margin-bottom: 2px;
 }
 
 .upload-text {
@@ -744,7 +839,7 @@ onMounted(() => {
 }
 
 .upload-progress {
-  margin-top: 15px;
+  margin-bottom: 15px;
 }
 
 .progress-text {
@@ -754,27 +849,9 @@ onMounted(() => {
   text-align: center;
 }
 
-/* 自定义输入框样式 */
-.custom-input, .custom-textarea, .custom-select {
-  border: 1px solid #D6C6AF !important;
-  background-color: #FFFDF7 !important;
-  color: #582F0E !important;
-  border-radius: 4px !important;
-  font-family: "SimSun", "宋体", serif !important;
-}
-
-.custom-input:focus, .custom-textarea:focus, .custom-select:focus {
-  border-color: #8C1F28 !important;
-  box-shadow: 0 0 0 2px rgba(140, 31, 40, 0.1) !important;
-}
-
-/* 表单标签样式 */
-.post-form :deep(.arco-form-item-label) {
-  font-weight: 500;
-  color: #582F0E;
-  font-size: 16px;
-  margin-bottom: 8px;
-  font-family: "STKaiti", "楷体", serif;
+/* 敏感词警告 */
+.sensitive-words-alert {
+  margin-top: 0;
 }
 
 /* 按钮样式 */
@@ -782,103 +859,28 @@ onMounted(() => {
   background-color: #8C1F28 !important;
   border-color: #8C1F28 !important;
   border-radius: 4px;
-  padding: 0 30px;
-  height: 40px;
-  font-size: 16px;
+  padding: 0 16px;
+  height: 36px;
+  font-size: 14px;
   font-weight: 500;
-  letter-spacing: 1px;
+  box-shadow: 0 2px 4px rgba(140, 31, 40, 0.2);
+  transition: all 0.3s ease;
+  margin-top: 4px;
 }
 
 .submit-btn:hover {
   background-color: #A52A2A !important;
   border-color: #A52A2A !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(140, 31, 40, 0.3);
 }
 
-.cancel-btn {
-  border-radius: 4px;
-  padding: 0 30px;
-  height: 40px;
-  font-size: 16px;
-  border: 1px solid #D6C6AF;
-  color: #582F0E;
-  background-color: #F9F3E9;
-}
-
-.cancel-btn:hover {
-  border-color: #8C1F28;
-  color: #8C1F28;
-  background-color: #FFFBF0;
-}
-
-/* 复古纸张质感效果 */
-.post-form::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23D6C6AF' fill-opacity='0.1'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z'/%3E%3C/g%3E%3C/svg%3E");
-  z-index: -1;
-  opacity: 0.3;
-}
-
-/* 响应式设计 */
-@media screen and (max-width: 768px) {
-  .create-post-container {
-    padding: 10px;
-  }
-  
-  .post-form {
-    padding: 20px;
-  }
-  
-  .topic-input-container {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .action-buttons {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .submit-btn, .cancel-btn {
-    width: 100%;
-  }
-  
-  .image-previews {
-    gap: 10px;
-  }
-  
-  .image-preview-item,
-  .image-upload-trigger {
-    width: calc(33.333% - 7px);
-    height: 100px;
-  }
-}
-
-.footer{
+.footer {
   display: flex;
-  bottom: 0;
-}
-
-/* 自定义Markdown编辑器样式 */
-.markdown-editor-wrapper {
-  border: 1px solid #D6C6AF;
-  border-radius: 4px;
-  overflow: hidden;
-  background-color: #FFFDF7;
-  height: 500px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-.editor-tip {
-  font-size: 12px;
-  color: #7F4F24;
-  margin-top: 8px;
+  justify-content: center;
+  margin-top: auto;
+  padding: 10px 0;
+  background-color: transparent;
 }
 
 /* Markdown预览样式增强 */
@@ -938,10 +940,51 @@ onMounted(() => {
   border: 1px solid #E4D9C3;
 }
 
-/* 响应式调整 */
-@media screen and (max-width: 768px) {
+/* 响应式样式 */
+@media screen and (max-width: 1200px) {
+  .sidebar {
+    width: 250px;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .main-content {
+    flex-direction: column;
+    height: auto;
+  }
+  
   .markdown-editor-wrapper {
-    height: 300px;
+    height: 500px;
+    margin-bottom: 10px;
+  }
+  
+  .post-form {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+  
+  .sidebar {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .create-post-container {
+    width: 98%;
+  }
+  
+  .page-header {
+    padding: 12px;
+  }
+  
+  .header-title {
+    font-size: 18px;
+  }
+  
+  .image-preview-item,
+  .image-upload-trigger {
+    width: calc(33.333% - 7px);
   }
 }
 </style>
