@@ -21,6 +21,8 @@ watch(() => needUpdate.value, () => {
   off();
   nextTick(() => {
     on();
+    // 触发图片修复
+    fixImages();
   });
 }, {
   deep: true
@@ -28,11 +30,51 @@ watch(() => needUpdate.value, () => {
 
 onMounted(() => {
   on();
+  // 在组件挂载后延迟执行图片修复
+  setTimeout(() => {
+    fixImages();
+  }, 300);
 });
 
 onUnmounted(() => {
   off();
 });
+
+// 添加图片修复函数
+const fixImages = () => {
+  if (!markdownBody.value) return;
+  
+  // 查找所有图片并应用样式
+  const images = markdownBody.value.querySelectorAll('img');
+  console.log('Viewer中找到图片数量:', images.length);
+  
+  images.forEach((img, index) => {
+    // 强制应用样式以确保图片可见
+    img.style.display = 'block';
+    img.style.visibility = 'visible';
+    img.style.opacity = '1';
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    img.style.margin = '10px auto';
+    img.style.border = '1px solid #E4D9C3';
+    img.style.borderRadius = '4px';
+    
+    // 添加图片加载错误处理
+    img.onerror = function() {
+      console.error('图片加载失败:', img.src);
+      this.onerror = null;
+      // 尝试重新加载
+      setTimeout(() => {
+        const newSrc = this.src.includes('?') ? 
+          this.src + '&reload=' + new Date().getTime() : 
+          this.src + '?reload=' + new Date().getTime();
+        this.src = newSrc;
+      }, 300);
+    };
+    
+    console.log(`预览图片 ${index+1}:`, img.src);
+  });
+};
 
 const handleClick = e => {
   const target = e.target;
@@ -71,6 +113,7 @@ const on = () => {
   font-family: "SimSun", "宋体", serif;
   color: #582F0E;
   padding: 15px;
+  overflow-wrap: break-word; /* 确保长内容不会溢出 */
 }
 
 .markdown-body h1,
@@ -118,11 +161,15 @@ const on = () => {
 }
 
 .markdown-body img {
-  max-width: 100%;
-  box-sizing: content-box;
-  border-radius: 4px;
-  border: 1px solid #E4D9C3;
-  margin: 10px 0;
-  display: block;
+  max-width: 100% !important;
+  box-sizing: content-box !important;
+  border-radius: 4px !important;
+  border: 1px solid #E4D9C3 !important;
+  margin: 10px 0 !important;
+  display: block !important;
+  height: auto !important;
+  object-fit: contain !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 </style> 

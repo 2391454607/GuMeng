@@ -1,6 +1,6 @@
 <script setup>
 import { Editor } from 'bytemd';
-import { ref, watch, defineEmits, onMounted, computed } from 'vue';
+import { ref, watch, defineEmits, onMounted, computed, nextTick, onUnmounted } from 'vue';
 
 const props = defineProps({
   value: String,//内容控件的值
@@ -70,9 +70,166 @@ onMounted(() => {
   });
   editor.$on("change", e => {
     emit("change", e.detail.value);
+
+    nextTick(() => {
+      fixPreviewImages();
+    });
   });
   editorRef.value = editor;
+  
+  // 添加定时器，每隔一段时间检查预览区图片
+  const intervalId = setInterval(() => {
+    fixPreviewImages();
+  }, 3000);
+  
+  // 组件销毁时清除定时器
+  onUnmounted(() => {
+    clearInterval(intervalId);
+  });
 });
+
+// 增强fixPreviewImages函数
+const fixPreviewImages = () => {
+  // 查找预览区域
+  const previewElement = document.querySelector('.bytemd-preview');
+  if (!previewElement) return;
+  
+  // 找到所有图片
+  const images = previewElement.querySelectorAll('img');
+  if (images.length === 0) return;
+  
+  // 收集出现的图片URL路径
+  const possibleImageUrls = [];
+  
+  // 查找编辑器中所有的图片URL
+  const editorValue = document.querySelector('.CodeMirror').CodeMirror?.getValue() || '';
+  const matches = editorValue.match(/!\[.*?\]\((.*?)\)/g) || [];
+  
+  if (matches.length > 0) {
+    matches.forEach(match => {
+      const urlMatch = match.match(/!\[.*?\]\((.*?)\)/);
+      if (urlMatch && urlMatch[1] && urlMatch[1].startsWith('http')) {
+        possibleImageUrls.push(urlMatch[1]);
+      }
+    });
+  }
+  
+  // 处理每个图片
+  images.forEach((img, index) => {
+    // 检查图片是否正常显示
+    const src = img.getAttribute('src');
+    if (!src || src === 'undefined' || src.includes('undefined') || src.startsWith('http://localhost')) {
+      
+      // 尝试使用alt文本作为线索查找正确URL
+      const alt = img.getAttribute('alt') || '';
+      
+      // 尝试找到匹配的图片URL
+      let replacementUrl = null;
+      
+      // 1. 尝试通过alt文本匹配
+      replacementUrl = possibleImageUrls.find(url => 
+        url && url.includes(alt.replace('.jpg', '').replace('.png', '').replace('.gif', ''))
+      );
+      
+      // 2. 如果没找到匹配，使用索引匹配
+      if (!replacementUrl && index < possibleImageUrls.length) {
+        replacementUrl = possibleImageUrls[index];
+      }
+      
+      // 3. 如果还是没找到，使用第一个可用URL
+      if (!replacementUrl && possibleImageUrls.length > 0) {
+        replacementUrl = possibleImageUrls[0];
+      }
+      
+      // 如果找到了替换URL
+      if (replacementUrl) {
+        img.src = replacementUrl;
+        
+        // 确保图片可见
+        img.style.display = 'block';
+        img.style.maxWidth = '80%'; // 调整为更小的尺寸
+        img.style.height = 'auto';
+        img.style.margin = '10px auto';
+        img.style.border = '1px solid #E4D9C3';
+        img.style.borderRadius = '4px';
+        img.style.visibility = 'visible';
+        img.style.opacity = '1';
+      } else {
+        // 应用应急样式
+        img.style.border = '1px dashed #ff6b6b';
+        img.style.padding = '10px';
+        img.style.height = '120px';
+        img.style.width = '120px';
+        img.style.display = 'block';
+        img.style.margin = '10px auto';
+        img.style.backgroundColor = '#fff7e9';
+        img.style.position = 'relative';
+        
+        // 显示替代文本
+        if (!img.nextSibling || !img.nextSibling.classList?.contains('img-placeholder-text')) {
+          const placeholder = document.createElement('div');
+          placeholder.textContent = `图片 [${alt || '未命名'}] 正在加载中...`;
+          placeholder.className = 'img-placeholder-text';
+          placeholder.style.textAlign = 'center';
+          placeholder.style.fontSize = '12px';
+          placeholder.style.color = '#8C1F28';
+          placeholder.style.padding = '5px';
+          img.parentNode.insertBefore(placeholder, img.nextSibling);
+        }
+      }
+    } else {
+      // 确保图片正常显示
+      img.style.display = 'block';
+      img.style.maxWidth = '80%'; // 调整为更小的尺寸
+      img.style.height = 'auto';
+      img.style.margin = '10px auto';
+      img.style.border = '1px solid #E4D9C3';
+      img.style.borderRadius = '4px';
+      img.style.visibility = 'visible';
+      img.style.opacity = '1';
+    }
+    
+    // 添加错误处理
+    if (!img._hasErrorHandler) {
+      img._hasErrorHandler = true;
+      img.onerror = function() {
+        // 尝试使用替代URL
+        if (possibleImageUrls.length > 0) {
+          let replacementUrl;
+          
+          // 优先使用相同索引的URL
+          if (index < possibleImageUrls.length) {
+            replacementUrl = possibleImageUrls[index];
+          } else {
+            replacementUrl = possibleImageUrls[0];
+          }
+          
+          if (replacementUrl && replacementUrl !== this.src) {
+            this.src = replacementUrl;
+            return;
+          }
+        }
+        
+        // 应用错误样式
+        this.style.border = '1px dashed #ff6b6b';
+        this.style.padding = '10px';
+        this.alt = this.alt || '图片加载失败';
+        
+        // 显示错误信息
+        if (!this.nextSibling || !this.nextSibling.classList?.contains('img-error-text')) {
+          const errorText = document.createElement('div');
+          errorText.textContent = `图片加载失败: ${this.alt || '未知图片'}`;
+          errorText.className = 'img-error-text';
+          errorText.style.textAlign = 'center';
+          errorText.style.fontSize = '12px';
+          errorText.style.color = '#ff6b6b';
+          errorText.style.padding = '5px';
+          this.parentNode.insertBefore(errorText, this.nextSibling);
+        }
+      };
+    }
+  });
+};
 </script>
 
 <template>
@@ -355,5 +512,45 @@ onMounted(() => {
     height: 500px !important;
     max-height: 500px !important;
   }
+}
+
+/* 增强预览区域的图片显示 */
+:deep(.bytemd-preview img) {
+  display: block !important;
+  max-width: 100% !important;
+  height: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  margin: 10px auto !important;
+  border-radius: 4px !important;
+  border: 1px solid #E4D9C3 !important;
+}
+
+/* 修复预览区域滚动和尺寸问题 */
+:deep(.bytemd-preview) {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  min-height: 500px !important;
+  padding: 15px !important;
+  box-sizing: border-box !important;
+}
+
+:deep(.markdown-body) {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+/* 确保图片在编辑器预览和实时预览中都能正确显示 */
+:deep(.markdown-body img) {
+  max-width: 100% !important;
+  box-sizing: content-box !important;
+  border-radius: 4px !important;
+  border: 1px solid #E4D9C3 !important;
+  margin: 10px auto !important;
+  display: block !important;
+  height: auto !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 </style> 
