@@ -54,12 +54,30 @@ const sensitiveWordsError = ref('');
 // 添加加载状态
 const loading = ref(false);
 
+// 在script setup开始位置添加草稿相关常量和editorValue初始化
+const DRAFT_KEY = 'forum_post_draft';
+const DRAFT_TIMESTAMP_KEY = 'forum_post_draft_timestamp';
+
+// 创建预览区域 - 移动到前面
+const editorValue = ref('');  // 用于存储编辑器内容
+
+// 计算编辑器内容的字数
+const contentWordCount = computed(() => {
+  // 如果没有内容返回0
+  if (!editorValue.value) return 0;
+  
+  // 去除markdown图片语法后计算字数
+  const textOnly = editorValue.value.replace(/!\[.*?\]\(.*?\)/g, '图片');
+  return textOnly.length;
+});
+
 // ByteMD编辑器上传图片处理函数
 const handleUploadBytemdImages = async (files) => {
   try {
     // 检查已有图片数量
     const imageRegex = /!\[.*?\]\((.*?)\)/g;
-    const matches = [...(editorValue.value || '').matchAll(imageRegex)];
+    // 使用可选链操作符避免未定义错误
+    const matches = [...((editorValue?.value || '').matchAll(imageRegex))];
     const currentImages = matches.length;
     
     if (currentImages + files.length > 9) {
@@ -373,7 +391,252 @@ const uploadImages = async () => {
   }
 };
 
-// 提交表单
+// 修改onMounted钩子，添加加载草稿功能
+onMounted(() => {
+  fetchTopics();
+  
+  // 尝试从localStorage加载草稿
+  if (!isEdit.value) { // 只在创建新帖子时加载草稿
+    loadDraft();
+  }
+  
+  fetchPostDetail();
+  
+  // 初始化时设置状态栏
+  updateWordCount();
+  
+  // 创建一个可重复执行的图片刷新函数
+  const attemptRefreshImages = (attempts = 0) => {
+    if (attempts >= 3) return; // 最多尝试3次
+    
+    refreshPreviewImages();
+    
+    // 递归调用，每次间隔增加
+    setTimeout(() => {
+      attemptRefreshImages(attempts + 1);
+    }, 1000 + attempts * 500); // 依次增加间隔时间
+  };
+  
+  // 延迟启动刷新尝试，确保编辑器已完全初始化
+  setTimeout(() => {
+    attemptRefreshImages();
+    
+    // 添加一个间隔检查，确保图片显示正常
+    const intervalId = setInterval(() => {
+      refreshPreviewImages();
+    }, 5000); // 每5秒检查一次
+    
+    // 组件卸载时清除定时器
+    onUnmounted(() => {
+      clearInterval(intervalId);
+    });
+  }, 1000);
+  
+  // 添加页面关闭前的提示
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  onUnmounted(() => {
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+  });
+});
+
+// 添加草稿相关函数
+// 保存草稿到localStorage
+const saveDraft = () => {
+  if (!editorValue.value && !postForm.title) return; // 如果内容为空，不保存
+  
+  try {
+    const draft = {
+      title: postForm.title,
+      content: editorValue.value,
+      topic: postForm.topic,
+      images: postForm.images
+    };
+    
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    localStorage.setItem(DRAFT_TIMESTAMP_KEY, Date.now().toString());
+  } catch (error) {
+    console.error('保存草稿失败:', error);
+  }
+};
+
+// 加载草稿
+const loadDraft = () => {
+  try {
+    const draftJson = localStorage.getItem(DRAFT_KEY);
+    const timestamp = localStorage.getItem(DRAFT_TIMESTAMP_KEY);
+    
+    if (!draftJson || !timestamp) return;
+    
+    // 计算草稿的保存时间（超过24小时的草稿不加载）
+    const now = Date.now();
+    const draftTime = parseInt(timestamp, 10);
+    const hoursDiff = (now - draftTime) / (1000 * 60 * 60);
+    
+    if (hoursDiff > 24) {
+      clearDraft();
+      return;
+    }
+    
+    // 解析并加载草稿
+    const draft = JSON.parse(draftJson);
+    
+    if (draft.content) {
+      editorValue.value = draft.content;
+      postForm.content = draft.content;
+    }
+    
+    if (draft.title) {
+      postForm.title = draft.title;
+    }
+    
+    if (draft.topic) {
+      postForm.topic = draft.topic;
+    }
+    
+    if (draft.images && Array.isArray(draft.images)) {
+      postForm.images = draft.images;
+      previewImages.value = [...draft.images];
+    }
+    
+    // 显示提示
+    Message.info('已加载上次编辑的草稿');
+  } catch (error) {
+    console.error('加载草稿失败:', error);
+  }
+};
+
+// 清除草稿
+const clearDraft = () => {
+  localStorage.removeItem(DRAFT_KEY);
+  localStorage.removeItem(DRAFT_TIMESTAMP_KEY);
+};
+
+// 页面关闭前提示 - 修改为不显示确认提示
+const handleBeforeUnload = (e) => {
+  // 自动保存草稿但不提示确认
+  if (editorValue.value && !submitting.value) {
+    saveDraft();
+  }
+};
+
+// 修改监听编辑器内容变化的函数，添加自动保存草稿功能
+watch(editorValue, (newVal) => {
+  postForm.content = newVal;
+  
+  // 提取内容中的图片URL
+  const imageRegex = /!\[.*?\]\((.*?)\)/g;
+  const matches = [...(newVal || '').matchAll(imageRegex)];
+  const contentImages = matches.map(match => match[1]);
+  
+  console.log('编辑器内容已更新，字数:', contentWordCount.value);
+  console.log('提取到的图片URLs:', contentImages);
+  
+  // 将图片添加到表单数据中
+  if (contentImages.length > 0) {
+    contentImages.forEach(url => {
+      if (!postForm.images.includes(url)) {
+        postForm.images.push(url);
+      }
+    });
+  }
+  
+  // 添加延迟刷新预览区域中的图片
+  setTimeout(() => {
+    refreshPreviewImages();
+  }, 500);
+  
+  // 自动保存草稿（防抖）
+  clearTimeout(window.draftSaveTimeout);
+  window.draftSaveTimeout = setTimeout(() => {
+    if (!isEdit.value) { // 只在创建新帖子时保存草稿
+      saveDraft();
+    }
+  }, 1000);
+}, { immediate: true, deep: true });
+
+// 标题和话题变化时也保存草稿
+watch(() => postForm.title, () => {
+  if (!isEdit.value) {
+    clearTimeout(window.draftSaveTimeout);
+    window.draftSaveTimeout = setTimeout(saveDraft, 1000);
+  }
+});
+
+watch(() => postForm.topic, () => {
+  if (!isEdit.value) {
+    clearTimeout(window.draftSaveTimeout);
+    window.draftSaveTimeout = setTimeout(saveDraft, 1000);
+  }
+});
+
+// 进一步改进prepareContentForSubmission函数，确保不会有undefined图片URL
+const prepareContentForSubmission = (content) => {
+  if (!content) return '';
+  
+  try {
+    let processedContent = content;
+    
+    // 1. 修复图片URL
+    processedContent = fixImageUrlsInContent(processedContent);
+    
+    // 2. 删除任何undefined的图片引用
+    processedContent = processedContent.replace(/!\[.*?\]\(undefined\)/g, '');
+    processedContent = processedContent.replace(/!\[.*?\]\(.*?undefined.*?\)/g, '');
+    
+    // 3. 处理相对路径图片，确保URL是完整的
+    const relativeImageRegex = /!\[(.*?)\]\((?!http)(.*?)\)/g;
+    processedContent = processedContent.replace(relativeImageRegex, (match, alt, url) => {
+      // 只处理非http开头的URL
+      if (!url || !url.startsWith('http')) {
+        // 检查是否为空URL
+        if (!url || url.trim() === '') {
+          return ''; // 移除无效图片标记
+        }
+        
+        const baseUrl = 'http://sw8nkdw7h.hn-bkt.clouddn.com';
+        const absoluteUrl = url.startsWith('/') ? 
+          `${baseUrl}${url}` : 
+          `${baseUrl}/${url}`;
+        return `![${alt}](${absoluteUrl})`;
+      }
+      return match;
+    });
+    
+    // 4. 从已上传图片中尝试恢复丢失的链接
+    const brokenImageRegex = /!\[(.*?)\]\(\s*\)/g;
+    processedContent = processedContent.replace(brokenImageRegex, (match, alt) => {
+      // 尝试从已上传图片中找到匹配的URL
+      const possibleImage = postForm.images.find(img => 
+        img && img.includes(alt.replace('.jpg', '').replace('.png', '').replace('.gif', ''))
+      );
+      
+      if (possibleImage) {
+        return `![${alt}](${possibleImage})`;
+      }
+      return ''; // 如果找不到匹配，删除这个图片标记
+    });
+    
+    // 5. 确保所有图片URL都是有效的http链接
+    const allImagesRegex = /!\[(.*?)\]\((.*?)\)/g;
+    processedContent = processedContent.replace(allImagesRegex, (match, alt, url) => {
+      if (!url || !url.startsWith('http')) {
+        return ''; // 移除无效图片
+      }
+      return match;
+    });
+    
+    // 6. 清理多余的空行
+    processedContent = processedContent.replace(/\n{3,}/g, '\n\n');
+    
+    console.log('处理后的内容：', processedContent);
+    return processedContent;
+  } catch (error) {
+    console.error('处理提交内容出错:', error);
+    return content; // 出错时返回原始内容
+  }
+};
+
+// 修改submitForm函数中的内容处理部分
 const submitForm = async () => {
   if (!userStore.isLogin) {
     Message.warning('请先登录再发布帖子');
@@ -389,20 +652,27 @@ const submitForm = async () => {
   submitting.value = true;
   
   try {
-    // 在提交前修复可能的undefined图片URL
+    // 在提交前全面处理内容
     if (postForm.content) {
-      const fixedContent = fixImageUrlsInContent(postForm.content);
-      if (fixedContent !== postForm.content) {
-        console.log('提交前修复了内容中的undefined图片URL');
-        postForm.content = fixedContent;
-        editorValue.value = fixedContent;
+      // 使用新的预处理函数
+      const processedContent = prepareContentForSubmission(postForm.content);
+      
+      if (processedContent !== postForm.content) {
+        console.log('内容已完全预处理，准备提交');
+        postForm.content = processedContent;
+        editorValue.value = processedContent;
       }
     }
     
     // 检查内容中是否还有undefined图片URL
     const undefinedCheck = /!\[.*?\]\(undefined\)/.test(postForm.content);
     if (undefinedCheck) {
-      console.warn('内容中仍然存在undefined的图片URL，尝试修复...');
+      console.warn('内容中仍然存在undefined的图片URL，继续尝试修复...');
+      
+      // 移除所有undefined图片，确保内容干净
+      postForm.content = postForm.content.replace(/!\[.*?\]\(undefined\)/g, '');
+      editorValue.value = postForm.content;
+      
       // 强制刷新预览区域图片
       refreshPreviewImages();
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -507,6 +777,9 @@ const submitForm = async () => {
     }
     
     if (res.code === 200) {
+      // 清除草稿
+      clearDraft();
+      
       Message.success(isEdit.value ? '帖子更新成功' : '帖子发布成功');
       // 跳转到详情页或列表页
       if (isEdit.value) {
@@ -529,45 +802,6 @@ const submitForm = async () => {
 const goBack = () => {
   router.push('/forum/list');
 };
-
-// 创建预览区域
-const editorValue = ref('');  // 用于存储编辑器内容
-// 计算编辑器内容的字数
-const contentWordCount = computed(() => {
-  // 如果没有内容返回0
-  if (!editorValue.value) return 0;
-  
-  // 去除markdown图片语法后计算字数
-  const textOnly = editorValue.value.replace(/!\[.*?\]\(.*?\)/g, '图片');
-  return textOnly.length;
-});
-
-// 监听编辑器内容变化
-watch(editorValue, (newVal) => {
-  postForm.content = newVal;
-  
-  // 提取内容中的图片URL
-  const imageRegex = /!\[.*?\]\((.*?)\)/g;
-  const matches = [...(newVal || '').matchAll(imageRegex)];
-  const contentImages = matches.map(match => match[1]);
-  
-  console.log('编辑器内容已更新，字数:', contentWordCount.value);
-  console.log('提取到的图片URLs:', contentImages);
-  
-  // 将图片添加到表单数据中
-  if (contentImages.length > 0) {
-    contentImages.forEach(url => {
-      if (!postForm.images.includes(url)) {
-        postForm.images.push(url);
-      }
-    });
-  }
-  
-  // 添加延迟刷新预览区域中的图片
-  setTimeout(() => {
-    refreshPreviewImages();
-  }, 500);
-}, { immediate: true, deep: true });
 
 // 修改fixImageUrlsInContent函数
 const fixImageUrlsInContent = (content) => {
@@ -726,7 +960,7 @@ const refreshPreviewImages = () => {
   const previewElement = document.querySelector('.bytemd-preview');
   if (!previewElement) return;
 
-  if (editorValue.value) {
+  if (editorValue?.value) {
     const fixedContent = fixImageUrlsInContent(editorValue.value);
     if (fixedContent !== editorValue.value) {
       editorValue.value = fixedContent;
@@ -835,12 +1069,12 @@ const refreshPreviewImages = () => {
   });
 };
 
-// 处理编辑器内容变化的事件处理函数
+// 修改处理编辑器内容变化的事件处理函数
 const handleEditorChange = (value) => {
   editorValue.value = value;
   postForm.content = value;
   
-  // 提取并记录内容中的图片URL
+  // 提取内容中的图片URL
   const imageRegex = /!\[.*?\]\((.*?)\)/g;
   const matches = [...(value || '').matchAll(imageRegex)];
   const contentImages = matches.map(match => match[1]);
@@ -850,13 +1084,51 @@ const handleEditorChange = (value) => {
   
   // 手动更新状态栏字数统计
   updateWordCount();
+  
+  // 对内容进行预处理，确保能在列表中正确显示
+  processContentForPreview(value);
 };
 
-// 更新编辑器状态栏的字数统计
+// 添加内容预处理函数
+const processContentForPreview = (content) => {
+  if (!content) return;
+  
+  try {
+    // 确保Markdown图片语法正确
+    const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
+    let correctedContent = content;
+    
+    // 修复可能的图片路径问题
+    correctedContent = correctedContent.replace(imageRegex, (match, alt, url) => {
+      // 检查URL是否有效
+      if (!url || url === 'undefined' || url.includes('undefined') || !url.startsWith('http')) {
+        // 尝试查找匹配的图片
+        const possibleImage = postForm.images.find(img => 
+          img && img.includes(alt.replace('.jpg', '').replace('.png', '').replace('.gif', ''))
+        );
+        
+        if (possibleImage) {
+          return `![${alt}](${possibleImage})`;
+        }
+      }
+      return match;
+    });
+    
+    // 如果内容有变化，更新
+    if (correctedContent !== content) {
+      editorValue.value = correctedContent;
+      postForm.content = correctedContent;
+    }
+  } catch (error) {
+    console.error('处理内容预览出错:', error);
+  }
+};
+
+// 修改updateWordCount函数为更安全的版本
 const updateWordCount = () => {
   setTimeout(() => {
     const statusElement = document.querySelector('.bytemd-status-left');
-    if (statusElement) {
+    if (statusElement && editorValue?.value !== undefined) {
       // 去除图片标记后的内容长度
       const textContent = editorValue.value.replace(/!\[.*?\]\(.*?\)/g, '图片');
       statusElement.innerHTML = `字数: ${textContent.length}`;
@@ -873,41 +1145,6 @@ const handleTitleChange = (value) => {
 const handleTopicChange = (value) => {
   postForm.topic = value;
 };
-
-onMounted(() => {
-  fetchTopics();
-  fetchPostDetail();
-  
-  // 初始化时设置状态栏
-  updateWordCount();
-  
-  // 创建一个可重复执行的图片刷新函数
-  const attemptRefreshImages = (attempts = 0) => {
-    if (attempts >= 3) return; // 最多尝试3次
-    
-    refreshPreviewImages();
-    
-    // 递归调用，每次间隔增加
-    setTimeout(() => {
-      attemptRefreshImages(attempts + 1);
-    }, 1000 + attempts * 500); // 依次增加间隔时间
-  };
-  
-  // 延迟启动刷新尝试，确保编辑器已完全初始化
-  setTimeout(() => {
-    attemptRefreshImages();
-    
-    // 添加一个间隔检查，确保图片显示正常
-    const intervalId = setInterval(() => {
-      refreshPreviewImages();
-    }, 5000); // 每5秒检查一次
-    
-    // 组件卸载时清除定时器
-    onUnmounted(() => {
-      clearInterval(intervalId);
-    });
-  }, 1000);
-});
 </script>
 
 <template>

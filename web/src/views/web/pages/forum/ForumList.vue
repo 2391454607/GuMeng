@@ -103,10 +103,8 @@ const fetchPosts = async () => {
       }
     }
     
-    // console.log('发送分页请求参数:', params);
     const res = await getPostsAPI(params);
     if (res.code === 200) {
-      // console.log('获取到分页数据:', res.data);
       const newPosts = res.data.records || [];
       
       // 处理图片字段和确保评论数正确
@@ -124,6 +122,32 @@ const fetchPosts = async () => {
         // 确保用户名和头像字段正确
         post.authorName = post.username || '匿名用户';
         post.authorAvatar = post.avatar || '/avatar/default-avatar.png';
+        
+        // 创建简短预览内容（去除图片标记等）
+        if (post.content) {
+          // 预处理内容，去除任何undefined图片链接
+          let processedContent = post.content;
+          
+          // 1. 首先移除所有包含undefined的图片标记
+          processedContent = processedContent.replace(/!\[.*?\]\(undefined\)/g, '');
+          processedContent = processedContent.replace(/!\[.*?\]\(.*?undefined.*?\)/g, '');
+          
+          // 2. 将剩余的图片标记替换为[图片]文本
+          processedContent = processedContent.replace(/!\[.*?\]\(.*?\)/g, '[图片]');
+          
+          // 3. 去除多余的空行
+          processedContent = processedContent.replace(/\n{3,}/g, '\n\n');
+          
+          // 4. 截取前150个字符作为预览
+          const previewText = processedContent.length > 150 ? 
+            processedContent.slice(0, 150) + '...' : 
+            processedContent;
+          
+          // 添加处理后的预览文本字段
+          post.previewText = previewText;
+        } else {
+          post.previewText = '';
+        }
       });
       
       posts.value = newPosts;
@@ -328,7 +352,12 @@ onMounted(() => {
                       
                       <!-- 使用Viewer组件渲染Markdown内容 -->
                       <div class="post-content-markdown">
-                        <Viewer :value="post.content" :plugins="plugins" />
+                        <Viewer 
+                          :value="post.previewText" 
+                          :plugins="plugins" 
+                          :sanitize="false"
+                          class="preview-markdown"
+                        />
                       </div>
                     </div>
                     
@@ -657,10 +686,19 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
-  line-height: 1.6;
+  line-height: 1.5;
   background-color: transparent;
+  padding: 0 !important;
+  margin: 0 !important;
+  min-height: 20px;
+}
+
+.post-content-markdown :deep(.markdown-body p) {
+  white-space: normal;
+  margin: 0;
+  padding: 0;
 }
 
 .post-content-markdown :deep(.markdown-body h1),
@@ -669,20 +707,31 @@ onMounted(() => {
 .post-content-markdown :deep(.markdown-body h4),
 .post-content-markdown :deep(.markdown-body h5),
 .post-content-markdown :deep(.markdown-body h6) {
-  margin-top: 0;
-  margin-bottom: 4px;
+  margin: 0;
+  padding: 0;
   font-size: 14px;
   display: inline;
   border: none;
-  padding: 0;
-}
-
-.post-content-markdown :deep(.markdown-body p) {
-  margin-bottom: 0;
+  color: #6B4F2E;
 }
 
 .post-content-markdown :deep(.markdown-body img) {
-  display: none;
+  display: none !important;
+}
+
+.post-content-markdown :deep(.markdown-body blockquote),
+.post-content-markdown :deep(.markdown-body pre),
+.post-content-markdown :deep(.markdown-body table) {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.post-content-markdown :deep(.markdown-body code) {
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  border: none;
 }
 
 .post-images {
