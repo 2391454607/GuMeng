@@ -15,8 +15,8 @@ const topics = ref([]);
 
 // 分页参数
 const status = reactive({
-  current: 1,
-  size: 10,
+  pageNum: 1,
+  pageSize: 10,
   keyword: "",
   topic: null
 });
@@ -46,7 +46,16 @@ const getTopics = async () => {
 // 获取帖子列表
 const getPostList = () => {
   loading.value = true;
-  getForumPostsAPI(status).then(res => {
+  // 创建参数对象，将pageNum映射为page，将pageSize映射为size
+  const params = {
+    page: status.pageNum,
+    size: status.pageSize,
+    keyword: status.keyword,
+    topic: status.topic
+  };
+  console.log("获取帖子列表参数:", params);
+  
+  getForumPostsAPI(params).then(res => {
     if (res.code === 200) {
       postList.value = res.data.records;
       total.value = res.data.total;
@@ -63,19 +72,19 @@ const getPostList = () => {
 
 // 分页处理
 const handlePageChange = (current) => {
-  status.current = current;
+  status.pageNum = current;
   getPostList();
 };
 
 // 搜索功能
 const handleSearch = () => {
-  status.current = 1;
+  status.pageNum = 1;
   getPostList();
 };
 
 // 重置搜索
 const handleReset = () => {
-  status.current = 1;
+  status.pageNum = 1;
   status.keyword = "";
   status.topic = null;
   getPostList();
@@ -177,8 +186,8 @@ const getGridClass = (imageCount) => {
           :data="postList"
           :pagination="{
           total: total,
-          current: status.current,
-          pageSize: status.size,
+          current: status.pageNum,
+          pageSize: status.pageSize,
           showTotal: true,
           showJumper: true
         }"
@@ -186,7 +195,7 @@ const getGridClass = (imageCount) => {
           @page-change="handlePageChange"
       >
         <template #columns>
-          <a-table-column align="center" data-index="id" title="ID" width="60"></a-table-column>
+          <a-table-column align="center" data-index="id" title="ID" :width="60"></a-table-column>
           <a-table-column align="center" data-index="title" title="标题" ellipsis tooltip></a-table-column>
           <a-table-column align="center" data-index="topic" title="话题">
             <template #cell="{ record }">
@@ -194,15 +203,15 @@ const getGridClass = (imageCount) => {
             </template>
           </a-table-column>
           <a-table-column align="center" data-index="username" title="发布者"></a-table-column>
-          <a-table-column align="center" data-index="createTime" title="发布时间" width="150">
+          <a-table-column align="center" data-index="createTime" title="发布时间" :width="150">
             <template #cell="{ record }">
               <span class="time-cell">{{ formatDateTime(record.createTime) }}</span>
             </template>
           </a-table-column>
-          <a-table-column align="center" data-index="thumbsUpNum" title="点赞数" width="80"></a-table-column>
-          <a-table-column align="center" data-index="commonNum" title="评论数" width="80"></a-table-column>
-          <a-table-column align="center" data-index="viewCount" title="浏览量" width="80"></a-table-column>
-          <a-table-column align="center" title="操作" width="180">
+          <a-table-column align="center" data-index="thumbsUpNum" title="点赞数" :width="80"></a-table-column>
+          <a-table-column align="center" data-index="commonNum" title="评论数" :width="80"></a-table-column>
+          <a-table-column align="center" data-index="viewCount" title="浏览量" :width="80"></a-table-column>
+          <a-table-column align="center" title="操作" :width="180">
             <template #cell="{record}">
               <div class="operation-buttons">
                 <a-button class="edit-button" type="text" @click="viewPostDetail(record.id)">

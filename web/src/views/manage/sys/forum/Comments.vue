@@ -17,8 +17,8 @@ const selectedKeys = ref([]);
 
 // 分页参数
 const status = reactive({
-  current: 1,
-  size: 10,
+  pageNum: 1,
+  pageSize: 10,
   postId: null,
   userId: null
 });
@@ -98,7 +98,17 @@ const processCommentTopics = async (comments) => {
 const getCommentList = () => {
   console.log("获取评论列表, 参数:", status);
   loading.value = true;
-  getCommentsAPI(status).then(async res => {
+  
+  // 创建参数对象，将pageNum映射为page，将pageSize映射为size
+  const params = {
+    page: status.pageNum,
+    size: status.pageSize,
+    postId: status.postId,
+    userId: status.userId
+  };
+  console.log("API请求参数:", params);
+  
+  getCommentsAPI(params).then(async res => {
     if (res.code === 200) {
       console.log("获取评论列表结果:", res.data);
       let comments = res.data.records;
@@ -129,21 +139,21 @@ const getCommentStats = () => {
 };
 
 // 分页处理
-const handlePageChange = (current) => {
-  console.log("页码变更为:", current);
-  status.current = current;
+const handlePageChange = (pageNum) => {
+  console.log("页码变更为:", pageNum);
+  status.pageNum = pageNum;
   getCommentList();
 };
 
 // 搜索功能
 const handleSearch = () => {
-  status.current = 1;
+  status.pageNum = 1;
   getCommentList();
 };
 
 // 重置搜索
 const handleReset = () => {
-  status.current = 1;
+  status.pageNum = 1;
   status.postId = null;
   status.userId = null;
   getCommentList();
@@ -291,8 +301,8 @@ const formatDateTime = (dateTimeStr) => {
           :data="commentList"
           :pagination="{
           total: total,
-          current: status.current,
-          pageSize: status.size,
+          current: status.pageNum,
+          pageSize: status.pageSize,
           showTotal: true,
           showJumper: true
         }"
@@ -307,7 +317,7 @@ const formatDateTime = (dateTimeStr) => {
           @page-change="handlePageChange"
       >
         <template #columns>
-          <a-table-column align="center" data-index="commentId" title="ID" width="60"></a-table-column>
+          <a-table-column align="center" data-index="commentId" title="ID" :width="60"></a-table-column>
           <!-- 鼠标悬停时展示内容 -->
           <a-table-column align="center" data-index="content" title="内容" ellipsis tooltip>
             <template #cell="{ record }">
@@ -328,19 +338,19 @@ const formatDateTime = (dateTimeStr) => {
               <span v-else>{{ record.postId || '-' }}</span>
             </template>
           </a-table-column>
-          <a-table-column align="center" data-index="isReply" title="是否回复" width="100">
+          <a-table-column align="center" data-index="isReply" title="是否回复" :width="100">
             <template #cell="{ record }">
               <a-tag v-if="record.isReply" color="blue">回复评论</a-tag>
               <a-tag v-else color="green">原始评论</a-tag>
             </template>
           </a-table-column>
-          <a-table-column align="center" data-index="thumbsUp" title="点赞数" width="80"></a-table-column>
-          <a-table-column align="center" data-index="createTime" title="发布时间" width="150">
+          <a-table-column align="center" data-index="thumbsUp" title="点赞数" :width="80"></a-table-column>
+          <a-table-column align="center" data-index="createTime" title="发布时间" :width="150">
             <template #cell="{ record }">
               <span class="time-cell">{{ formatDateTime(record.createTime) }}</span>
             </template>
           </a-table-column>
-          <a-table-column align="center" title="操作" width="180">
+          <a-table-column align="center" title="操作" :width="180">
             <template #cell="{record}">
               <div class="operation-buttons">
                 <a-button class="edit-button" type="text" @click="viewCommentDetail(record.commentId)">
