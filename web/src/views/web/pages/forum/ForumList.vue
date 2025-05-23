@@ -3,7 +3,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
-import { IconSearch, IconEye, IconPlus, IconHeart, IconMessage, IconHeartFill } from '@arco-design/web-vue/es/icon';
+import { IconSearch, IconEye, IconPlus, IconHeart, IconMessage, IconHeartFill, IconLoading } from '@arco-design/web-vue/es/icon';
 import { getPostListAPI as getPostsAPI, getTopicsAPI, likePostAPI, unlikePostAPI } from '@/api/forum';
 import { useUserStore } from '@/stores/userStore.js';
 import { formatDate } from '@/utils/format';
@@ -293,83 +293,83 @@ onMounted(() => {
       <div class="forum-body">
         <!-- 帖子列表 -->
         <div class="forum-content">
-          <!-- 加载状态 -->
-          <div v-if="loading" class="loading-container">
-            <a-skeleton :rows="10" animation />
-          </div>
-          
-          <!-- 空状态 -->
-          <div v-else-if="posts.length === 0" class="empty-container">
-            <a-empty description="暂无帖子">
-              <template #extra>
-                <a-button type="primary" @click="createPost">立即发布</a-button>
-              </template>
-            </a-empty>
-          </div>
-          
-          <!-- 帖子列表 -->
-          <div v-else class="post-list">
-            <div v-for="post in posts" :key="post.id" class="post-item" @click="goToDetail(post.id)">
-              <!-- 帖子内容 -->
-              <div class="post-info">
-                <div class="post-author">
-                  <img :src="post.authorAvatar || '/avatar/default-avatar.png'" alt="头像" class="author-avatar" />
-                  <span class="author-name">{{ post.authorName }}</span>
-                  <span class="post-time">{{ formatDate(post.createTime) }}</span>
-                </div>
-                <h3 class="post-title">{{ post.title }}</h3>
-                
-                <!-- 图文并排布局容器 -->
-                <div class="post-content-container">
-                  <!-- 帖子图片 - 只显示第一张 -->
-                  <div v-if="post.images && post.images.length > 0" class="post-images single-image">
-                    <div class="post-image-wrapper">
-                      <img :src="post.images[0]" alt="帖子图片" class="post-image" />
+          <a-spin :loading="loading" size="large">
+            <template #icon><icon-loading /></template>
+            <div class="post-container">
+              <!-- 空状态 -->
+              <div v-if="posts.length === 0 && !loading" class="empty-container">
+                <a-empty description="暂无帖子">
+                  <template #extra>
+                    <a-button type="primary" @click="createPost">立即发布</a-button>
+                  </template>
+                </a-empty>
+              </div>
+              
+              <!-- 帖子列表 -->
+              <div v-else-if="!loading" class="post-list">
+                <div v-for="post in posts" :key="post.id" class="post-item" @click="goToDetail(post.id)">
+                  <!-- 帖子内容 -->
+                  <div class="post-info">
+                    <div class="post-author">
+                      <img :src="post.authorAvatar || '/avatar/default-avatar.png'" alt="头像" class="author-avatar" />
+                      <span class="author-name">{{ post.authorName }}</span>
+                      <span class="post-time">{{ formatDate(post.createTime) }}</span>
+                    </div>
+                    <h3 class="post-title">{{ post.title }}</h3>
+                    
+                    <!-- 图文并排布局容器 -->
+                    <div class="post-content-container">
+                      <!-- 帖子图片 - 只显示第一张 -->
+                      <div v-if="post.images && post.images.length > 0" class="post-images single-image">
+                        <div class="post-image-wrapper">
+                          <img :src="post.images[0]" alt="帖子图片" class="post-image" />
+                        </div>
+                      </div>
+                      
+                      <!-- 使用Viewer组件渲染Markdown内容 -->
+                      <div class="post-content-markdown">
+                        <Viewer :value="post.content" :plugins="plugins" />
+                      </div>
+                    </div>
+                    
+                    <!-- 帖子底部信息 -->
+                    <div class="post-footer">
+                      <div class="post-stats">
+                        <span class="stat-item topic-badge">
+                          <span class="topic-tag">{{ post.topic }}</span>
+                        </span>
+                        <span class="stat-item">
+                          <icon-eye />
+                          {{ post.viewCount || 0 }}
+                        </span>
+                        <span class="stat-item" @click.stop="handleLikePost(post)" :class="{ 'liked': post.isLiked }">
+                          <icon-heart-fill v-if="post.isLiked" />
+                          <icon-heart v-else />
+                          {{ post.thumbsUpNum || 0 }}
+                        </span>
+                        <span class="stat-item">
+                          <icon-message />
+                          {{ post.commonNum || 0 }}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  
-                  <!-- 使用Viewer组件渲染Markdown内容 -->
-                  <div class="post-content-markdown">
-                    <Viewer :value="post.content" :plugins="plugins" />
-                  </div>
                 </div>
                 
-                <!-- 帖子底部信息 -->
-                <div class="post-footer">
-                  <div class="post-stats">
-                    <span class="stat-item topic-badge">
-                      <span class="topic-tag">{{ post.topic }}</span>
-                    </span>
-                    <span class="stat-item">
-                      <icon-eye />
-                      {{ post.viewCount || 0 }}
-                    </span>
-                    <span class="stat-item" @click.stop="handleLikePost(post)" :class="{ 'liked': post.isLiked }">
-                      <icon-heart-fill v-if="post.isLiked" />
-                      <icon-heart v-else />
-                      {{ post.thumbsUpNum || 0 }}
-                    </span>
-                    <span class="stat-item">
-                      <icon-message />
-                      {{ post.commonNum || 0 }}
-                    </span>
-                  </div>
+                <!-- 分页 -->
+                <div class="pagination-container" v-if="total > 0">
+                  <a-pagination
+                    :current="pageNum"
+                    :total="total"
+                    :page-size="pageSize"
+                    show-total
+                    show-jumper
+                    @change="handlePageChange"
+                  />
                 </div>
               </div>
             </div>
-            
-            <!-- 分页 -->
-            <div class="pagination-container" v-if="total > 0">
-              <a-pagination
-                :current="pageNum"
-                :total="total"
-                :page-size="pageSize"
-                show-total
-                show-jumper
-                @change="handlePageChange"
-              />
-            </div>
-          </div>
+          </a-spin>
         </div>
       </div>
 
@@ -529,11 +529,39 @@ onMounted(() => {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   border: 1px solid #D6C6AF;
+  min-height: 300px; /* 确保内容区域有足够高度 */
+  position: relative; /* 为绝对定位的加载动画提供参考 */
 }
 
-.loading-container, .empty-container {
+.post-container {
+  width: 100%;
+}
+
+.empty-container {
   padding: 40px;
   text-align: center;
+}
+
+:deep(.arco-spin) {
+  width: 100%;
+}
+
+:deep(.arco-spin.arco-spin-loading) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 251, 240, 0.5);
+  z-index: 1;
+}
+
+:deep(.arco-spin-icon) {
+  color: #8C1F28;
+  font-size: 32px;
 }
 
 .post-list {

@@ -5,6 +5,7 @@ import { Message } from '@arco-design/web-vue';
 import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI, checkSensitiveWordsAPI, uploadImageAPI } from '@/api/forum';
 import { useUserStore } from '@/stores/userStore.js';
 import Footer from "@/views/web/layout/Footer.vue";
+import { IconLoading } from '@arco-design/web-vue/es/icon';
 
 // 导入自定义Markdown编辑器和查看器
 import { Editor, Viewer } from '@/views/web/pages/forum/bytemd';
@@ -49,6 +50,9 @@ const uploadProgress = ref(0); // 上传进度
 // 敏感词相关
 const checkingSensitiveWords = ref(false);
 const sensitiveWordsError = ref('');
+
+// 添加加载状态
+const loading = ref(false);
 
 // ByteMD编辑器上传图片处理函数
 const handleUploadBytemdImages = async (files) => {
@@ -153,6 +157,7 @@ const postFormRef = ref(null);
 
 // 获取话题列表
 const fetchTopics = async () => {
+  loading.value = true;
   try {
     const res = await getTopicsAPI();
     if (res.code === 200) {
@@ -163,6 +168,8 @@ const fetchTopics = async () => {
   } catch (err) {
     console.error('获取话题列表出错:', err);
     Message.error('获取话题失败，请稍后重试');
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -170,6 +177,7 @@ const fetchTopics = async () => {
 const fetchPostDetail = async () => {
   if (!isEdit.value) return;
   
+  loading.value = true;
   try {
     const res = await getPostDetailAPI(postId.value);
     if (res.code === 200) {
@@ -211,6 +219,8 @@ const fetchPostDetail = async () => {
     console.error('获取帖子详情出错:', err);
     Message.error('获取帖子详情失败，请稍后重试');
     goBack();
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -536,7 +546,7 @@ onMounted(() => {
             type="primary" 
             @click="submitForm" 
             :loading="submitting || uploading" 
-            :disabled="submitting || uploading"
+            :disabled="submitting || uploading || loading"
             class="submit-btn"
           >
             {{ isEdit ? '保存修改' : '发布帖子' }}
@@ -545,32 +555,37 @@ onMounted(() => {
       </div>
       
       <div class="main-content">
-        <a-form
-          ref="postFormRef"
-          :model="postForm"
-          :rules="rules"
-          class="post-form"
-        >
-          <!-- 集成式Markdown编辑器 -->
-          <a-form-item field="content" class="editor-form-item">
-            <div class="markdown-editor-wrapper">
-              <Editor
-                :value="editorValue"
-                :plugins="plugins"
-                :locale="zhHans"
-                placeholder="请输入帖子内容（支持Markdown格式）"
-                :uploadImages="handleUploadBytemdImages"
-                @change="handleEditorChange"
-                :split="true"
-                :title="postForm.title"
-                :topicId="postForm.topic"
-                :topics="topics"
-                @titleChange="handleTitleChange"
-                @topicChange="handleTopicChange"
-              />
-            </div>
-          </a-form-item>
-        </a-form>
+        <a-spin :loading="loading" size="large">
+          <template #icon><icon-loading /></template>
+          <div class="editor-container">
+            <a-form
+              ref="postFormRef"
+              :model="postForm"
+              :rules="rules"
+              class="post-form"
+            >
+              <!-- 集成式Markdown编辑器 -->
+              <a-form-item field="content" class="editor-form-item">
+                <div class="markdown-editor-wrapper">
+                  <Editor
+                    :value="editorValue"
+                    :plugins="plugins"
+                    :locale="zhHans"
+                    placeholder="请输入帖子内容（支持Markdown格式）"
+                    :uploadImages="handleUploadBytemdImages"
+                    @change="handleEditorChange"
+                    :split="true"
+                    :title="postForm.title"
+                    :topicId="postForm.topic"
+                    :topics="topics"
+                    @titleChange="handleTitleChange"
+                    @topicChange="handleTopicChange"
+                  />
+                </div>
+              </a-form-item>
+            </a-form>
+          </div>
+        </a-spin>
         
         <!-- 敏感词错误提示，保留该部分 -->
         <div class="sidebar" v-if="sensitiveWordsError || uploading">
@@ -986,5 +1001,21 @@ onMounted(() => {
   .image-upload-trigger {
     width: calc(33.333% - 7px);
   }
+}
+
+.editor-container {
+  width: 100%;
+  min-height: 300px;
+}
+
+:deep(.arco-spin) {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+:deep(.arco-spin-icon) {
+  color: #8C1F28;
+  font-size: 24px;
 }
 </style>
