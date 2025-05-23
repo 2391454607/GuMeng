@@ -25,10 +25,25 @@ import {
 import { useUserStore } from '@/stores/userStore.js';
 import { formatDate } from '@/utils/format';
 import Footer from "@/views/web/layout/Footer.vue";
+// 导入Markdown查看器
+import { Viewer } from '@/views/web/pages/forum/bytemd';
+// 导入ByteMD插件
+import gfm from '@bytemd/plugin-gfm'
+import highlight from '@bytemd/plugin-highlight'
+import gemoji from '@bytemd/plugin-gemoji'
+// 导入ByteMD样式
+import 'bytemd/dist/index.css'
 
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
+
+// ByteMD插件
+const plugins = [
+  gfm(),
+  highlight(),
+  gemoji(),
+]
 
 // 用户登录状态
 const isLogin = computed(() => userStore.isLogin);
@@ -583,7 +598,10 @@ onMounted(() => {
           </div>
 
           <div class="post-body">
-            <div class="content-text">{{ post.content }}</div>
+            <!-- 使用Markdown渲染器替换原始文本显示 -->
+            <div class="content-markdown">
+              <Viewer :value="post.content" :plugins="plugins" />
+            </div>
             
             <!-- 图片展示 -->
             <div v-if="post.images && post.images.length > 0" class="post-images">
@@ -972,6 +990,21 @@ onMounted(() => {
   white-space: pre-wrap;
   word-break: break-word;
   text-align: justify;
+}
+
+/* 添加Markdown内容的样式 */
+.content-markdown {
+  font-size: 16px;
+  line-height: 1.8;
+  color: #582F0E;
+  margin-bottom: 24px;
+}
+
+/* Markdown渲染器 */
+.content-markdown :deep(.markdown-body) {
+  background-color: transparent;
+  font-family: "SimSun", "宋体", serif;
+  color: #582F0E;
 }
 
 .post-images {

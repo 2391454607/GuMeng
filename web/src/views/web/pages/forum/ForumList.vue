@@ -8,9 +8,24 @@ import { getPostListAPI as getPostsAPI, getTopicsAPI, likePostAPI, unlikePostAPI
 import { useUserStore } from '@/stores/userStore.js';
 import { formatDate } from '@/utils/format';
 import Footer from "@/views/web/layout/Footer.vue";
+// 导入Markdown查看器组件
+import { Viewer } from '@/views/web/pages/forum/bytemd';
+// 导入ByteMD插件
+import gfm from '@bytemd/plugin-gfm'
+import highlight from '@bytemd/plugin-highlight'
+import gemoji from '@bytemd/plugin-gemoji'
+// 导入ByteMD样式
+import 'bytemd/dist/index.css'
 
 const router = useRouter();
 const userStore = useUserStore();
+
+// ByteMD插件
+const plugins = [
+  gfm(),
+  highlight(),
+  gemoji(),
+]
 
 // 用户登录状态
 const isLogin = computed(() => userStore.isLogin);
@@ -303,19 +318,19 @@ onMounted(() => {
                   <span class="post-time">{{ formatDate(post.createTime) }}</span>
                 </div>
                 <h3 class="post-title">{{ post.title }}</h3>
-                <p class="post-content">{{ post.content }}</p>
                 
-                <!-- 帖子图片 -->
-                <div v-if="post.images && post.images.length > 0" class="post-images">
-                  <div 
-                    v-for="(image, index) in post.images.slice(0, 3)" 
-                    :key="index" 
-                    class="post-image-wrapper"
-                  >
-                    <img :src="image" :alt="`图片${index+1}`" class="post-image" />
+                <!-- 图文并排布局容器 -->
+                <div class="post-content-container">
+                  <!-- 帖子图片 - 只显示第一张 -->
+                  <div v-if="post.images && post.images.length > 0" class="post-images single-image">
+                    <div class="post-image-wrapper">
+                      <img :src="post.images[0]" alt="帖子图片" class="post-image" />
+                    </div>
                   </div>
-                  <div v-if="post.images.length > 3" class="post-image-more">
-                    +{{ post.images.length - 3 }}
+                  
+                  <!-- 使用Viewer组件渲染Markdown内容 -->
+                  <div class="post-content-markdown">
+                    <Viewer :value="post.content" :plugins="plugins" />
                   </div>
                 </div>
                 
@@ -593,22 +608,84 @@ onMounted(() => {
   font-family: "STKaiti", "楷体", serif;
 }
 
-.post-content {
+/* 添加Markdown内容的样式 */
+/* 图文并排布局容器 */
+.post-content-container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+  align-items: flex-start;
+}
+
+.post-content-markdown {
+  flex: 1;
+  max-height: 60px;
+  overflow: hidden;
+}
+
+.post-content-markdown :deep(.markdown-body) {
   font-size: 14px;
   color: #6B4F2E;
-  margin: 0 0 15px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   line-height: 1.6;
+  background-color: transparent;
+}
+
+.post-content-markdown :deep(.markdown-body h1),
+.post-content-markdown :deep(.markdown-body h2),
+.post-content-markdown :deep(.markdown-body h3),
+.post-content-markdown :deep(.markdown-body h4),
+.post-content-markdown :deep(.markdown-body h5),
+.post-content-markdown :deep(.markdown-body h6) {
+  margin-top: 0;
+  margin-bottom: 4px;
+  font-size: 14px;
+  display: inline;
+  border: none;
+  padding: 0;
+}
+
+.post-content-markdown :deep(.markdown-body p) {
+  margin-bottom: 0;
+}
+
+.post-content-markdown :deep(.markdown-body img) {
+  display: none;
 }
 
 .post-images {
   display: flex;
   gap: 10px;
   margin-bottom: 15px;
+}
+
+/* 单张图片的样式 */
+.post-images.single-image {
+  margin: 0;
+  flex-shrink: 0;
+  width: 180px;
+}
+
+.post-images.single-image .post-image-wrapper {
+  width: 100%;
+  height: 120px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: transparent;
+}
+
+.post-images.single-image .post-image {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  border-radius: 4px;
 }
 
 .post-image-wrapper {
@@ -755,6 +832,21 @@ onMounted(() => {
   .topic-item {
     white-space: nowrap;
     padding: 12px 15px;
+  }
+  
+  /* 移动端图文布局调整为垂直堆叠 */
+  .post-content-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .post-images.single-image {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  
+  .post-images.single-image .post-image-wrapper {
+    height: 160px;
   }
   
   .post-images {
