@@ -17,6 +17,11 @@ const userInfoRouters = [
         component:() => import("@/views/userInfo/info/Collection.vue")
     },
     {
+        path: "posts",
+        name: "posts",
+        component:() => import("@/views/userInfo/info/Posts.vue")
+    },
+    {
         path: "history",
         name: "history",
         component:() => import("@/views/userInfo/info/History.vue")

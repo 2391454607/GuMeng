@@ -26,7 +26,7 @@ export function createPostAPI(data) {
 
 // 更新帖子
 export function updatePostAPI(id, data) {
-  return http.put(`/forum/posts/${id}`, data);
+  return http.post(`/forum/posts/${id}/update`, data);
 }
 
 // 删除帖子
@@ -105,7 +105,15 @@ export function getHotPostsAPI() {
 
 // 我的帖子列表
 export function getMyPostsAPI(params) {
-  return http.get('/forum/posts/my', params);
+  // 获取当前用户的帖子
+  const convertedParams = {
+    page: params.page || 1,
+    size: params.size || 10,
+    selfOnly: true  // 明确指定只查询当前用户的帖子
+  };
+  
+  console.log('获取我的帖子参数:', convertedParams);
+  return http.get('/forum/getPosts', convertedParams);
 }
 
 // 我点赞的帖子列表

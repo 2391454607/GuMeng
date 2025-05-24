@@ -52,6 +52,7 @@ const menuItems = [
   {name: '个人资料', icon : IconUser, url: '/userInfo'},
   {name: '我的订单', icon: IconUnorderedList, url: '/userInfo/order'},
   {name: '我的收藏', icon: IconStar, url: '/userInfo/collection'},
+  {name: '我的帖子', icon: IconRelation, url: '/userInfo/posts'},
   {name: '浏览历史', icon: IconHistory, url: '/userInfo/history'},
   {name: '资产流动', icon: IconRelation, url: '/userInfo/assetFlows'},
   {name: '账号设置', icon: IconSettings, url: '/userInfo/settings'}
