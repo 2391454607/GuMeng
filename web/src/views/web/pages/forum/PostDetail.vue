@@ -312,30 +312,83 @@ const submitComment = async () => {
   checkingSensitiveWords.value = true;
   sensitiveWordsError.value = '';
   
-  try {
-    const checkResult = await checkSensitiveWordsAPI({ text: commentContent.value.trim() });
-    console.log('敏感词检查结果:', checkResult);
-    
-    if (checkResult.code === 200 && checkResult.data.containsSensitiveWords) {
-      const sensitiveWords = checkResult.data.sensitiveWords || [];
-      // 判断AI审核结果
-      if (!checkResult.data.aiApproved) {
-        // AI认为内容不合规
-        sensitiveWordsError.value = `评论包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
-        Message.error(sensitiveWordsError.value);
-        checkingSensitiveWords.value = false;
-        return;
+  // 添加重试计数器
+  let retryCount = 0;
+  const maxRetries = 2;
+  
+  const attemptCheck = async () => {
+    try {
+      const checkResult = await checkSensitiveWordsAPI({ text: commentContent.value.trim() });
+      console.log('敏感词检查结果:', checkResult);
+      
+      // 处理多种审核失败情况
+      if (checkResult.code === 200) {
+        // 处理完整审核结果（包含敏感词+AI审核）
+        const containsSensitiveWords = checkResult.data?.containsSensitiveWords;
+        const aiApproved = checkResult.data?.aiApproved;
+        const message = checkResult.data?.message;
+        
+        // 如果审核不通过
+        if (containsSensitiveWords && !aiApproved) {
+          const sensitiveWords = checkResult.data.sensitiveWords || [];
+          sensitiveWordsError.value = message || `评论包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
+          Message.error(sensitiveWordsError.value);
+          checkingSensitiveWords.value = false;
+          return false;
+        }
+        
+        // 如果AI全文审核不通过（即使没有敏感词）
+        if (!aiApproved && checkResult.data?.fullContentAiApproved === false) {
+          sensitiveWordsError.value = message || "AI检测到内容可能包含不当表达，请修改后重试";
+          Message.error(sensitiveWordsError.value);
+          checkingSensitiveWords.value = false;
+          return false;
+        }
+        
+        // 通过审核，继续提交
+        return true;
       } else {
-        // AI判断内容合规，只记录日志但不向用户展示提示
-        console.log('评论包含敏感词，但AI判断合规，继续提交');
+        // API调用失败，根据重试次数决定是否重试
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`敏感词检查失败，第${retryCount}次重试`);
+          // 延迟500ms后重试
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return attemptCheck();
+        } else {
+          // 达到最大重试次数，显示错误
+          Message.warning('内容检查服务暂不可用，请稍后重试');
+          checkingSensitiveWords.value = false;
+          return false;
+        }
+      }
+    } catch (err) {
+      console.error('敏感词检查出错:', err);
+      
+      // 检查是否需要重试
+      if (retryCount < maxRetries) {
+        retryCount++;
+        console.log(`敏感词检查异常，第${retryCount}次重试`);
+        // 延迟500ms后重试
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return attemptCheck();
+      } else {
+        // 达到最大重试次数，允许提交
+        console.warn('敏感词检查服务异常，允许提交');
+        return true;
       }
     }
-  } catch (err) {
-    console.error('敏感词检查出错:', err);
-    // 敏感词检查出错，继续评论流程
-  } finally {
+  };
+  
+  // 开始检查
+  const checkPassed = await attemptCheck();
+  if (!checkPassed) {
     checkingSensitiveWords.value = false;
+    return;
   }
+  
+  // 敏感词检查通过，继续提交评论
+  checkingSensitiveWords.value = false;
   
   try {
     const res = await addCommentAPI({
@@ -405,30 +458,83 @@ const submitReply = async () => {
   checkingSensitiveWords.value = true;
   sensitiveWordsError.value = '';
   
-  try {
-    const checkResult = await checkSensitiveWordsAPI({ text: replyContent.value.trim() });
-    console.log('敏感词检查结果:', checkResult);
-    
-    if (checkResult.code === 200 && checkResult.data.containsSensitiveWords) {
-      const sensitiveWords = checkResult.data.sensitiveWords || [];
-      // 判断AI审核结果
-      if (!checkResult.data.aiApproved) {
-        // AI认为内容不合规
-        sensitiveWordsError.value = `回复包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
-        Message.error(sensitiveWordsError.value);
-        checkingSensitiveWords.value = false;
-        return;
+  // 添加重试计数器
+  let retryCount = 0;
+  const maxRetries = 2;
+  
+  const attemptCheck = async () => {
+    try {
+      const checkResult = await checkSensitiveWordsAPI({ text: replyContent.value.trim() });
+      console.log('敏感词检查结果:', checkResult);
+      
+      // 处理多种审核失败情况
+      if (checkResult.code === 200) {
+        // 处理完整审核结果（包含敏感词+AI审核）
+        const containsSensitiveWords = checkResult.data?.containsSensitiveWords;
+        const aiApproved = checkResult.data?.aiApproved;
+        const message = checkResult.data?.message;
+        
+        // 如果审核不通过
+        if (containsSensitiveWords && !aiApproved) {
+          const sensitiveWords = checkResult.data.sensitiveWords || [];
+          sensitiveWordsError.value = message || `回复包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
+          Message.error(sensitiveWordsError.value);
+          checkingSensitiveWords.value = false;
+          return false;
+        }
+        
+        // 如果AI全文审核不通过（即使没有敏感词）
+        if (!aiApproved && checkResult.data?.fullContentAiApproved === false) {
+          sensitiveWordsError.value = message || "AI检测到内容可能包含不当表达，请修改后重试";
+          Message.error(sensitiveWordsError.value);
+          checkingSensitiveWords.value = false;
+          return false;
+        }
+        
+        // 通过审核，继续提交
+        return true;
       } else {
-        // AI判断内容合规，只记录日志但不向用户展示提示
-        console.log('回复包含敏感词，但AI判断合规，继续提交');
+        // API调用失败，根据重试次数决定是否重试
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`敏感词检查失败，第${retryCount}次重试`);
+          // 延迟500ms后重试
+          await new Promise(resolve => setTimeout(resolve, 500));
+          return attemptCheck();
+        } else {
+          // 达到最大重试次数，显示错误
+          Message.warning('内容检查服务暂不可用，请稍后重试');
+          checkingSensitiveWords.value = false;
+          return false;
+        }
+      }
+    } catch (err) {
+      console.error('敏感词检查出错:', err);
+      
+      // 检查是否需要重试
+      if (retryCount < maxRetries) {
+        retryCount++;
+        console.log(`敏感词检查异常，第${retryCount}次重试`);
+        // 延迟500ms后重试
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return attemptCheck();
+      } else {
+        // 达到最大重试次数，允许提交
+        console.warn('敏感词检查服务异常，允许提交');
+        return true;
       }
     }
-  } catch (err) {
-    console.error('敏感词检查出错:', err);
-    // 敏感词检查出错，继续回复流程
-  } finally {
+  };
+  
+  // 开始检查
+  const checkPassed = await attemptCheck();
+  if (!checkPassed) {
     checkingSensitiveWords.value = false;
+    return;
   }
+  
+  // 敏感词检查通过，继续提交回复
+  checkingSensitiveWords.value = false;
   
   try {
     const res = await addCommentAPI({
