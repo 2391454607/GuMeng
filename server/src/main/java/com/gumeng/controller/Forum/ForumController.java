@@ -3,6 +3,7 @@ package com.gumeng.controller.Forum;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.annotation.LogOperation;
 import com.gumeng.code.HttpResponse;
+import com.gumeng.domain.forum.ForumPost;
 import com.gumeng.entity.DTO.ForumPostDTO;
 import com.gumeng.entity.vo.ForumPostVO;
 import com.gumeng.service.ContentAuditService;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,21 +66,42 @@ public class ForumController {
             @RequestParam(value = "page", defaultValue = "1") Integer page,
             @RequestParam(value = "size", defaultValue = "10") Integer size,
             @RequestParam(value = "topic", required = false) String topic,
-            @RequestParam(value = "keyword", required = false) String keyword) {
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "selfOnly", required = false) Boolean selfOnly) {
         
         // 记录用户信息和请求
         Map<String, Object> userInfo = ThreadLocalUtil.get();
-        log.info("获取帖子列表 - 用户信息: {}, 页码: {}, 大小: {}, 话题: {}, 关键词: {}", 
-                 userInfo, page, size, topic, keyword);
+        log.info("获取帖子列表 - 用户信息: {}, 页码: {}, 大小: {}, 话题: {}, 关键词: {}, 仅自己: {}", 
+                 userInfo, page, size, topic, keyword, selfOnly);
         
-        Page<ForumPostVO> posts;
-        if (keyword != null && !keyword.isEmpty()) {
-            posts = forumPostService.getPostList(page, size, topic, keyword);
-        } else {
-            posts = forumPostService.getPostList(page, size, topic);
+        // 获取当前用户ID
+        Integer currentUserId = null;
+        if (userInfo != null && userInfo.get("id") != null) {
+            currentUserId = (Integer) userInfo.get("id");
         }
         
-        return HttpResponse.success(posts);
+        // 如果请求只查看自己的帖子，但用户未登录，返回空列表
+        if (Boolean.TRUE.equals(selfOnly) && currentUserId == null) {
+            return HttpResponse.error("请先登录");
+        }
+        
+        Page<ForumPostVO> posts;
+        try {
+            // 如果selfOnly为true，则只查询当前用户的帖子
+            if (Boolean.TRUE.equals(selfOnly) && currentUserId != null) {
+                // 添加用户ID作为查询条件
+                posts = forumPostService.getUserPosts(page, size, topic, keyword, currentUserId);
+            } else if (keyword != null && !keyword.isEmpty()) {
+                posts = forumPostService.getPostList(page, size, topic, keyword);
+            } else {
+                posts = forumPostService.getPostList(page, size, topic);
+            }
+            
+            return HttpResponse.success(posts);
+        } catch (Exception e) {
+            log.error("获取帖子列表失败", e);
+            return HttpResponse.error("获取帖子列表失败，请稍后重试");
+        }
     }
 
     /**
@@ -244,6 +267,69 @@ public class ForumController {
         } catch (Exception e) {
             log.error("全文内容审核出错: {}", e.getMessage());
             return HttpResponse.error("内容审核服务异常，请稍后重试");
+        }
+    }
+
+    /**
+     * 更新帖子
+     */
+    @LogOperation(module = "论坛", operation = "更新帖子")
+    @PostMapping("/posts/{id}/update")
+    public HttpResponse updatePost(@PathVariable Integer id, @RequestBody @Valid ForumPostDTO postDTO) {
+        try {
+            // 确保当前用户是该帖子的作者
+            Map<String, Object> userInfo = ThreadLocalUtil.get();
+            Integer currentUserId = (Integer) userInfo.get("id");
+            
+            // 查询帖子
+            ForumPost post = forumPostService.getById(id);
+            if (post == null || "1".equals(post.getDeleted())) {
+                return HttpResponse.error("帖子不存在或已删除");
+            }
+            
+            // 验证用户是否是帖子的发布者
+            if (!post.getUserId().equals(currentUserId)) {
+                return HttpResponse.error("您没有权限修改此帖子");
+            }
+
+            // 敏感词和AI审核
+            ContentAuditService.AuditResult titleAudit = contentAuditService.auditContent(postDTO.getTitle());
+            ContentAuditService.AuditResult contentAudit = contentAuditService.auditContent(postDTO.getContent());
+            
+            boolean titleAiFullCheck = contentAuditService.checkFullContentWithAI(postDTO.getTitle());
+            boolean contentAiFullCheck = contentAuditService.checkFullContentWithAI(postDTO.getContent());
+            
+            // 检查是否有任何不通过的情况
+            if ((!titleAudit.isPassed() || !contentAudit.isPassed()) || 
+                (!titleAiFullCheck || !contentAiFullCheck)) {
+                
+                Map<String, Object> result = new HashMap<>();
+                // 内部记录详情，对用户隐藏
+                result.put("titleAudit", titleAudit.isPassed());
+                result.put("contentAudit", contentAudit.isPassed());
+                result.put("titleAiFullCheck", titleAiFullCheck);
+                result.put("contentAiFullCheck", contentAiFullCheck);
+                
+                return HttpResponse.error("内容审核不通过，请修改后重试").setData(result);
+            }
+            
+            // 更新帖子
+            post.setTitle(titleAudit.getFilteredContent());
+            post.setContent(contentAudit.getFilteredContent());
+            post.setTopic(postDTO.getTopic());
+            post.setImages(postDTO.getImages());
+            post.setUpdateTime(LocalDateTime.now());
+            
+            boolean result = forumPostService.updateById(post);
+            
+            if (result) {
+                return HttpResponse.success(post.getId());
+            } else {
+                return HttpResponse.error("更新帖子失败");
+            }
+        } catch (Exception e) {
+            log.error("更新帖子时出错: {}", e.getMessage(), e);
+            return HttpResponse.error("更新帖子异常，请稍后重试");
         }
     }
 }
