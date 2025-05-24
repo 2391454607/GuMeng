@@ -114,19 +114,14 @@ public class ForumController {
                 (!titleAiFullCheck || !contentAiFullCheck)) {
                 
                 Map<String, Object> result = new HashMap<>();
-                result.put("sensitiveWordsInTitle", titleAudit.getSensitiveWords());
-                result.put("sensitiveWordsInContent", contentAudit.getSensitiveWords());
-                result.put("titleAiApproved", titleAudit.isPassed() && titleAiFullCheck);
-                result.put("contentAiApproved", contentAudit.isPassed() && contentAiFullCheck);
+                // 内部记录敏感词和审核状态，但对用户隐藏具体原因
+                result.put("titleAudit", titleAudit.isPassed());
+                result.put("contentAudit", contentAudit.isPassed());
+                result.put("titleAiFullCheck", titleAiFullCheck);
+                result.put("contentAiFullCheck", contentAiFullCheck);
                 
-                // 确定拒绝原因
-                String message;
-                if (!titleAudit.getSensitiveWords().isEmpty() || !contentAudit.getSensitiveWords().isEmpty()) {
-                    message = "内容包含敏感词且AI判断不合规，请修改后重试";
-                } else {
-                    message = "AI检测到内容可能包含不当表达，请修改后重试";
-                }
-                result.put("message", message);
+                // 统一错误提示
+                result.put("message", "内容审核不通过，请修改后重试");
                 
                 return HttpResponse.error("内容审核不通过，请修改后重试").setData(result);
             }
@@ -136,14 +131,6 @@ public class ForumController {
             postDTO.setContent(contentAudit.getFilteredContent());
             
             Integer postId = forumPostService.createPost(postDTO);
-            
-            // 如果存在敏感词，但AI判断无害，告知用户
-            if (!titleAudit.getSensitiveWords().isEmpty() || !contentAudit.getSensitiveWords().isEmpty()) {
-                Map<String, Object> result = new HashMap<>();
-                result.put("postId", postId);
-                result.put("message", "内容中包含敏感词，但经AI判断上下文合规，已允许发布");
-                return HttpResponse.success(result);
-            }
             
             return HttpResponse.success(postId);
         } catch (Exception e) {
@@ -194,7 +181,7 @@ public class ForumController {
     /**
      * 检测文本是否包含敏感词（智能检测）
      */
-    @LogOperation(module = "论坛", operation = "敏感词智能检测")
+    @LogOperation(module = "论坛", operation = "内容合规检测")
     @PostMapping("/checkSensitiveWords")
     public HttpResponse checkSensitiveWords(@RequestBody Map<String, String> params) {
         String text = params.get("text");
@@ -212,48 +199,28 @@ public class ForumController {
             
             // 构建返回结果
             Map<String, Object> result = new HashMap<>();
-            result.put("containsSensitiveWords", !auditResult.getSensitiveWords().isEmpty());
-            result.put("sensitiveWords", auditResult.getSensitiveWords());
             
-            // 两种审核方式的结果
-            result.put("sensitiveWordAiApproved", auditResult.isPassed());  // 敏感词上下文审核
-            result.put("fullContentAiApproved", fullTextAiApproved);        // 全文AI审核
-            
-            // 综合结果：两种审核都通过才算通过
+            // 仅返回审核总体结果，不暴露具体机制
             boolean finalApproved = auditResult.isPassed() && fullTextAiApproved;
-            result.put("aiApproved", finalApproved);
+            result.put("approved", finalApproved);
             
             // 添加提示信息
             if (!finalApproved) {
-                if (!auditResult.getSensitiveWords().isEmpty() && !auditResult.isPassed()) {
-                    result.put("message", "内容包含敏感词且AI判断不合规");
-                } else if (!auditResult.getSensitiveWords().isEmpty() && !fullTextAiApproved) {
-                    result.put("message", "内容包含敏感词且AI全文审核不通过");
-                } else if (!fullTextAiApproved) {
-                    result.put("message", "AI检测到内容可能包含不当表达");
-                }
+                result.put("message", "内容审核不通过，请修改后重试");
             }
             
             return HttpResponse.success(result);
         } catch (Exception e) {
             log.error("内容检测过程出错: {}", e.getMessage());
             
-            // 出错时返回基本的敏感词检测结果
-            ContentAuditService.AuditResult basicResult = contentAuditService.auditContent(text);
-            Map<String, Object> result = new HashMap<>();
-            result.put("containsSensitiveWords", !basicResult.getSensitiveWords().isEmpty());
-            result.put("sensitiveWords", basicResult.getSensitiveWords());
-            result.put("aiApproved", basicResult.isPassed());
-            result.put("error", "AI全文审核服务异常，仅返回基本敏感词检测结果");
-            
-            return HttpResponse.success(result);
+            return HttpResponse.error("内容审核服务异常，请稍后重试");
         }
     }
 
     /**
      * 使用AI审核全文内容（不仅限于敏感词）
      */
-    @LogOperation(module = "论坛", operation = "AI全文内容审核")
+    @LogOperation(module = "论坛", operation = "内容合规检查")
     @PostMapping("/aiContentCheck")
     public HttpResponse aiContentCheck(@RequestBody Map<String, String> params) {
         String text = params.get("text");
@@ -267,16 +234,16 @@ public class ForumController {
             boolean aiApproved = contentAuditService.checkFullContentWithAI(text);
             
             Map<String, Object> result = new HashMap<>();
-            result.put("aiApproved", aiApproved);
+            result.put("approved", aiApproved);
             
             if (!aiApproved) {
-                result.put("message", "AI检测到内容可能包含不当表达或攻击性语言");
+                result.put("message", "内容审核不通过，请修改后重试");
             }
             
             return HttpResponse.success(result);
         } catch (Exception e) {
-            log.error("AI全文审核出错: {}", e.getMessage());
-            return HttpResponse.error("AI审核服务异常，请稍后重试").setData(e.getMessage());
+            log.error("全文内容审核出错: {}", e.getMessage());
+            return HttpResponse.error("内容审核服务异常，请稍后重试");
         }
     }
 }

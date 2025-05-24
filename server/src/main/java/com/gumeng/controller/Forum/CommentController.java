@@ -62,19 +62,14 @@ public class CommentController {
             // 如果任一审核不通过，拒绝发布
             if (!auditResult.isPassed() || !fullAiCheck) {
                 Map<String, Object> result = new HashMap<>();
-                result.put("sensitiveWords", auditResult.getSensitiveWords());
-                result.put("aiApproved", auditResult.isPassed() && fullAiCheck);
+                // 内部记录审核状态
+                result.put("auditPassed", auditResult.isPassed());
+                result.put("fullAiCheckPassed", fullAiCheck);
                 
-                // 确定拒绝原因
-                String message;
-                if (!auditResult.getSensitiveWords().isEmpty()) {
-                    message = "评论包含敏感词且AI判断不合规，请修改后重试";
-                } else {
-                    message = "AI检测到评论可能包含不当表达，请修改后重试";
-                }
-                result.put("message", message);
+                // 统一错误提示
+                result.put("message", "内容审核不通过，请修改后重试");
                 
-                return HttpResponse.error("评论审核不通过，请修改后重试").setData(result);
+                return HttpResponse.error("内容审核不通过，请修改后重试").setData(result);
             }
             
             // 使用审核后的内容
@@ -82,14 +77,6 @@ public class CommentController {
             
             // 添加评论
             Integer commentId = commentsService.addComment(commentDTO);
-            
-            // 如果存在敏感词，但AI判断无害，告知用户
-            if (!auditResult.getSensitiveWords().isEmpty()) {
-                Map<String, Object> result = new HashMap<>();
-                result.put("commentId", commentId);
-                result.put("message", "评论中包含敏感词，但经AI判断上下文合规，已允许发布");
-                return HttpResponse.success(result);
-            }
             
             return HttpResponse.success(commentId);
         } catch (Exception e) {
