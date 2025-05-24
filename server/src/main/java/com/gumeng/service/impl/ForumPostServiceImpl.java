@@ -308,4 +308,41 @@ public class ForumPostServiceImpl extends ServiceImpl<ForumPostMapper, ForumPost
             return false;
         }
     }
+
+    @Override
+    public Page<ForumPostVO> getUserPosts(Integer page, Integer size, String topic, String keyword, Integer userId) {
+        log.info("获取用户帖子列表 - 用户ID: {}, 页码: {}, 大小: {}, 话题: {}, 关键词: {}", userId, page, size, topic, keyword);
+        
+        // 构建查询条件
+        LambdaQueryWrapper<ForumPost> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ForumPost::getDeleted, "0");
+        
+        // 添加用户ID筛选条件
+        if (userId != null) {
+            queryWrapper.eq(ForumPost::getUserId, userId);
+        }
+        
+        // 如果指定了话题，则按话题筛选
+        if (StrUtil.isNotBlank(topic)) {
+            queryWrapper.eq(ForumPost::getTopic, topic);
+        }
+
+        // 如果指定了关键词，则进行模糊搜索（标题或内容包含关键词）
+        if (StrUtil.isNotBlank(keyword)) {
+            queryWrapper.and(wrapper -> wrapper
+                    .like(ForumPost::getTitle, keyword)
+                    .or()
+                    .like(ForumPost::getContent, keyword));
+        }
+
+        // 按时间倒序排序
+        queryWrapper.orderByDesc(ForumPost::getCreateTime);
+
+        // 分页查询
+        Page<ForumPost> postPage = new Page<>(page, size);
+        Page<ForumPost> result = this.page(postPage, queryWrapper);
+
+        // 转换为VO对象
+        return convertToPostVOPage(result);
+    }
 }

@@ -28,6 +28,11 @@ public interface ForumPostService extends IService<ForumPost> {
     Page<ForumPostVO> getPostList(Integer page, Integer size, String topic, String keyword);
 
     /**
+     * 获取指定用户的帖子列表
+     */
+    Page<ForumPostVO> getUserPosts(Integer page, Integer size, String topic, String keyword, Integer userId);
+
+    /**
      * 获取帖子详情
      */
     ForumPostVO getPostDetail(Integer id);
