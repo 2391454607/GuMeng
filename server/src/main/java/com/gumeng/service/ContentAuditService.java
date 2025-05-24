@@ -114,6 +114,58 @@ public class ContentAuditService {
     }
     
     /**
+     * 对内容进行全面的AI审核，不依赖敏感词检测
+     * 该方法可以捕获不在敏感词库中的有害内容，如侮辱性语言、隐晦攻击等
+     *
+     * @param content 需要审核的内容
+     * @return true表示内容合规，false表示内容不合规
+     * @throws Exception 如果AI服务调用失败
+     */
+    public boolean checkFullContentWithAI(String content) throws Exception {
+        if (content == null || content.isEmpty()) {
+            return true;
+        }
+
+        List<JSONObject> messages = new ArrayList<>();
+        
+        // 设置增强版系统提示
+        JSONObject systemPrompt = new JSONObject();
+        systemPrompt.put("role", "system");
+        systemPrompt.put("content", 
+            "你是一个专业的内容审核助手，需要全面判断用户内容是否存在违规。请特别注意以下内容类型：\n" +
+            "1. 侮辱性语言：如人身攻击、嘲笑残疾、歧视性言论等\n" +
+            "2. 隐晦的攻击：使用比喻、拐弯抹角的方式攻击他人\n" +
+            "3. 暴力威胁：任何形式的暴力或伤害威胁\n" +
+            "4. 不当内容：色情、赌博、毒品等\n" +
+            "5. 社会负面影响：传播仇恨、分裂言论\n\n" +
+            "同时，请理解合理的上下文，例如医学讨论、新闻报道、教育内容中可能需要提及敏感话题。\n" +
+            "请只回答'合规'或'不合规'。"
+        );
+        messages.add(systemPrompt);
+        
+        // 添加用户消息
+        JSONObject userPrompt = new JSONObject();
+        userPrompt.put("role", "user");
+        userPrompt.put("content", "请全面审核以下内容，判断是否存在任何不当、侮辱、歧视、攻击性表达或其他违规内容：\n\n" + content);
+        messages.add(userPrompt);
+        
+        // 调用GLM-4v-Flash
+        String aiResponse = glmChatService.chat(messages);
+        log.info("全文AI审核结果: {}", aiResponse);
+        
+        // 判断逻辑：只有明确包含"合规"且不包含"不合规"时才判为合规
+        boolean isApproved = aiResponse.contains("合规") && !aiResponse.contains("不合规");
+        
+        if (isApproved) {
+            log.info("AI全文审核判断内容合规");
+        } else {
+            log.info("AI全文审核判断内容不合规: {}", content);
+        }
+        
+        return isApproved;
+    }
+    
+    /**
      * 审核结果类
      */
     public static class AuditResult {

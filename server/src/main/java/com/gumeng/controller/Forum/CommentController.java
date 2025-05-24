@@ -7,6 +7,7 @@ import com.gumeng.entity.vo.CommentVO;
 import com.gumeng.service.CommentsService;
 import com.gumeng.service.ContentAuditService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +23,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/forum")
+@Slf4j
 public class CommentController {
 
     @Autowired
@@ -50,32 +52,50 @@ public class CommentController {
         
         commentDTO.setPageId(postId);
         
-        // 对评论内容进行智能审核
-        ContentAuditService.AuditResult auditResult = contentAuditService.auditContent(commentDTO.getContent());
-        
-        // 如果评论中包含敏感词且AI判断不合规，则拒绝发布
-        if (!auditResult.getSensitiveWords().isEmpty() && !auditResult.isPassed()) {
-            Map<String, Object> result = new HashMap<>();
-            result.put("sensitiveWords", auditResult.getSensitiveWords());
-            result.put("message", "评论包含敏感词且上下文不合规，请修改后重试");
-            return HttpResponse.error("评论包含敏感词，请修改后重试").setData(result);
+        try {
+            // 第一步：传统敏感词检测和AI上下文审核
+            ContentAuditService.AuditResult auditResult = contentAuditService.auditContent(commentDTO.getContent());
+            
+            // 第二步：全文AI审核（可捕获不在敏感词库中的不良内容）
+            boolean fullAiCheck = contentAuditService.checkFullContentWithAI(commentDTO.getContent());
+            
+            // 如果任一审核不通过，拒绝发布
+            if (!auditResult.isPassed() || !fullAiCheck) {
+                Map<String, Object> result = new HashMap<>();
+                result.put("sensitiveWords", auditResult.getSensitiveWords());
+                result.put("aiApproved", auditResult.isPassed() && fullAiCheck);
+                
+                // 确定拒绝原因
+                String message;
+                if (!auditResult.getSensitiveWords().isEmpty()) {
+                    message = "评论包含敏感词且AI判断不合规，请修改后重试";
+                } else {
+                    message = "AI检测到评论可能包含不当表达，请修改后重试";
+                }
+                result.put("message", message);
+                
+                return HttpResponse.error("评论审核不通过，请修改后重试").setData(result);
+            }
+            
+            // 使用审核后的内容
+            commentDTO.setContent(auditResult.getFilteredContent());
+            
+            // 添加评论
+            Integer commentId = commentsService.addComment(commentDTO);
+            
+            // 如果存在敏感词，但AI判断无害，告知用户
+            if (!auditResult.getSensitiveWords().isEmpty()) {
+                Map<String, Object> result = new HashMap<>();
+                result.put("commentId", commentId);
+                result.put("message", "评论中包含敏感词，但经AI判断上下文合规，已允许发布");
+                return HttpResponse.success(result);
+            }
+            
+            return HttpResponse.success(commentId);
+        } catch (Exception e) {
+            log.error("评论审核过程出错: {}", e.getMessage());
+            return HttpResponse.error("评论审核服务异常，请稍后重试");
         }
-        
-        // 使用审核后的内容
-        commentDTO.setContent(auditResult.getFilteredContent());
-        
-        // 添加评论
-        Integer commentId = commentsService.addComment(commentDTO);
-        
-        // 如果存在敏感词，但AI判断无害，告知用户
-        if (!auditResult.getSensitiveWords().isEmpty()) {
-            Map<String, Object> result = new HashMap<>();
-            result.put("commentId", commentId);
-            result.put("message", "评论中包含敏感词，但经AI判断上下文合规，已允许发布");
-            return HttpResponse.success(result);
-        }
-        
-        return HttpResponse.success(commentId);
     }
 
     /**
