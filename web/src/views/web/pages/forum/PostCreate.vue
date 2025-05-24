@@ -717,11 +717,17 @@ const submitForm = async () => {
       
       if (checkResult.code === 200 && checkResult.data.containsSensitiveWords) {
         const sensitiveWords = checkResult.data.sensitiveWords || [];
-        sensitiveWordsError.value = `内容包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
-        Message.error(sensitiveWordsError.value);
-        submitting.value = false;
-        checkingSensitiveWords.value = false;
-        return;
+        // 检查是否通过了AI审核 - 关键修改点
+        if (!checkResult.data.aiApproved) {
+          sensitiveWordsError.value = `内容包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
+          Message.error(sensitiveWordsError.value);
+          submitting.value = false;
+          checkingSensitiveWords.value = false;
+          return;
+        } else {
+          // AI判断内容合规，只记录日志但不向用户展示提示
+          console.log('内容包含敏感词，但AI判断合规，继续提交');
+        }
       }
     } catch (err) {
       console.error('敏感词检查出错:', err);
@@ -781,11 +787,12 @@ const submitForm = async () => {
       clearDraft();
       
       Message.success(isEdit.value ? '帖子更新成功' : '帖子发布成功');
-      // 跳转到详情页或列表页
+      // 修改跳转逻辑：编辑模式仍跳转到详情页，新建模式跳转到帖子列表页
       if (isEdit.value) {
         router.push(`/forum/detail/${postId.value}`);
       } else {
-        router.push(`/forum/detail/${res.data}`);
+        // 发布新帖后跳转到帖子列表页而不是详情页，避免数据未就绪问题
+        router.push('/forum/list');
       }
     } else {
       Message.error(res.msg || (isEdit.value ? '更新失败' : '发布失败'));

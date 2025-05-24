@@ -115,39 +115,66 @@ const goBack = () => {
 const fetchPostDetail = async () => {
   loading.value = true;
   error.value = false;
+  let retryCount = 0;
+  const maxRetries = 3;
   
-  try {
-    console.log('获取帖子详情:', postId.value);
-    const res = await getPostDetailAPI(postId.value);
-    console.log('帖子详情响应:', res);
-    
-    if (res.code === 200) {
-      post.value = res.data;
+  const attemptFetch = async () => {
+    try {
+      console.log(`获取帖子详情: ${postId.value}, 尝试次数: ${retryCount + 1}/${maxRetries + 1}`);
+      const res = await getPostDetailAPI(postId.value);
+      console.log('帖子详情响应:', res);
       
-      // 确保用户名和头像字段正确
-      post.value.username = post.value.username || post.value.authorName || '匿名用户';
-      post.value.avatar = post.value.avatar || post.value.userPic || '/avatar/default-avatar.png';
-      
-      // 将图片字符串转为数组
-      if (post.value.images && typeof post.value.images === 'string') {
-        post.value.images = post.value.images.split(',').filter(img => img);
-      } else if (!post.value.images) {
-        post.value.images = [];
+      if (res.code === 200) {
+        post.value = res.data;
+        
+        // 确保用户名和头像字段正确
+        post.value.username = post.value.username || post.value.authorName || '匿名用户';
+        post.value.avatar = post.value.avatar || post.value.userPic || '/avatar/default-avatar.png';
+        
+        // 将图片字符串转为数组
+        if (post.value.images && typeof post.value.images === 'string') {
+          post.value.images = post.value.images.split(',').filter(img => img);
+        } else if (!post.value.images) {
+          post.value.images = [];
+        }
+        
+        // 获取评论列表
+        fetchComments();
+        
+        // 成功获取数据，设置loading为false
+        loading.value = false;
+      } else {
+        // 获取失败，判断是否重试
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`获取帖子详情失败，将在1秒后进行第${retryCount + 1}次尝试`);
+          setTimeout(attemptFetch, 1000);
+        } else {
+          // 达到最大重试次数，显示错误
+          error.value = true;
+          Message.error(res.msg || '获取帖子详情失败');
+          loading.value = false;
+        }
       }
+    } catch (err) {
+      console.error('获取帖子详情出错:', err);
       
-      // 获取评论列表
-      fetchComments();
-    } else {
-      error.value = true;
-      Message.error(res.msg || '获取帖子详情失败');
+      // 发生错误，判断是否重试
+      if (retryCount < maxRetries) {
+        retryCount++;
+        console.log(`获取帖子详情出错，将在1秒后进行第${retryCount + 1}次尝试`);
+        setTimeout(attemptFetch, 1000);
+      } else {
+        // 达到最大重试次数，显示错误
+        error.value = true;
+        Message.error('获取帖子详情失败，请稍后重试');
+        loading.value = false;
+      }
     }
-  } catch (err) {
-    console.error('获取帖子详情出错:', err);
-    error.value = true;
-    Message.error('获取帖子详情失败，请稍后重试');
-  } finally {
-    loading.value = false;
-  }
+  };
+  
+  // 开始第一次尝试
+  attemptFetch();
 };
 
 // 获取评论列表
@@ -291,10 +318,17 @@ const submitComment = async () => {
     
     if (checkResult.code === 200 && checkResult.data.containsSensitiveWords) {
       const sensitiveWords = checkResult.data.sensitiveWords || [];
-      sensitiveWordsError.value = `评论包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
-      Message.error(sensitiveWordsError.value);
-      checkingSensitiveWords.value = false;
-      return;
+      // 判断AI审核结果
+      if (!checkResult.data.aiApproved) {
+        // AI认为内容不合规
+        sensitiveWordsError.value = `评论包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
+        Message.error(sensitiveWordsError.value);
+        checkingSensitiveWords.value = false;
+        return;
+      } else {
+        // AI判断内容合规，只记录日志但不向用户展示提示
+        console.log('评论包含敏感词，但AI判断合规，继续提交');
+      }
     }
   } catch (err) {
     console.error('敏感词检查出错:', err);
@@ -377,10 +411,17 @@ const submitReply = async () => {
     
     if (checkResult.code === 200 && checkResult.data.containsSensitiveWords) {
       const sensitiveWords = checkResult.data.sensitiveWords || [];
-      sensitiveWordsError.value = `回复包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
-      Message.error(sensitiveWordsError.value);
-      checkingSensitiveWords.value = false;
-      return;
+      // 判断AI审核结果
+      if (!checkResult.data.aiApproved) {
+        // AI认为内容不合规
+        sensitiveWordsError.value = `回复包含敏感词: ${sensitiveWords.join(', ')}，请修改后重新提交`;
+        Message.error(sensitiveWordsError.value);
+        checkingSensitiveWords.value = false;
+        return;
+      } else {
+        // AI判断内容合规，只记录日志但不向用户展示提示
+        console.log('回复包含敏感词，但AI判断合规，继续提交');
+      }
     }
   } catch (err) {
     console.error('敏感词检查出错:', err);
