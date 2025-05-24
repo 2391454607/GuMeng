@@ -17,6 +17,14 @@ public class HttpResponse {
     private Object data;  //返回给前端的数据
 
     /**
+     * 设置返回数据并返回this以支持链式调用
+     */
+    public HttpResponse setData(Object data) {
+        this.data = data;
+        return this;
+    }
+
+    /**
      * 请求成功
      */
     public static HttpResponse success() {

@@ -5,6 +5,7 @@ import com.gumeng.annotation.LogOperation;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.entity.DTO.ForumPostDTO;
 import com.gumeng.entity.vo.ForumPostVO;
+import com.gumeng.service.ContentAuditService;
 import com.gumeng.service.ForumPostService;
 import com.gumeng.service.ForumTopicService;
 import com.gumeng.utils.SensitiveWordFilter;
@@ -35,6 +36,9 @@ public class ForumController {
     
     @Autowired
     private ForumTopicService forumTopicService;
+    
+    @Autowired
+    private ContentAuditService contentAuditService;
 
     /**
      * 调试端点 - 用于验证权限和Token
@@ -96,7 +100,34 @@ public class ForumController {
     @LogOperation(module = "论坛", operation = "创建新帖子")
     @PostMapping("/posts")
     public HttpResponse createPost(@RequestBody @Valid ForumPostDTO postDTO) {
+        // 内容审核
+        ContentAuditService.AuditResult titleAudit = contentAuditService.auditContent(postDTO.getTitle());
+        ContentAuditService.AuditResult contentAudit = contentAuditService.auditContent(postDTO.getContent());
+        
+        // 如果标题或内容中有敏感词且AI判断不合规，则拒绝发布
+        if ((!titleAudit.getSensitiveWords().isEmpty() && !titleAudit.isPassed()) || 
+            (!contentAudit.getSensitiveWords().isEmpty() && !contentAudit.isPassed())) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("sensitiveWordsInTitle", titleAudit.getSensitiveWords());
+            result.put("sensitiveWordsInContent", contentAudit.getSensitiveWords());
+            result.put("message", "内容包含敏感词且上下文不合规，请修改后重试");
+            return HttpResponse.error("内容包含敏感词，请修改后重试").setData(result);
+        }
+        
+        // 使用过滤后的内容（如果AI判断不合规）
+        postDTO.setTitle(titleAudit.getFilteredContent());
+        postDTO.setContent(contentAudit.getFilteredContent());
+        
         Integer postId = forumPostService.createPost(postDTO);
+        
+        // 如果存在敏感词，但AI判断无害，告知用户
+        if (!titleAudit.getSensitiveWords().isEmpty() || !contentAudit.getSensitiveWords().isEmpty()) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("postId", postId);
+            result.put("message", "内容中包含敏感词，但经AI判断上下文合规，已允许发布");
+            return HttpResponse.success(result);
+        }
+        
         return HttpResponse.success(postId);
     }
 
@@ -140,9 +171,9 @@ public class ForumController {
     }
 
     /**
-     * 检测文本是否包含敏感词
+     * 检测文本是否包含敏感词（智能检测）
      */
-    @LogOperation(module = "论坛", operation = "敏感词检测")
+    @LogOperation(module = "论坛", operation = "敏感词智能检测")
     @PostMapping("/checkSensitiveWords")
     public HttpResponse checkSensitiveWords(@RequestBody Map<String, String> params) {
         String text = params.get("text");
@@ -151,22 +182,14 @@ public class ForumController {
             return HttpResponse.error("文本内容不能为空");
         }
         
-        // 获取敏感词过滤器实例
-        SensitiveWordFilter filter = SensitiveWordFilter.getInstance();
-        
-        // 检查文本是否包含敏感词
-        boolean containsSensitiveWords = filter.containsSensitiveWord(text);
-        
-        // 如果包含敏感词，获取敏感词列表
-        List<String> sensitiveWords = null;
-        if (containsSensitiveWords) {
-            sensitiveWords = SensitiveWordFilter.getSensitiveWords(text);
-        }
+        // 使用智能内容审核服务
+        ContentAuditService.AuditResult auditResult = contentAuditService.auditContent(text);
         
         // 构建返回结果
         Map<String, Object> result = new HashMap<>();
-        result.put("containsSensitiveWords", containsSensitiveWords);
-        result.put("sensitiveWords", sensitiveWords);
+        result.put("containsSensitiveWords", !auditResult.getSensitiveWords().isEmpty());
+        result.put("sensitiveWords", auditResult.getSensitiveWords());
+        result.put("aiApproved", auditResult.isPassed());
         
         return HttpResponse.success(result);
     }
