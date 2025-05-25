@@ -45,9 +45,9 @@ spring:
 
   data:
     redis:
-      host: 45.40.254.217       # Redis 服务器地址   docer 172.17.0.1
+      host: 175.178.218.95       # Redis 服务器地址   docer 172.17.0.1
       port: 6379            # Redis 服务器端口
-      password: redis_BRsGxx    # Redis 密码（如果没有密码，可以省略）
+      password: redis_TjGWcs    # Redis 密码（如果没有密码，可以省略）
       database: 0           # 使用的数据库索引（默认是 0）
       timeout: 5000         # 连接超时时间（单位：毫秒）
       lettuce:
