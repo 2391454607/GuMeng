@@ -137,6 +137,12 @@
             <version>release-V4-2.3.0</version>
         </dependency>
 
+        <!-- WebClient -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
         <!--  FastJSON  -->
         <dependency>
             <groupId>com.alibaba</groupId>
