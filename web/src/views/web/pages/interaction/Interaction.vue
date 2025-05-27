@@ -9,6 +9,9 @@ const router = useRouter();
 
 const handleClick = (type) => {
   Message.success(`即将体验${type}`);
+  if (type === '故梦阑珊非遗守护精灵'){
+    router.push({ name: 'Aides' })
+  }
   if (type === '非遗小游戏') {
     router.push({ name: 'Games' });
   }
@@ -25,7 +28,7 @@ const handleClick = (type) => {
         </div>
         <h2>非遗智能体</h2>
         <p>智能问答助手，为您解答非遗相关问题，提供专业的非遗知识服务。</p>
-        <a-button type="outline" class="feature-button" @click="handleClick('非遗智能体')">
+        <a-button type="outline" class="feature-button" @click="handleClick('故梦阑珊非遗守护精灵')">
           开始对话
           <template #icon><icon-right /></template>
         </a-button>

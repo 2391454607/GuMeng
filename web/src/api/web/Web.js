@@ -19,3 +19,8 @@ export const getPolicyInfoAPI = async (id) => {
 export const downloadPolicyAPI = async (id) => {
     return http.get(`/web/policy/download?id=${id}`)
 }
+
+//智能体对话
+export const chatWithAI = async(data) => {
+    return http.post(`/api/ai/chat`, data);
+}

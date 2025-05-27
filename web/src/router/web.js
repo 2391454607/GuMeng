@@ -82,6 +82,11 @@ const webRouters = [
         }
     },
     {
+        path: '/aides',
+        name: "Aides",
+        component: () => import("@/views/web/pages/interaction/Aides.vue")
+    },
+    {
         path: '/games',
         name: 'Games',
         component: () => import('@/views/web/pages/games/Games.vue'),
