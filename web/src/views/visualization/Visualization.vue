@@ -1,6 +1,11 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick, watch, computed } from 'vue';
 import * as echarts from 'echarts';
+import 'echarts-wordcloud';
+
+import yunnanGeoJson from '@/utils/yunnan.json';
+
+
 
 // --- mockData 合并 ---
 const trendData = [
@@ -63,19 +68,25 @@ const relationData = {
 };
 
 const chartConfigs = [
-  { id: 'trendTimelineChart', title: '批次时间线趋势' },
+  { id: 'relationNetworkChart', title: '项目关系网络' },
   { id: 'trendStackChart', title: '批次级别分布' },
   { id: 'overviewGenderChart', title: '性别比例分布' },
   { id: 'overviewEthnicChart', title: '民族分布' },
   { id: 'contentRadarChart', title: '内容分布分析' },
   { id: 'contentInteractionChart', title: '互动分析' },
+  { id: 'trendTimelineChart', title: '批次时间线趋势' },
   { id: 'contentWordCloudChart', title: '内容热度词云' },
-  { id: 'relationNetworkChart', title: '项目关系网络' },
 ];
+
+// 交换内容热度词云与性别比例分布
+const temp = chartConfigs[2];
+chartConfigs[2] = chartConfigs[7];
+chartConfigs[7] = temp;
 
 const charts = ref([]);
 const modalVisible = ref(false);
 const modalChartIdx = ref(0);
+const yunnanMapModalVisible = ref(false);
 
 const initCharts = async () => {
   await nextTick();
@@ -211,17 +222,16 @@ const initCharts = async () => {
   const contentWordCloudChart = echarts.init(document.getElementById('contentWordCloudChart'));
   charts.value.push(contentWordCloudChart);
   const wordData = [
-    { name: '传承', value: 100 },
-    { name: '文化', value: 90 },
-    { name: '传统', value: 85 },
-    { name: '技艺', value: 80 },
-    { name: '非遗', value: 75 },
-    { name: '保护', value: 70 },
-    { name: '发展', value: 65 },
-    { name: '创新', value: 60 },
-    { name: '艺术', value: 55 },
-    { name: '历史', value: 50 }
-  ];
+  { "name": "白族扎染技艺", "value": 91 },
+  { "name": "傣族泼水节", "value": 88 },
+  { "name": "彝族火把节", "value": 88 },
+  { "name": "永子围棋", "value": 87 },
+  { "name": "乌铜走银", "value": 57 },  // 补充高频非遗
+  { "name": "剑川木雕", "value": 50 },  // 补充高频非遗
+  { "name": "普洱茶制作技艺", "value": 65 },  // 补充高频非遗
+  { "name": "哈尼梯田文化系统", "value": 75 },  // 补充高频非遗
+  { "name": "纳西古乐", "value": 69 }   // 补充高频非遗
+];
   contentWordCloudChart.setOption({
     title: { text: '', left: 'center' },
     tooltip: { show: true },
@@ -291,6 +301,54 @@ const initCharts = async () => {
       lineStyle: { color: 'source', curveness: 0.3 }
     }]
   });
+
+  // --- 云南省热度分布地图 ---
+  echarts.registerMap('云南', yunnanGeoJson); // <--- 将注册地图移到这里
+  await nextTick(); // 确保DOM已渲染
+  const yunnanMapChart = echarts.init(document.getElementById('yunnanMapChart'));
+  charts.value.push(yunnanMapChart);
+  const yunnanData = [
+    { name: '昆明市', value: 120 },
+    { name: '曲靖市', value: 80 },
+    { name: '玉溪市', value: 60 },
+    { name: '保山市', value: 40 },
+    { name: '昭通市', value: 70 },
+    { name: '丽江市', value: 50 },
+    { name: '普洱市', value: 30 },
+    { name: '临沧市', value: 20 },
+    { name: '楚雄彝族自治州', value: 55 },
+    { name: '红河哈尼族彝族自治州', value: 65 },
+    { name: '文山壮族苗族自治州', value: 35 },
+    { name: '西双版纳傣族自治州', value: 25 },
+    { name: '大理白族自治州', value: 75 },
+    { name: '德宏傣族景颇acee州', value: 15 },
+    { name: '怒江傈僳族自治州', value: 10 },
+    { name: '迪庆藏族自治州', value: 5 }
+  ];
+  yunnanMapChart.setOption({
+    title: { text: '', left: 'center' },
+    tooltip: {
+      trigger: 'item',
+      formatter: '{b}<br/>热度: {c}'
+    },
+    visualMap: {
+      min: 0,
+      max: 120,
+      left: 'left',
+      top: 'bottom',
+      text: ['高','低'],
+      inRange: { color: ['#fceabb', '#f8b500', '#c0392b'] },
+      calculable: true
+    },
+    series: [{
+      name: '热度',
+      type: 'map',
+      map: '云南',
+      roam: true,
+      label: { show: true },
+      data: yunnanData
+    }]
+  });
 };
 
 // 放大图表弹窗初始化
@@ -356,6 +414,28 @@ watch(modalVisible, v => {
 });
 
 const filteredChartConfigs = computed(() => chartConfigs.filter(c => !['overviewRegionChart','relationSankeyChart','trendHeatmapChart','overviewLevelChart'].includes(c.id)));
+
+const enlargeYunnanMap = () => {
+  yunnanMapModalVisible.value = true;
+  setTimeout(() => {
+    nextTick(() => {
+      if (charts.value['yunnan-modal']) charts.value['yunnan-modal'].dispose();
+      const dom = document.getElementById('yunnanMapChart-modal');
+      if (!dom) return;
+      const smallChart = echarts.getInstanceByDom(document.getElementById('yunnanMapChart'));
+      let option = smallChart ? smallChart.getOption() : null;
+      charts.value['yunnan-modal'] = echarts.init(dom);
+      if (option) charts.value['yunnan-modal'].setOption(option);
+    });
+  }, 100);
+};
+const closeYunnanMapModal = () => {
+  yunnanMapModalVisible.value = false;
+  if (charts.value['yunnan-modal']) {
+    charts.value['yunnan-modal'].dispose();
+    charts.value['yunnan-modal'] = null;
+  }
+};
 </script>
 
 <template>
@@ -373,6 +453,12 @@ const filteredChartConfigs = computed(() => chartConfigs.filter(c => !['overview
         <button class="enlarge-btn" @click="enlargeChart(idx)" title="放大">🔍</button>
       </div>
     </div>
+    <!-- 云南省热度分布地图 -->
+    <div class="yunnan-map-block">
+      <div class="chart-title">云南省热度分布</div>
+      <div id="yunnanMapChart" class="yunnan-map-chart"></div>
+      <button class="enlarge-btn" @click="enlargeYunnanMap" title="放大">🔍</button>
+    </div>
     <transition name="modal-fade">
       <div v-if="modalVisible" class="modal-mask" @click.self="closeModal">
         <div class="modal-content">
@@ -381,6 +467,17 @@ const filteredChartConfigs = computed(() => chartConfigs.filter(c => !['overview
             <button class="modal-close" @click="closeModal">×</button>
           </div>
           <div :id="chartConfigs[modalChartIdx].id + '-modal'" class="modal-chart"></div>
+        </div>
+      </div>
+    </transition>
+    <transition name="modal-fade">
+      <div v-if="yunnanMapModalVisible" class="modal-mask" @click.self="closeYunnanMapModal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <span class="modal-title">云南省热度分布</span>
+            <button class="modal-close" @click="closeYunnanMapModal">×</button>
+          </div>
+          <div id="yunnanMapChart-modal" class="modal-map-chart"></div>
         </div>
       </div>
     </transition>
@@ -534,5 +631,24 @@ const filteredChartConfigs = computed(() => chartConfigs.filter(c => !['overview
   .chart-block { width: 90vw; }
   .chart { width: 90vw; }
   .modal-chart { width: 98vw; }
+}
+.yunnan-map-block {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 40px 0;
+}
+.yunnan-map-chart {
+  width: 240px;
+  height: 180px;
+  margin: 0 auto;
+}
+.modal-map-chart {
+  width: 600px;
+  height: 450px;
+  max-width: 90vw;
+  max-height: 80vh;
+  background: transparent;
 }
 </style>

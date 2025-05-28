@@ -1,4 +1,4 @@
-/**
+p/**
  * 格式化日期
  * @param {string|Date} date - 日期对象或日期字符串
  * @param {string} fmt - 格式化模板，例如：'yyyy-MM-dd hh:mm:ss'
