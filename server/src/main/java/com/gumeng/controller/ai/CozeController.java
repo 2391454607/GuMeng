@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/ai")
+@RequestMapping("/coze/ai")
 public class CozeController {
 
     private final CozeService cozeService;

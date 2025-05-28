@@ -38,7 +38,7 @@ public class SecurityConfig {
             "/web/**",
             "/forum/getPosts",
             "/forum/getTopics",
-            "/api/ai/**"
+            "/coze/ai/**"
     };
     private static final String[] PUBLIC_Authority = {
             "user",
