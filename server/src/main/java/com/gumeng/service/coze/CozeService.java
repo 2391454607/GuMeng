@@ -2,6 +2,7 @@ package com.gumeng.service.coze;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gumeng.code.HttpResponse;
 import com.gumeng.config.coze.CozeBotsProperties;
 import com.gumeng.config.coze.CozeBotsProperties.BotConfig;
 import org.springframework.stereotype.Service;
@@ -25,10 +26,10 @@ public class CozeService {
     }
 
     // 新增：创建会话方法，返回会话ID
-    public Mono<String> createConversation(String botName, String userId) {
+    public Mono<HttpResponse> createConversation(String botName, String userId) {
         BotConfig config = botsProperties.getBot(botName);
         if (config == null) {
-            return Mono.error(new IllegalArgumentException("未配置的 bot: " + botName));
+            return Mono.just(HttpResponse.error("未配置的 bot: " + botName));
         }
 
         Map<String, Object> requestBody = new HashMap<>();
@@ -50,11 +51,11 @@ public class CozeService {
                         JsonNode root = objectMapper.readTree(response);
                         JsonNode dataNode = root.get("data");
                         if (dataNode != null && dataNode.get("id") != null) {
-                            return dataNode.get("id").asText();
+                            return HttpResponse.success(dataNode.get("id").asText());
                         }
-                        return "";
+                        return HttpResponse.error("创建会话失败");
                     } catch (Exception e) {
-                        return "";
+                        return HttpResponse.error("创建会话失败: " + e.getMessage());
                     }
                 });
     }

@@ -1,5 +1,6 @@
 package com.gumeng.controller.ai;
 
+import com.gumeng.code.HttpResponse;
 import com.gumeng.service.coze.CozeService;
 import com.gumeng.utils.JwtUtil;
 import org.springframework.http.MediaType;
@@ -21,9 +22,9 @@ public class CozeController {
 
     // 新增：创建会话接口
     @PostMapping("/conversation/create")
-    public Mono<String> createConversation(@RequestBody Map<String, String> body, @RequestHeader("Authorization") String token) {
+    public Mono<HttpResponse> createConversation(@RequestBody Map<String, String> body, @RequestHeader("Authorization") String token) {
         if (token == null || !token.startsWith("Bearer ")) {
-            return Mono.error(new IllegalArgumentException("未提供有效的认证信息"));
+            return Mono.just(HttpResponse.error("未提供有效的认证信息"));
         }
         try {
             String actualToken = token.substring(7);
@@ -32,7 +33,7 @@ public class CozeController {
             String bot = body.getOrDefault("bot", "aides");
             return cozeService.createConversation(bot, userId);
         } catch (Exception e) {
-            return Mono.error(new IllegalArgumentException("无效的认证信息"));
+            return Mono.just(HttpResponse.error("无效的认证信息"));
         }
     }
 
