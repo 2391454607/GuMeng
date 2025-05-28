@@ -20,7 +20,13 @@ export const downloadPolicyAPI = async (id) => {
     return http.get(`/web/policy/download?id=${id}`)
 }
 
+// 新增：创建会话
+export const createConversationAPI = async (bot = 'aides') => {
+    return http.post(`/api/ai/conversation/create`, { bot });
+}
+
 //智能体对话
 export const chatWithAI = async(data) => {
     return http.post(`/api/ai/chat`, data);
 }
+

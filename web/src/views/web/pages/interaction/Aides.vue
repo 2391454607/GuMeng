@@ -1,237 +1,378 @@
 <script setup>
-import { ref, onMounted } from 'vue';
-import { Message } from '@arco-design/web-vue';
+import { ref, watch, nextTick, onMounted } from 'vue';
 import Footer from "@/views/web/layout/Footer.vue";
-import {chatWithAI} from "@/api/web/Web.js";
 
-const messageList = ref([
-  {
-    type: 'bot',
-    content: '你好！我是故梦阑珊非遗守护精灵，很高兴为您服务。我可以为您解答非遗相关的问题，让我们开始对话吧！'
-  }
+// 左侧菜单数据
+const menuItems = ref([
+  { title: '今天', items: ['Greeting and Offering Assistance'] },
+  { title: '7 天内', items: [
+    '影响他人人生决定的深度图谱',
+  ]},
+  { title: '30 天内', items: [
+    '国内外校园家庭心理干预研究',
+    '故事细节项目日记与自动化方向'
+  ]}
 ]);
 
-const inputMessage = ref('');
-const chatContainer = ref(null);
+// 聊天记录
+const messages = ref([
+  { role: 'ai', text: '你好！请问有什么可以帮你的呢？ 😊' }
+]);
 
-const sendMessage = async () => {
-  if (!inputMessage.value.trim()) {
-    Message.warning('请输入内容');
-    return;
-  }
+// 用户输入
+const userInput = ref('');
+const isTyping = ref(false);
+const messageContainer = ref(null);
 
-  // 添加用户消息
-  messageList.value.push({
-    type: 'user',
-    content: inputMessage.value
-  });
+// 监听消息变化，自动滚动到底部
+watch(messages, () => {
+  scrollToBottom();
+}, { deep: true });
 
-  // 添加思考中的消息
-  messageList.value.push({
-    type: 'bot',
-    content: '正在思考中...'
-  });
-
-  try {
-    const userMessage = inputMessage.value;
-    inputMessage.value = '';
-
-    const response = await chatWithAI({
-      bot: 'aides',
-      message: userMessage
-    });
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let botResponse = '';
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n').filter(line => line.trim());
-      
-      for (const line of lines) {
-        try {
-          const data = JSON.parse(line);
-          if (data.role === 'assistant' && data.type === 'answer' && data.content) {
-            botResponse += data.content;
-            messageList.value[messageList.value.length - 1].content = botResponse;
-            scrollToBottom();
-          }
-        } catch (e) {
-          console.error('解析响应数据失败:', e);
-        }
-      }
-    }
-
-  } catch (error) {
-    console.error('AI 对话错误:', error);
-    Message.error('发送失败，请重试');
-    messageList.value.pop();
-  }
-};
-
-// 监听回车发送
-const handleKeyPress = (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
-};
-
-// 自动滚动到底部
-const scrollToBottom = () => {
-  if (chatContainer.value) {
-    chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
-  }
-};
+// 监听打字状态变化，自动滚动到底部
+watch(isTyping, () => {
+  scrollToBottom();
+});
 
 onMounted(() => {
   scrollToBottom();
 });
+
+// 滚动到底部
+function scrollToBottom() {
+  nextTick(() => {
+    if (messageContainer.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+    }
+  });
+}
+
+// 发送消息
+async function sendMessage() {
+  if (!userInput.value.trim()) return;
+  
+  // 添加用户消息
+  messages.value.push({ role: 'user', text: userInput.value });
+  const question = userInput.value;
+  userInput.value = '';
+  
+  // 显示AI正在输入状态
+  isTyping.value = true;
+  
+  try {
+    // 这里添加实际的API调用
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    messages.value.push({
+      role: 'ai',
+      text: `我是DeepSeek Chat，由深度求索公司开发的智能AI助手！ 我的回答是根据你的问题：${question}。提供的是模拟回答，需要接入实际的API才能实现真实对话。 有什么我可以帮你的呢？ ✨\n\n你可以大胆，或者尝试告诉学习3dg工作中的问题，无论日常烦恼、技术问题，还是需要写作建议，我都会尽力帮你！`
+    });
+  } catch (error) {
+    messages.value.push({
+      role: 'ai',
+      text: '抱歉，发生了一些错误，请稍后重试。'
+    });
+  } finally {
+    isTyping.value = false;
+  }
+}
 </script>
 
 <template>
-  <div class="chat-container">
-    <div class="chat-header">
-      <h2>故梦阑珊非遗守护精灵</h2>
-      <p>专业解答非遗相关问题，让传统文化焕发新生机</p>
-    </div>
-    
-    <div class="chat-messages" ref="chatContainer">
-      <div v-for="(message, index) in messageList" 
-           :key="index" 
-           :class="['message', message.type]">
-        <div class="avatar">
-          <img :src="message.type === 'bot' ? '/bot-avatar.png' : '/user-avatar.png'" 
-               :alt="message.type === 'bot' ? '机器人头像' : '用户头像'">
+  <div class="chat-page">
+    <!-- 左侧菜单 -->
+    <div class="sidebar">
+      <div class="new-chat-btn">
+        <button @click="messages = [{ role: 'ai', text: '你好！请问有什么可以帮你的呢？ 😊' }]">
+          <i class="fas fa-plus"></i> 开始新对话
+        </button>
+      </div>
+      
+      <div class="menu-container">
+        <div v-for="(section, index) in menuItems" :key="index" class="menu-section">
+          <div class="section-title">{{ section.title }}</div>
+          <div v-for="(item, itemIndex) in section.items" :key="itemIndex" class="menu-item">
+            {{ item }}
+          </div>
         </div>
-        <div class="content">{{ message.content }}</div>
       </div>
     </div>
 
-    <div class="chat-input">
-      <a-textarea
-        v-model="inputMessage"
-        placeholder="请输入您的问题..."
-        :auto-size="{ minRows: 1, maxRows: 4 }"
-        @keypress="handleKeyPress"
-      />
-      <a-button type="primary" @click="sendMessage">
-        发送
-        <template #icon>
-          <icon-send />
-        </template>
-      </a-button>
-    </div>
-  </div>
+    <!-- 右侧聊天区域 -->
+    <div class="chat-container">
+      <div class="chat-header">
+        <h1>智能助手</h1>
+      </div>
+      
+      <div class="messages" ref="messageContainer">
+        <div v-for="(msg, idx) in messages" :key="idx" :class="['message', msg.role]">
+          <div class="avatar" :class="msg.role">
+            {{ msg.role === 'user' ? '我' : 'AI' }}
+          </div>
+          <div class="bubble">
+            {{ msg.text }}
+          </div>
+        </div>
+        
+        <!-- AI正在输入提示 -->
+        <div v-if="isTyping" class="message ai">
+          <div class="avatar ai">AI</div>
+          <div class="bubble typing">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
+        </div>
+      </div>
 
-  <Footer class="footer"/>
+      <!-- 输入区域 -->
+      <div class="input-area">
+        <input 
+          v-model="userInput" 
+          @keyup.enter="sendMessage" 
+          placeholder="请输入您的问题..." 
+          class="message-input"
+        />
+        <div class="input-buttons">
+          <button class="action-button" title="上传文件">
+            <i class="fas fa-paperclip"></i>
+          </button>
+          <button class="action-button" title="录音">
+            <i class="fas fa-microphone"></i>
+          </button>
+          <button 
+            @click="sendMessage" 
+            class="send-button"
+            :disabled="!userInput.trim()"
+          >
+            发送
+          </button>
+        </div>
+      </div>
+    </div>
+    <Footer class="footer" />
+  </div>
 </template>
 
 <style scoped>
-.chat-container {
-  height: calc(100vh - 169px);
+.chat-page {
+  display: flex;
+  height: calc(100vh - 128px);
+  background-color: #fff;
+}
+
+/* 左侧菜单样式 */
+.sidebar {
+  width: 260px;
+  background-color: #f5f5f5;
+  border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
-  background: #faf6f0;
-  padding: 20px;
+  padding: 16px;
+}
+
+.new-chat-btn button {
+  width: 100%;
+  padding: 10px;
+  background-color: #4a55e6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.menu-container {
+  margin-top: 20px;
+  overflow-y: auto;
+}
+
+.menu-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.menu-item {
+  padding: 8px 12px;
+  margin: 4px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+}
+
+.menu-item:hover {
+  background-color: #e8e8e8;
+}
+
+/* 右侧聊天区域样式 */
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #fff;
 }
 
 .chat-header {
-  text-align: center;
-  padding: 20px;
-  border-bottom: 1px solid rgba(194, 16, 28, 0.1);
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.chat-header h2 {
-  color: #C2101C;
-  margin-bottom: 10px;
+.chat-header h1 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
 }
 
-.chat-header p {
-  color: #666;
-}
-
-.chat-messages {
+.messages {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .message {
   display: flex;
-  margin-bottom: 20px;
-  align-items: flex-start;
+  gap: 12px;
+  max-width: 80%;
 }
 
 .message.user {
+  margin-left: auto;
   flex-direction: row-reverse;
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  overflow: hidden;
-  margin: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
 }
 
-.avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.content {
-  max-width: 70%;
-  padding: 12px 16px;
-  border-radius: 12px;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.message.bot .content {
-  background: #fff;
-  color: #333;
-}
-
-.message.user .content {
-  background: #C2101C;
+.avatar.user {
+  background-color: #4a55e6;
   color: white;
 }
 
-.chat-input {
-  padding: 20px;
-  background: #faf6f0;
-  border-top: 1px solid rgba(194, 16, 28, 0.1);
-  display: flex;
-  gap: 10px;
+.avatar.ai {
+  background-color: #10a37f;
+  color: white;
 }
 
-.chat-input :deep(.arco-textarea) {
+.bubble {
+  padding: 12px 16px;
+  border-radius: 12px;
+  max-width: 100%;
+  word-break: break-word;
+  line-height: 1.5;
+}
+
+.message.user .bubble {
+  background-color: #4a55e6;
+  color: white;
+}
+
+.message.ai .bubble {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.typing .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #666;
+  margin: 0 2px;
+  animation: typing 1.4s infinite ease-in-out both;
+}
+
+.typing .dot:nth-child(1) { animation-delay: 0s; }
+.typing .dot:nth-child(2) { animation-delay: 0.2s; }
+.typing .dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.6; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.input-area {
+  border-top: 1px solid #e0e0e0;
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.message-input {
   flex: 1;
-  border-color: #C2101C;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
 }
 
-.chat-input :deep(.arco-textarea:focus) {
-  box-shadow: 0 0 0 2px rgba(194, 16, 28, 0.2);
+.message-input:focus {
+  border-color: #4a55e6;
 }
 
-.chat-input :deep(.arco-btn-primary) {
-  background-color: #C2101C;
-  border-color: #C2101C;
-}
-
-.chat-input :deep(.arco-btn-primary:hover) {
-  background-color: #d32f2f;
-  border-color: #d32f2f;
-}
-
-.footer{
+.input-buttons {
   display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.action-button {
+  padding: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  border-radius: 4px;
+}
+
+.action-button:hover {
+  background-color: #f5f5f5;
+}
+
+.send-button {
+  padding: 8px 16px;
+  background-color: #4a55e6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.send-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.send-button:not(:disabled):hover {
+  background-color: #3a44d5;
+}
+
+.footer {
+  display: flex;
+  position: absolute;
   bottom: 0;
 }
 </style>
+
