@@ -80,7 +80,6 @@ public class CozeService {
         requestBody.put("auto_save_history", true);
         requestBody.put("stream", true);
 
-        // 新增：如果有 conversationId，加入请求体
         if (conversationId != null && !conversationId.isEmpty()) {
             requestBody.put("conversation_id", conversationId);
         }
@@ -103,8 +102,8 @@ public class CozeService {
                         JsonNode jsonNode = objectMapper.readTree(chunk);
                         JsonNode contentNode = jsonNode.get("content");
                         String content = contentNode != null ? contentNode.asText() : "";
-                        // SSE格式返回
-                        return content.isEmpty() ? "" : "data: " + content + "\n";
+                        // 检查内容长度，超过20字符的内容不显示
+                        return content.length() <= 20 ? content : "";
                     } catch (Exception e) {
                         return "";
                     }
