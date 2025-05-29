@@ -15,26 +15,35 @@ const request = axios.create({
     withCredentials: true,
 });
 
-
+// 获取通用headers
+const getCommonHeaders = () => {
+    const headers = {
+        "Content-Type": "application/json;charset=UTF-8"
+    };
+    const token = localStorage.getItem('token');
+    if (token) {
+        headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+};
 
 /**
  * @description axios请求拦截器
  */
 request.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-      // 如果是 FormData，则删除 Content-Type（让浏览器自动生成 boundary）
-      if (config.data instanceof FormData) {
-          delete config.headers['Content-Type'];
-      }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
 );
 
 /**
@@ -60,6 +69,8 @@ request.interceptors.response.use(
  * @description 封装http对象包含GET、POST、PUT与DELETE方法
  */
 export const http = {
+    defaults: request.defaults,
+    headers: getCommonHeaders(),
     get: (url, data) => {
         return request.request({
             url: url,

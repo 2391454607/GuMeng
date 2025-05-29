@@ -22,11 +22,20 @@ export const downloadPolicyAPI = async (id) => {
 
 // 新增：创建会话
 export const createConversationAPI = async (bot = 'aides') => {
-    return http.post(`/api/ai/conversation/create`, { bot });
+    return http.post(`/coze/ai/conversation/create`, { bot });
 }
 
 //智能体对话
 export const chatWithAI = async(data) => {
-    return http.post(`/api/ai/chat`, data);
+    const token = localStorage.getItem('token');
+    return fetch(`/api/coze/ai/chat`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream',
+            'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify(data)
+    });
 }
 

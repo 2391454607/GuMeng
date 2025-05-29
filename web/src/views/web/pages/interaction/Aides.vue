@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, nextTick, onMounted } from 'vue';
 import Footer from "@/views/web/layout/Footer.vue";
+import { createConversationAPI, chatWithAI } from '@/api/web/Web.js';
 
 // 左侧菜单数据
 const menuItems = ref([
@@ -19,6 +20,9 @@ const messages = ref([
   { role: 'ai', text: '你好！请问有什么可以帮你的呢？ 😊' }
 ]);
 
+// 添加会话ID
+const conversationId = ref('');
+
 // 用户输入
 const userInput = ref('');
 const isTyping = ref(false);
@@ -34,7 +38,17 @@ watch(isTyping, () => {
   scrollToBottom();
 });
 
-onMounted(() => {
+onMounted(async () => {
+  try {
+    const response = await createConversationAPI();
+    conversationId.value = response.data.conversationId;
+  } catch (error) {
+    console.error('创建会话失败:', error);
+    messages.value.push({
+      role: 'ai',
+      text: '初始化对话失败，请刷新页面重试。'
+    });
+  }
   scrollToBottom();
 });
 
@@ -47,33 +61,112 @@ function scrollToBottom() {
   });
 }
 
-// 发送消息
+ // 发送消息
 async function sendMessage() {
   if (!userInput.value.trim()) return;
-  
-  // 添加用户消息
+
   messages.value.push({ role: 'user', text: userInput.value });
   const question = userInput.value;
   userInput.value = '';
-  
-  // 显示AI正在输入状态
   isTyping.value = true;
-  
+
   try {
-    // 这里添加实际的API调用
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    messages.value.push({
-      role: 'ai',
-      text: `我是DeepSeek Chat，由深度求索公司开发的智能AI助手！ 我的回答是根据你的问题：${question}。提供的是模拟回答，需要接入实际的API才能实现真实对话。 有什么我可以帮你的呢？ ✨\n\n你可以大胆，或者尝试告诉学习3dg工作中的问题，无论日常烦恼、技术问题，还是需要写作建议，我都会尽力帮你！`
+    const response = await chatWithAI({
+      conversationId: conversationId.value,
+      message: question
     });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let aiMessage = { role: 'ai', text: '' };
+    messages.value.push(aiMessage);
+    let buffer = '';
+    let fullText = '';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+      buffer += chunk;
+
+      while (buffer.includes('\n')) {
+        const newlineIndex = buffer.indexOf('\n');
+        const line = buffer.slice(0, newlineIndex);
+        buffer = buffer.slice(newlineIndex + 1);
+
+        if (line.startsWith('data:')) {
+          const data = line.slice('data:'.length).trim();
+
+          if (data.startsWith('{')) {
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.msg_type === 'generate_answer_finish') {
+                break;
+              } else if (parsed.msg_type === 'time_capsule_recall') {
+                continue;
+              }
+            } catch (e) {
+              console.error('解析JSON数据失败:', e);
+            }
+          } else if (data) {
+            fullText += data;
+            // 对新增的文本片段使用打字机效果
+            await typewriterEffect(data, aiMessage, 30);
+          }
+        }
+      }
+    }
+
+    // 确保最终文本是完整的
+    aiMessage.text = fullText;
+
   } catch (error) {
-    messages.value.push({
-      role: 'ai',
-      text: '抱歉，发生了一些错误，请稍后重试。'
-    });
+    console.error('发送消息失败:', error);
+    const errorMessage = { role: 'ai', text: '' };
+    messages.value.push(errorMessage);
+    await typewriterEffect('抱歉，发生了一些错误，请稍后重试。', errorMessage, 30);
   } finally {
     isTyping.value = false;
   }
+}
+
+// 添加开始新对话的函数
+async function startNewChat() {
+  try {
+    const response = await createConversationAPI();
+    conversationId.value = response.data.conversationId;
+    messages.value = [{ role: 'ai', text: '你好！请问有什么可以帮你的呢？ 😊' }];
+  } catch (error) {
+    console.error('创建新对话失败:', error);
+    messages.value.push({
+      role: 'ai',
+      text: '创建新对话失败，请稍后重试。'
+    });
+  }
+}
+// 添加打字机效果方法
+function typewriterEffect(text, message, delay = 50) {
+  let index = 0;
+  message.text = '';
+
+  return new Promise((resolve) => {
+    async function type() {
+      if (index < text.length) {
+        message.text += text[index];
+        index++;
+        await nextTick(); // 让 Vue DOM 更新
+        setTimeout(type, delay);
+      } else {
+        resolve();
+      }
+    }
+    type();
+  });
 }
 </script>
 
@@ -82,7 +175,7 @@ async function sendMessage() {
     <!-- 左侧菜单 -->
     <div class="sidebar">
       <div class="new-chat-btn">
-        <button @click="messages = [{ role: 'ai', text: '你好！请问有什么可以帮你的呢？ 😊' }]">
+        <button @click="startNewChat">
           <i class="fas fa-plus"></i> 开始新对话
         </button>
       </div>
