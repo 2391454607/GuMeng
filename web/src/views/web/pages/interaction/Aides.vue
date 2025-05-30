@@ -193,7 +193,7 @@ function typewriterEffect(text, message, delay = 50) {
     <!-- 右侧聊天区域 -->
     <div class="chat-container">
       <div class="chat-header">
-        <h1>智能助手</h1>
+        <h1>故梦阑珊非遗守护精灵</h1>
       </div>
       
       <div class="messages" ref="messageContainer">
@@ -208,8 +208,8 @@ function typewriterEffect(text, message, delay = 50) {
         
         <!-- AI正在输入提示 -->
         <div v-if="isTyping" class="message ai">
-          <div class="avatar ai">AI</div>
-          <div class="bubble typing">
+          <div class="ai">小精灵正在思考中</div>
+          <div class="typing">
             <span class="dot"></span>
             <span class="dot"></span>
             <span class="dot"></span>
