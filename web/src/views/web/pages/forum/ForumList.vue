@@ -188,6 +188,15 @@ const handlePageChange = (page) => {
 
 // 跳转到帖子详情
 const goToDetail = (id) => {
+  // 检查用户是否已登录
+  if (!isLogin.value) {
+    // 未登录时，显示提示并重定向到登录页面
+    Message.warning('请先登录后查看帖子详情');
+    router.push('/login');
+    return;
+  }
+  
+  // 已登录则正常跳转到帖子详情页
   router.push(`/forum/detail/${id}`);
 };
 
