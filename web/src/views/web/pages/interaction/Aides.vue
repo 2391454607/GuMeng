@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, nextTick, onMounted } from 'vue';
+import {ref, watch, nextTick, onMounted, reactive} from 'vue';
 import Footer from "@/views/web/layout/Footer.vue";
 import { createConversationAPI, chatWithAI } from '@/api/web/Web.js';
 
@@ -61,7 +61,7 @@ function scrollToBottom() {
   });
 }
 
- // 发送消息
+// 发送消息
 async function sendMessage() {
   if (!userInput.value.trim()) return;
 
@@ -81,11 +81,11 @@ async function sendMessage() {
     }
 
     const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let aiMessage = { role: 'ai', text: '' };
+    const decoder = new TextDecoder('utf-8');
+
+    let aiMessage = reactive({ role: 'ai', text: '' });
     messages.value.push(aiMessage);
     let buffer = '';
-    let fullText = '';
 
     while (true) {
       const { value, done } = await reader.read();
@@ -102,6 +102,8 @@ async function sendMessage() {
         if (line.startsWith('data:')) {
           const data = line.slice('data:'.length).trim();
 
+          if (!data) continue;
+
           if (data.startsWith('{')) {
             try {
               const parsed = JSON.parse(data);
@@ -111,20 +113,15 @@ async function sendMessage() {
                 continue;
               }
             } catch (e) {
-              console.error('解析JSON数据失败:', e);
+              console.error('JSON 解析失败', e);
             }
-          } else if (data) {
-            fullText += data;
-            // 对新增的文本片段使用打字机效果
-            await typewriterEffect(data, aiMessage, 30);
+          } else {
+            // 真正流式追加，每个 chunk 打字输出
+            await typewriterEffect(data, aiMessage, 10);
           }
         }
       }
     }
-
-    // 确保最终文本是完整的
-    aiMessage.text = fullText;
-
   } catch (error) {
     console.error('发送消息失败:', error);
     const errorMessage = { role: 'ai', text: '' };
@@ -134,6 +131,7 @@ async function sendMessage() {
     isTyping.value = false;
   }
 }
+
 
 // 添加开始新对话的函数
 async function startNewChat() {
@@ -150,24 +148,14 @@ async function startNewChat() {
   }
 }
 // 添加打字机效果方法
-function typewriterEffect(text, message, delay = 50) {
-  let index = 0;
-  message.text = '';
-
-  return new Promise((resolve) => {
-    async function type() {
-      if (index < text.length) {
-        message.text += text[index];
-        index++;
-        await nextTick(); // 让 Vue DOM 更新
-        setTimeout(type, delay);
-      } else {
-        resolve();
-      }
-    }
-    type();
-  });
+async function typewriterEffect(text, message, delay = 30) {
+  for (let i = 0; i < text.length; i++) {
+    message.text = message.text + text[i];  // 用赋值替代 +=
+    await nextTick();                        // 等待视图刷新
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
 }
+
 </script>
 
 <template>
