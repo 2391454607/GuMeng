@@ -71,7 +71,7 @@ export function addCommentAPI(postId, content, parentComment = null) {
     content: content
   };
   
-  // 如果是回复评论，添加父评论ID
+  // 是回复评论，添加父评论ID
   if (parentComment) {
     data.parent = parentComment.id.toString();
     if (parentComment.userId) {
@@ -127,7 +127,7 @@ export function getTopicsAPI() {
 
 // 上传图片
 export function uploadImageAPI(file, type = 'post') {
-  // 如果传入的是文件对象，需要创建FormData
+  // 传入的是文件对象，创建FormData
   if (file instanceof File) {
     const formData = new FormData();
     formData.append('file', file);
@@ -141,7 +141,7 @@ export function uploadImageAPI(file, type = 'post') {
     });
   }
   
-  // 如果传入的已经是FormData，直接发送
+  // 传入的已经是FormData，直接发送
   if (file instanceof FormData) {
     return http.post('/forum/file/upload', file, {
       headers: {

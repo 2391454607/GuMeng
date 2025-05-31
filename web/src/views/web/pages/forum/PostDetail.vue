@@ -242,7 +242,7 @@ const fixPostImages = () => {
       const position = match.index;
       const fullMatch = match[0]; // 完整匹配的文本
       
-      // 如果是中文数字，转换为阿拉伯数字
+      // 中文数字转换为阿拉伯数字
       let index;
       const chineseNumbers = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10};
       if (chineseNumbers[imageNumber]) {
@@ -306,7 +306,7 @@ const fixPostImages = () => {
         }
       }
       
-      // 如果没找到完全匹配的，用上下文匹配
+      // 没找到完全匹配的，用上下文匹配
       if (!targetParagraph) {
         for (const p of paragraphs) {
           if (p.textContent.includes(ref.ref) || 
@@ -351,7 +351,7 @@ const fixPostImages = () => {
         console.log(`已将图片${ref.index + 1}插入到文本"${ref.ref}"后`);
         insertedPositions.add(ref.ref);
       } else {
-        // 如果没找到匹配段落，添加到末尾
+        // 没找到匹配段落，添加到末尾
         markdownBody.appendChild(imgContainer);
         console.log(`未找到匹配段落，已将图片${ref.index + 1}添加到末尾`);
         insertedPositions.add(ref.ref);
@@ -384,7 +384,7 @@ const fetchComments = async (loadMore = false) => {
       // 返回的数据是数组
       let newComments = res.data || [];
       
-      // 如果返回的是分页对象，则取records属性
+      // 返回的是分页对象，则取records属性
       if (res.data && res.data.records) {
         newComments = res.data.records;
       }
@@ -515,7 +515,7 @@ const submitComment = async () => {
         // 处理完整审核结果
         const approved = checkResult.data?.approved;
         
-        // 如果审核不通过
+        // 审核不通过
         if (!approved) {
           // 统一错误提示，不暴露具体审核原因
           sensitiveWordsError.value = checkResult.data?.message || "内容审核不通过，请修改后重试";
@@ -651,7 +651,7 @@ const submitReply = async () => {
         // 处理完整审核结果
         const approved = checkResult.data?.approved;
         
-        // 如果审核不通过
+        // 审核不通过
         if (!approved) {
           // 统一错误提示，不暴露具体审核原因
           sensitiveWordsError.value = checkResult.data?.message || "内容审核不通过，请修改后重试";

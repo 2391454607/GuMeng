@@ -140,17 +140,17 @@ const fixPreviewImages = () => {
         url && url.includes(alt.replace('.jpg', '').replace('.png', '').replace('.gif', ''))
       );
       
-      // 2. 如果没找到匹配，使用索引匹配
+      // 2. 没找到匹配，使用索引匹配
       if (!replacementUrl && index < possibleImageUrls.length) {
         replacementUrl = possibleImageUrls[index];
       }
       
-      // 3. 如果还是没找到，使用第一个可用URL
+      // 3. 没找到，使用第一个可用URL
       if (!replacementUrl && possibleImageUrls.length > 0) {
         replacementUrl = possibleImageUrls[0];
       }
       
-      // 如果找到了替换URL
+      // 替换URL
       if (replacementUrl) {
         img.src = replacementUrl;
         

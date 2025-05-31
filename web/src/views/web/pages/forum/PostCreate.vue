@@ -62,7 +62,7 @@ const editorValue = ref('');  // 用于存储编辑器内容
 
 // 计算编辑器内容的字数
 const contentWordCount = computed(() => {
-  // 如果没有内容返回0
+  // 没有内容返回0
   if (!editorValue.value) return 0;
   
   // 去除markdown图片语法后计算字数
@@ -122,7 +122,7 @@ const handleUploadBytemdImages = async (files) => {
           // 保证URL是绝对URL
           let imageUrl = res.data;
           
-          // 如果不是绝对URL，转换为绝对URL
+          // 不是绝对URL，转换为绝对URL
           if (imageUrl && typeof imageUrl === 'string' && !imageUrl.startsWith('http')) {
             const baseUrl = 'http://sw8nkdw7h.hn-bkt.clouddn.com';
             imageUrl = new URL(imageUrl, baseUrl).href;
@@ -208,7 +208,7 @@ const fetchTopics = async () => {
   }
 };
 
-// 如果是编辑模式，获取帖子详情
+// 编辑模式，获取帖子详情
 const fetchPostDetail = async () => {
   if (!isEdit.value) return;
   
@@ -226,7 +226,7 @@ const fetchPostDetail = async () => {
       if (foundTopic) {
         postForm.topic = foundTopic.id;
       } else {
-        // 如果找不到对应话题，尝试查找默认话题
+        // 找不到对应话题，尝试查找默认话题
         const defaultTopic = topics.value.length > 0 ? topics.value[0].id : '';
         postForm.topic = defaultTopic;
       }
@@ -239,7 +239,7 @@ const fetchPostDetail = async () => {
       if (post.images && post.images.length > 0) {
         let imageArray = [];
         
-        // 如果是字符串，分割成数组
+        // 字符串分割成数组
         if (typeof post.images === 'string') {
           imageArray = post.images.split(',').filter(img => img);
         } else if (Array.isArray(post.images)) {
@@ -335,12 +335,12 @@ const handleFileChange = (event) => {
 
 // 删除预览图片
 const removeImage = (index) => {
-  // 如果是已上传的图片
+  // 已上传的图片
   if (index < postForm.images.length) {
     postForm.images.splice(index, 1);
   }
   
-  // 如果是新选择的图片
+  // 新选择的图片
   const newImageIndex = index - postForm.images.length;
   if (newImageIndex >= 0 && newImageIndex < imageFiles.value.length) {
     imageFiles.value.splice(newImageIndex, 1);
@@ -441,7 +441,7 @@ onMounted(() => {
 // 添加草稿相关函数
 // 保存草稿到localStorage
 const saveDraft = () => {
-  if (!editorValue.value && !postForm.title) return; // 如果内容为空，不保存
+  if (!editorValue.value && !postForm.title) return; // 内容为空，则不保存
   
   try {
     const draft = {
@@ -611,7 +611,7 @@ const prepareContentForSubmission = (content) => {
       if (possibleImage) {
         return `![${alt}](${possibleImage})`;
       }
-      return ''; // 如果找不到匹配，删除这个图片标记
+      return '';
     });
 
     const allImagesRegex = /!\[(.*?)\]\((.*?)\)/g;
@@ -823,7 +823,7 @@ const fixImageUrlsInContent = (content) => {
     if (!url || url === 'undefined' || url === '图片上传中...' || 
         url.includes('undefined') || url.startsWith('http://localhost')) {
       
-      // 如果URL有问题，尝试根据alt文本在已上传的图片中查找
+      // URL有问题，尝试根据alt文本在已上传的图片中查找
       const possibleImage = postForm.images.find(img => 
         img && img.includes(altText.replace('.jpg', '').replace('.png', '').replace('.gif', ''))
       );
@@ -832,13 +832,13 @@ const fixImageUrlsInContent = (content) => {
         return `![${altText}](${possibleImage})`;
       }
       
-      // 如果找不到匹配的图片，返回原始标记而不是占位符
+      // 找不到匹配的图片，返回原始标记而不是占位符
       return match;
     }
     
     // 保证URL是绝对路径
     if (!url.startsWith('http')) {
-      // 如果是相对路径，尝试转为绝对路径
+      // 是相对路径，尝试转为绝对路径
       if (url.includes('/')) {
         const baseUrl = 'http://sw8nkdw7h.hn-bkt.clouddn.com';
         const absoluteUrl = url.startsWith('/') ? 
@@ -889,12 +889,12 @@ const enhancePreviewImages = () => {
         imgUrl && imgUrl.includes(alt.replace('.jpg', '').replace('.png', '').replace('.gif', ''))
       );
       
-      // 2. 如果没找到匹配，尝试通过索引匹配
+      // 2. 没找到匹配，尝试通过索引匹配
       if (!possibleImage && index < postForm.images.length) {
         possibleImage = postForm.images[index];
       }
       
-      // 3. 如果仍找不到匹配，使用任何可用的图片
+      // 3. 仍找不到匹配，使用任何可用的图片
       if (!possibleImage && postForm.images.length > 0) {
         possibleImage = postForm.images[0];
       }
@@ -997,7 +997,7 @@ const refreshPreviewImages = () => {
       needsReplacement = true;
     }
     
-    // 如果需要替换URL
+    // 替换URL
     if (needsReplacement) {
       // 尝试找到合适的替代URL
       const alt = img.getAttribute('alt') || '';
@@ -1008,12 +1008,12 @@ const refreshPreviewImages = () => {
         url.includes(alt.replace('.jpg', '').replace('.png', '').replace('.gif', ''))
       );
       
-      // 2. 如果没找到，使用索引位置匹配
+      // 2. 没找到，使用索引位置匹配
       if (!replacementUrl && index < validImageUrls.length) {
         replacementUrl = validImageUrls[index];
       }
       
-      // 3. 如果仍然没有，使用第一个有效URL
+      // 3. 仍然没有，使用第一个有效URL
       if (!replacementUrl && validImageUrls.length > 0) {
         replacementUrl = validImageUrls[0];
       }
@@ -1037,7 +1037,6 @@ const refreshPreviewImages = () => {
     if (!img._hasErrorHandler) {
       img._hasErrorHandler = true;
       img.onerror = function() {
-        // 如果源URL有问题，尝试使用有效的图片URL
         if (validImageUrls.length > 0) {
           let replacementUrl;
           
@@ -1052,8 +1051,7 @@ const refreshPreviewImages = () => {
         } else {
           // 没有可用的有效URL，使用占位符
           this.style.display = 'none';
-          
-          // 如果还没有添加过占位符
+
           if (!this.nextElementSibling || !this.nextElementSibling.classList.contains('image-placeholder')) {
             const placeholder = document.createElement('div');
             placeholder.className = 'image-placeholder';
@@ -1102,7 +1100,7 @@ const processContentForPreview = (content) => {
     const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
     let correctedContent = content;
     
-    // 修复可能的图片路径问题
+    // 修复图片路径问题
     correctedContent = correctedContent.replace(imageRegex, (match, alt, url) => {
       // 检查URL是否有效
       if (!url || url === 'undefined' || url.includes('undefined') || !url.startsWith('http')) {
@@ -1118,7 +1116,7 @@ const processContentForPreview = (content) => {
       return match;
     });
     
-    // 如果内容有变化，更新
+    // 更新有变化的内容
     if (correctedContent !== content) {
       editorValue.value = correctedContent;
       postForm.content = correctedContent;

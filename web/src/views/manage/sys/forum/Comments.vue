@@ -41,7 +41,7 @@ onMounted(() => {
 
 // 获取帖子话题信息
 const fetchPostTopic = async (postId) => {
-  // 如果已经缓存过，直接返回
+  //缓存过，直接返回
   if (postTopicCache[postId]) {
     return postTopicCache[postId];
   }
