@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue';
+import { ref, computed, onMounted, nextTick, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import { 
@@ -56,6 +56,9 @@ const postId = computed(() => route.params.id);
 const post = ref({});
 const loading = ref(true);
 const error = ref(false);
+
+// 图片处理标志，避免重复插入
+const imagesProcessed = ref(false);
 
 // 评论列表
 const comments = ref([]);
@@ -115,6 +118,9 @@ const goBack = () => {
 const fetchPostDetail = async () => {
   loading.value = true;
   error.value = false;
+  // 重置图片处理状态
+  imagesProcessed.value = false;
+  
   let retryCount = 0;
   const maxRetries = 3;
   
@@ -143,6 +149,13 @@ const fetchPostDetail = async () => {
         
         // 成功获取数据，设置loading为false
         loading.value = false;
+        
+        // 等待DOM渲染完成后处理图片位置
+        nextTick(() => {
+          setTimeout(() => {
+            fixPostImages();
+          }, 500);
+        });
       } else {
         // 获取失败，判断是否重试
         if (retryCount < maxRetries) {
@@ -175,6 +188,182 @@ const fetchPostDetail = async () => {
   
   // 开始第一次尝试
   attemptFetch();
+};
+
+// 修复帖子中图片位置的函数
+const fixPostImages = () => {
+  try {
+    // 检查是否已经处理过图片
+    if (imagesProcessed.value) {
+      console.log('图片已处理，跳过重复执行');
+      return;
+    }
+    
+    // 检查是否存在图片数组
+    if (!post.value.images || post.value.images.length === 0) {
+      console.log('帖子没有图片数据');
+      imagesProcessed.value = true;
+      return;
+    }
+    
+    // 找到Markdown内容区域
+    const contentElement = document.querySelector('.content-markdown');
+    if (!contentElement) {
+      console.warn('未找到内容区域元素');
+      return;
+    }
+    
+    // 找到markdown-body元素
+    const markdownBody = contentElement.querySelector('.markdown-body');
+    if (!markdownBody) {
+      console.warn('未找到markdown-body元素');
+      return;
+    }
+    
+    // 先检查是否已有图片元素，避免重复插入
+    const existingImages = markdownBody.querySelectorAll('img');
+    if (existingImages.length > 0 && existingImages.length >= post.value.images.length) {
+      console.log('已存在足够图片，跳过处理');
+      imagesProcessed.value = true;
+      return;
+    }
+    
+    // 提取原始Markdown文本
+    const originalMarkdown = post.value.content || '';
+    console.log('原始内容:', originalMarkdown);
+    
+    // 查找文本中的"图片x"引用
+    const imageRefs = [];
+    const imageRegex = /图片([0-9一二三四五六七八九十]+)/g;
+    let match;
+    
+    while ((match = imageRegex.exec(originalMarkdown)) !== null) {
+      const imageNumber = match[1]; // 捕获组中的数字或中文数字
+      const position = match.index;
+      const fullMatch = match[0]; // 完整匹配的文本
+      
+      // 如果是中文数字，转换为阿拉伯数字
+      let index;
+      const chineseNumbers = {'一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9, '十': 10};
+      if (chineseNumbers[imageNumber]) {
+        index = chineseNumbers[imageNumber] - 1; // 索引从0开始
+      } else {
+        index = parseInt(imageNumber, 10) - 1; // 索引从0开始
+      }
+      
+      // 检查索引是否有效
+      if (index >= 0 && index < post.value.images.length) {
+        // 找出图片引用前的文本上下文
+        const textBefore = originalMarkdown.substring(0, position).split('\n').pop() || '';
+        const textAfter = originalMarkdown.substring(position + fullMatch.length).split('\n')[0] || '';
+        
+        imageRefs.push({
+          ref: fullMatch,
+          index: index,
+          position: position,
+          textBefore: textBefore.trim(),
+          textAfter: textAfter.trim(),
+          context: (textBefore + ' ' + fullMatch + ' ' + textAfter).trim()
+        });
+      }
+    }
+    
+    console.log('找到图片引用:', imageRefs);
+    
+    // 找到所有段落
+    const paragraphs = Array.from(markdownBody.querySelectorAll('p, h1, h2, h3, h4, h5, h6'));
+    console.log('找到段落元素数量:', paragraphs.length);
+    
+    if (paragraphs.length === 0) {
+      console.warn('没有找到段落元素');
+      return;
+    }
+    
+    // 跟踪已插入的图片位置
+    const insertedPositions = new Set();
+    
+    // 处理每个图片引用，将实际图片插入到对应位置
+    imageRefs.forEach(ref => {
+      // 确保每个位置只插入一次图片
+      if (insertedPositions.has(ref.ref)) {
+        console.log(`图片引用 "${ref.ref}" 已处理，跳过`);
+        return;
+      }
+      
+      // 获取对应的图片URL
+      const imageUrl = post.value.images[ref.index];
+      if (!imageUrl) {
+        console.warn(`没有找到索引 ${ref.index} 的图片`);
+        return;
+      }
+      
+      // 查找包含图片引用文本的段落
+      let targetParagraph = null;
+      for (const p of paragraphs) {
+        if (p.textContent.includes(ref.ref)) {
+          targetParagraph = p;
+          break;
+        }
+      }
+      
+      // 如果没找到完全匹配的，用上下文匹配
+      if (!targetParagraph) {
+        for (const p of paragraphs) {
+          if (p.textContent.includes(ref.ref) || 
+              (ref.textBefore && p.textContent.includes(ref.textBefore)) || 
+              (ref.textAfter && p.textContent.includes(ref.textAfter))) {
+            targetParagraph = p;
+            break;
+          }
+        }
+      }
+      
+      // 创建图片元素
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.alt = `图片${ref.index + 1}`;
+      img.style.maxWidth = '60%';
+      img.style.maxHeight = '250px';
+      img.style.margin = '10px auto';
+      img.style.display = 'block';
+      img.style.borderRadius = '4px';
+      img.style.border = '1px solid #E4D9C3';
+      img.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+      
+      // 避免图片重复加载
+      img.setAttribute('loading', 'lazy');
+      img.setAttribute('data-processed', 'true');
+      
+      // 创建图片容器
+      const imgContainer = document.createElement('p');
+      imgContainer.style.textAlign = 'center';
+      imgContainer.style.margin = '20px 0';
+      imgContainer.appendChild(img);
+      
+      if (targetParagraph) {
+        // 在找到的段落后插入图片
+        if (targetParagraph.nextSibling) {
+          markdownBody.insertBefore(imgContainer, targetParagraph.nextSibling);
+        } else {
+          markdownBody.appendChild(imgContainer);
+        }
+        
+        console.log(`已将图片${ref.index + 1}插入到文本"${ref.ref}"后`);
+        insertedPositions.add(ref.ref);
+      } else {
+        // 如果没找到匹配段落，添加到末尾
+        markdownBody.appendChild(imgContainer);
+        console.log(`未找到匹配段落，已将图片${ref.index + 1}添加到末尾`);
+        insertedPositions.add(ref.ref);
+      }
+    });
+    
+    // 标记图片处理完成
+    imagesProcessed.value = true;
+    console.log('已完成图片插入');
+  } catch (error) {
+    console.error('修复图片位置时出错:', error);
+  }
 };
 
 // 获取评论列表
@@ -677,8 +866,42 @@ const getGridClass = (imageCount) => {
   return `grid-${Math.min(imageCount, 9)}`;
 };
 
+// 监听postId变化，重置处理状态
+watch(() => postId.value, (newId, oldId) => {
+  if (newId !== oldId) {
+    console.log('帖子ID变化，重置处理状态');
+    imagesProcessed.value = false;
+  }
+});
+
 onMounted(() => {
   fetchPostDetail();
+  
+  // 监听DOM变化，确保在内容加载后修复图片位置
+  const observer = new MutationObserver((mutations) => {
+    const hasContentChange = mutations.some(mutation => {
+      return mutation.type === 'childList' && 
+             (mutation.target.classList?.contains('content-markdown') ||
+              mutation.target.classList?.contains('markdown-body'));
+    });
+    
+    if (hasContentChange && post.value.content && !imagesProcessed.value) {
+      setTimeout(fixPostImages, 500);
+    }
+  });
+  
+  // 开始观察DOM变化
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+  
+  // 组件卸载时停止观察
+  onUnmounted(() => {
+    observer.disconnect();
+    // 重置图片处理标志，以便在组件重新挂载时能够再次处理
+    imagesProcessed.value = false;
+  });
 });
 </script>
 
@@ -692,7 +915,7 @@ onMounted(() => {
         </a-button>
       </div>
 
-      <a-spin :loading="loading" size="large">
+      <a-spin :loading="loading" :size="40">
         <template #icon><icon-loading /></template>
         <div class="post-detail-content">
           <!-- 错误状态 -->
@@ -729,8 +952,8 @@ onMounted(() => {
                   <Viewer :value="post.content" :plugins="plugins" />
                 </div>
                 
-                <!-- 图片展示 -->
-                <div v-if="post.images && post.images.length > 0" class="post-images">
+                <!-- 图片展示 - 当图片已经在内容中处理过后就不显示 -->
+                <div v-if="post.images && post.images.length > 0 && !imagesProcessed" class="post-images">
                   <a-image-preview-group infinite>
                     <div class="image-grid" :class="getGridClass(post.images.length)">
                       <div v-for="(img, index) in post.images" :key="index" class="image-wrapper">
@@ -1142,6 +1365,8 @@ onMounted(() => {
   line-height: 1.8;
   color: #582F0E;
   margin-bottom: 24px;
+  position: relative;
+  width: 100%;
 }
 
 /* Markdown渲染器 */
@@ -1149,6 +1374,36 @@ onMounted(() => {
   background-color: transparent;
   font-family: "SimSun", "宋体", serif;
   color: #582F0E;
+  position: relative;
+}
+
+/* 确保图片容器样式正确 */
+.content-markdown :deep(.markdown-body p) {
+  margin: 1em 0;
+  position: relative;
+}
+
+/* 图片样式 */
+.content-markdown :deep(.markdown-body img) {
+  max-width: 60%;
+  max-height: 500px;
+  margin: 10px auto;
+  display: block;
+  border-radius: 4px;
+  border: 1px solid #E4D9C3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 标题样式保持不变 */
+.content-markdown :deep(.markdown-body h1),
+.content-markdown :deep(.markdown-body h2),
+.content-markdown :deep(.markdown-body h3),
+.content-markdown :deep(.markdown-body h4),
+.content-markdown :deep(.markdown-body h5),
+.content-markdown :deep(.markdown-body h6) {
+  color: #8C1F28;
+  font-family: "STKaiti", "楷体", serif;
+  position: relative;
 }
 
 .post-images {
