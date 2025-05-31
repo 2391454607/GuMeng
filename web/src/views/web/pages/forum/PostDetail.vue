@@ -207,14 +207,17 @@ const fixPostImages = () => {
     if (!post.value.images || post.value.images.length === 0) {
       console.log('帖子没有图片数据');
       imagesProcessed.value = true;
-      hideOriginalImages.value = false; // 需要底部图片区域
+      hideOriginalImages.value = false;
       return;
     }
+    
+    console.log('帖子图片数据:', post.value.images);
     
     // 找到Markdown内容区域
     const contentElement = document.querySelector('.content-markdown');
     if (!contentElement) {
       console.warn('未找到内容区域元素');
+      imagesProcessed.value = true;
       hideOriginalImages.value = false; // 处理失败，显示原始图片区域
       return;
     }
@@ -223,16 +226,20 @@ const fixPostImages = () => {
     const markdownBody = contentElement.querySelector('.markdown-body');
     if (!markdownBody) {
       console.warn('未找到markdown-body元素');
+      imagesProcessed.value = true;
       hideOriginalImages.value = false; // 处理失败，显示原始图片区域
       return;
     }
     
     // 先检查是否已有图片元素，避免重复插入
     const existingImages = markdownBody.querySelectorAll('img');
+    console.log('已存在图片元素数量:', existingImages.length);
+    
+    // 如果已有图片，检查是否足够
     if (existingImages.length > 0 && existingImages.length >= post.value.images.length) {
       console.log('已存在足够图片，跳过处理');
       imagesProcessed.value = true;
-      hideOriginalImages.value = false; //不需要底部图片区域
+      hideOriginalImages.value = false;
       return;
     }
     
@@ -276,29 +283,54 @@ const fixPostImages = () => {
       }
     }
     
+    // 尝试查找Markdown格式的图片引用 ![alt](url)
+    const markdownImageRegex = /!\[(.*?)\]\((.*?)\)/g;
+    let mdMatch;
+    while ((mdMatch = markdownImageRegex.exec(originalMarkdown)) !== null) {
+      // 对于Markdown格式的图片，我们已经有URL了，但还是需要找到对应的图片索引
+      const altText = mdMatch[1];
+      const urlText = mdMatch[2];
+      
+      // 检查这个URL是否在我们的图片列表中
+      const index = post.value.images.findIndex(img => img === urlText || img.includes(urlText));
+      
+      if (index >= 0) {
+        imageRefs.push({
+          ref: mdMatch[0],
+          index: index,
+          position: mdMatch.index,
+          textBefore: '',
+          textAfter: '',
+          context: mdMatch[0]
+        });
+      }
+    }
+    
     console.log('找到图片引用:', imageRefs);
     
-    // 找到所有段落
+    // 查找所有段落
     const paragraphs = Array.from(markdownBody.querySelectorAll('p, h1, h2, h3, h4, h5, h6'));
     console.log('找到段落元素数量:', paragraphs.length);
     
+    // 没有段落，直接返回
     if (paragraphs.length === 0) {
       console.warn('没有找到段落元素');
+      imagesProcessed.value = true;
+      hideOriginalImages.value = false;
       return;
     }
     
-    // 跟踪已插入的图片位置
-    const insertedPositions = new Set();
+    // 跟踪已插入的图片
+    const insertedImages = new Set();
     
-    // 处理每个图片引用，将实际图片插入到对应位置
+    // 首先处理找到的图片引用
     imageRefs.forEach(ref => {
-      // 确保每个位置只插入一次图片
-      if (insertedPositions.has(ref.ref)) {
-        console.log(`图片引用 "${ref.ref}" 已处理，跳过`);
+      if (insertedImages.has(ref.index)) {
+        console.log(`图片${ref.index + 1}已处理，跳过`);
         return;
       }
       
-      // 获取对应的图片URL
+      // 获取图片URL
       const imageUrl = post.value.images[ref.index];
       if (!imageUrl) {
         console.warn(`没有找到索引 ${ref.index} 的图片`);
@@ -326,52 +358,145 @@ const fixPostImages = () => {
         }
       }
       
-      // 创建图片元素
-      const img = document.createElement('img');
-      img.src = imageUrl;
-      img.alt = `图片${ref.index + 1}`;
-      img.style.maxWidth = '60%';
-      img.style.maxHeight = '250px';
-      img.style.margin = '10px auto';
-      img.style.display = 'block';
-      img.style.borderRadius = '4px';
-      img.style.border = '1px solid #E4D9C3';
-      img.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-      
-      // 避免图片重复加载
-      img.setAttribute('loading', 'lazy');
-      img.setAttribute('data-processed', 'true');
-      
-      // 创建图片容器
-      const imgContainer = document.createElement('p');
-      imgContainer.style.textAlign = 'center';
-      imgContainer.style.margin = '20px 0';
-      imgContainer.appendChild(img);
-      
-      if (targetParagraph) {
-        // 在找到的段落后插入图片
-        if (targetParagraph.nextSibling) {
-          markdownBody.insertBefore(imgContainer, targetParagraph.nextSibling);
-        } else {
-          markdownBody.appendChild(imgContainer);
-        }
-        
-        console.log(`已将图片${ref.index + 1}插入到文本"${ref.ref}"后`);
-        insertedPositions.add(ref.ref);
-      } else {
-        // 没找到匹配段落，添加到末尾
-        markdownBody.appendChild(imgContainer);
-        console.log(`未找到匹配段落，已将图片${ref.index + 1}添加到末尾`);
-        insertedPositions.add(ref.ref);
-      }
+      insertImage(imageUrl, ref.index, targetParagraph, markdownBody);
+      insertedImages.add(ref.index);
     });
     
-    console.log('已完成图片插入');
+    // 还有未插入的图片，将它们分散在各个段落之间
+    if (insertedImages.size < post.value.images.length) {
+      console.log(`还有 ${post.value.images.length - insertedImages.size} 张图片未插入，将它们分散在各段落之间`);
+      
+      // 先分析段落结构，找出适合插入图片的自然分隔点
+      const sectionBreaks = findSectionBreaks(paragraphs);
+      console.log('找到 section breaks:', sectionBreaks.length);
+      
+      // 找到了分段点，将剩余图片插入到这些位置
+      if (sectionBreaks.length > 0) {
+        let breakIndex = 0;
+        
+        for (let i = 0; i < post.value.images.length; i++) {
+          if (insertedImages.has(i)) continue;
+          
+          if (breakIndex < sectionBreaks.length) {
+            const targetParagraph = sectionBreaks[breakIndex];
+            insertImage(post.value.images[i], i, targetParagraph, markdownBody);
+            insertedImages.add(i);
+            breakIndex++;
+          } else {
+            // 如果section breaks用完了，就添加到最后一个段落之后
+            const lastParagraph = paragraphs[paragraphs.length - 1];
+            insertImage(post.value.images[i], i, lastParagraph, markdownBody);
+            insertedImages.add(i);
+          }
+        }
+      } else {
+        // 没有明显的分段点，尝试均匀分布
+        distributeRemainingImages(post.value.images, insertedImages, paragraphs, markdownBody);
+      }
+    }
+    
     imagesProcessed.value = true;
-    hideOriginalImages.value = false; // 图片插入完成后可能仍需要显示底部图片区域
+    hideOriginalImages.value = false;
+    console.log('图片处理完成');
+    
   } catch (error) {
     console.error('修复图片位置时出错:', error);
-    hideOriginalImages.value = false; // 发生错误时显示原始图片区域
+    imagesProcessed.value = true;
+    hideOriginalImages.value = false;
+  }
+};
+
+// 插入图片的辅助函数
+const insertImage = (imageUrl, index, targetParagraph, markdownBody) => {
+  // 创建图片元素
+  const img = document.createElement('img');
+  img.src = imageUrl;
+  img.alt = `图片${index + 1}`;
+  img.style.maxWidth = '60%';
+  img.style.maxHeight = '250px';
+  img.style.margin = '10px auto';
+  img.style.display = 'block';
+  img.style.borderRadius = '4px';
+  img.style.border = '1px solid #E4D9C3';
+  img.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+  
+  // 避免图片重复加载
+  img.setAttribute('loading', 'lazy');
+  img.setAttribute('data-processed', 'true');
+  img.setAttribute('data-index', index);
+  
+  // 创建图片容器
+  const imgContainer = document.createElement('p');
+  imgContainer.style.textAlign = 'center';
+  imgContainer.style.margin = '20px 0';
+  imgContainer.appendChild(img);
+  
+  if (targetParagraph) {
+    // 在目标段落后插入图片
+    if (targetParagraph.nextSibling) {
+      markdownBody.insertBefore(imgContainer, targetParagraph.nextSibling);
+    } else {
+      markdownBody.appendChild(imgContainer);
+    }
+    console.log(`已将图片${index + 1}插入到段落后`);
+  } else {
+    // 没有目标段落，添加到末尾
+    markdownBody.appendChild(imgContainer);
+    console.log(`已将图片${index + 1}添加到文档末尾`);
+  }
+};
+
+// 查找合适的段落分隔点
+const findSectionBreaks = (paragraphs) => {
+  const breaks = [];
+  
+  // 标题通常是一个新章节的开始
+  for (let i = 0; i < paragraphs.length; i++) {
+    const p = paragraphs[i];
+    if (p.tagName.toLowerCase().startsWith('h')) {
+      breaks.push(p);
+    } else if (p.textContent.includes('一、') || 
+               p.textContent.includes('二、') || 
+               p.textContent.includes('三、') || 
+               p.textContent.includes('四、') ||
+               p.textContent.includes('五、') ||
+               p.textContent.includes('第一') ||
+               p.textContent.includes('第二') ||
+               p.textContent.includes('第三')) {
+      breaks.push(p);
+    }
+  }
+  
+  return breaks;
+};
+
+// 均匀分布剩余图片
+const distributeRemainingImages = (allImages, insertedImages, paragraphs, markdownBody) => {
+  // 计算应该每隔几个段落插入一张图片
+  const remainingCount = allImages.length - insertedImages.size;
+  if (remainingCount <= 0) return;
+  
+  let interval = Math.max(1, Math.floor(paragraphs.length / (remainingCount + 1)));
+  
+  // 分散插入图片
+  let paragraphIndex = Math.min(interval, paragraphs.length - 1);
+  
+  // 遍历所有图片
+  for (let i = 0; i < allImages.length; i++) {
+    if (insertedImages.has(i)) continue;
+    
+    // 找到当前段落
+    if (paragraphIndex < paragraphs.length) {
+      insertImage(allImages[i], i, paragraphs[paragraphIndex], markdownBody);
+      insertedImages.add(i);
+      
+      // 计算下一个插入点
+      paragraphIndex = Math.min(paragraphIndex + interval, paragraphs.length - 1);
+    } else {
+      // 如果段落已用完，则附加在最后
+      insertImage(allImages[i], i, paragraphs[paragraphs.length - 1], markdownBody);
+      insertedImages.add(i);
+    }
   }
 };
 

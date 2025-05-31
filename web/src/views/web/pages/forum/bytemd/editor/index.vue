@@ -631,7 +631,7 @@ const fixPreviewImages = () => {
   opacity: 1 !important;
 }
 
-/* 解决长内容问题 - 针对代码块和表格等可能溢出的元素 */
+/* 解决长内容问题 - 针对代码块和表格等溢出的元素 */
 :deep(.markdown-body pre),
 :deep(.markdown-body table),
 :deep(.markdown-body code),
