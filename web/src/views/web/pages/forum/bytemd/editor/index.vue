@@ -492,7 +492,7 @@ const fixPreviewImages = () => {
 }
 
 .CodeMirror-lines {
-  padding: 16px 0 !important;
+  padding: 30px 0 !important;
 }
 
 /* 增强编辑器内容样式 */
