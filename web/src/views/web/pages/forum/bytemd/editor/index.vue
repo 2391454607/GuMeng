@@ -298,7 +298,6 @@ const fixPreviewImages = () => {
 
 .editor-header-left {
   flex: 0.7;
-  margin-right: 20px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -308,13 +307,14 @@ const fixPreviewImages = () => {
   flex: 0.3;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 48px;
+  justify-content: flex-end;
 }
 
 .editor-title-input {
   width: 100%;
   padding: 10px 12px;
-  font-size: 18px;
+  font-size: 20px; /* 增大字体 */
   border: 1px solid #D6C6AF;
   border-radius: 4px;
   background-color: #FFFDF7;
@@ -342,7 +342,8 @@ const fixPreviewImages = () => {
   background-color: #FFFDF7;
   color: #582F0E;
   font-family: "STKaiti", "楷体", serif;
-  min-width: 140px;
+  min-width: 150px; /* 增加选择框宽度 */
+  font-size: 16px; /* 增大字体 */
   cursor: pointer;
   transition: all 0.3s;
   appearance: none;
@@ -356,11 +357,11 @@ const fixPreviewImages = () => {
 }
 
 .editor-button {
-  padding: 8px 12px;
+  padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
   font-family: "STKaiti", "楷体", serif;
-  font-size: 14px;
+  font-size: 16px;
   transition: all 0.3s;
   white-space: nowrap;
   height: 38px;
@@ -384,7 +385,8 @@ const fixPreviewImages = () => {
   background-color: #8C1F28;
   color: #FFFDF7;
   border: 1px solid #8C1F28;
-  padding: 8px 12px;
+  padding: 8px 16px;
+  font-weight: bold;
 }
 
 .publish-button:hover {
