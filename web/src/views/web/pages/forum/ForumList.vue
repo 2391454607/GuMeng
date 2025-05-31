@@ -119,6 +119,9 @@ const fetchPosts = async () => {
         post.thumbsUpNum = post.thumbsUpNum || 0;
         post.commonNum = post.commonNum || 0;
         
+        // 确保isLiked属性有默认值，防止未定义时显示为已点赞状态
+        post.isLiked = post.isLiked === true ? true : false;
+        
         // 用户名和头像字段
         post.authorName = post.username || '匿名用户';
         post.authorAvatar = post.avatar || '/avatar/default-avatar.png';
