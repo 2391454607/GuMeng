@@ -59,6 +59,8 @@ const error = ref(false);
 
 // 图片处理标志，避免重复插入
 const imagesProcessed = ref(false);
+// 用于控制底部图片区域的显示/隐藏
+const hideOriginalImages = ref(true);
 
 // 评论列表
 const comments = ref([]);
@@ -120,6 +122,8 @@ const fetchPostDetail = async () => {
   error.value = false;
   // 重置图片处理状态
   imagesProcessed.value = false;
+  // 默认隐藏底部图片区域
+  hideOriginalImages.value = true;
   
   let retryCount = 0;
   const maxRetries = 3;
@@ -203,6 +207,7 @@ const fixPostImages = () => {
     if (!post.value.images || post.value.images.length === 0) {
       console.log('帖子没有图片数据');
       imagesProcessed.value = true;
+      hideOriginalImages.value = false; // 需要底部图片区域
       return;
     }
     
@@ -210,6 +215,7 @@ const fixPostImages = () => {
     const contentElement = document.querySelector('.content-markdown');
     if (!contentElement) {
       console.warn('未找到内容区域元素');
+      hideOriginalImages.value = false; // 处理失败，显示原始图片区域
       return;
     }
     
@@ -217,6 +223,7 @@ const fixPostImages = () => {
     const markdownBody = contentElement.querySelector('.markdown-body');
     if (!markdownBody) {
       console.warn('未找到markdown-body元素');
+      hideOriginalImages.value = false; // 处理失败，显示原始图片区域
       return;
     }
     
@@ -225,6 +232,7 @@ const fixPostImages = () => {
     if (existingImages.length > 0 && existingImages.length >= post.value.images.length) {
       console.log('已存在足够图片，跳过处理');
       imagesProcessed.value = true;
+      hideOriginalImages.value = false; //不需要底部图片区域
       return;
     }
     
@@ -358,11 +366,12 @@ const fixPostImages = () => {
       }
     });
     
-    // 标记图片处理完成
-    imagesProcessed.value = true;
     console.log('已完成图片插入');
+    imagesProcessed.value = true;
+    hideOriginalImages.value = false; // 图片插入完成后可能仍需要显示底部图片区域
   } catch (error) {
     console.error('修复图片位置时出错:', error);
+    hideOriginalImages.value = false; // 发生错误时显示原始图片区域
   }
 };
 
@@ -886,7 +895,8 @@ onMounted(() => {
     });
     
     if (hasContentChange && post.value.content && !imagesProcessed.value) {
-      setTimeout(fixPostImages, 500);
+      // 减少延时，加速图片处理
+      setTimeout(fixPostImages, 200);
     }
   });
   
@@ -901,6 +911,7 @@ onMounted(() => {
     observer.disconnect();
     // 重置图片处理标志，以便在组件重新挂载时能够再次处理
     imagesProcessed.value = false;
+    hideOriginalImages.value = true;
   });
 });
 </script>
@@ -953,7 +964,7 @@ onMounted(() => {
                 </div>
                 
                 <!-- 图片展示 - 当图片已经在内容中处理过后就不显示 -->
-                <div v-if="post.images && post.images.length > 0 && !imagesProcessed" class="post-images">
+                <div v-if="post.images && post.images.length > 0 && !imagesProcessed && !hideOriginalImages" class="post-images">
                   <a-image-preview-group infinite>
                     <div class="image-grid" :class="getGridClass(post.images.length)">
                       <div v-for="(img, index) in post.images" :key="index" class="image-wrapper">
@@ -1367,6 +1378,7 @@ onMounted(() => {
   margin-bottom: 24px;
   position: relative;
   width: 100%;
+  min-height: 200px; /* 添加最小高度，防止内容区域闪烁 */
 }
 
 /* Markdown渲染器 */
@@ -1375,6 +1387,7 @@ onMounted(() => {
   font-family: "SimSun", "宋体", serif;
   color: #582F0E;
   position: relative;
+  min-height: 100px; /* 添加最小高度 */
 }
 
 /* 确保图片容器样式正确 */
@@ -1392,6 +1405,13 @@ onMounted(() => {
   border-radius: 4px;
   border: 1px solid #E4D9C3;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  opacity: 1; /* 确保图片显示正常 */
+  animation: fadeIn 0.3s ease; /* 添加淡入动画 */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* 标题样式保持不变 */
