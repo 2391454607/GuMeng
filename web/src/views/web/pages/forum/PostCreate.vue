@@ -1197,16 +1197,6 @@ const handleTopicChange = (value) => {
             </a-form-item>
           </a-form>
         </a-spin>
-        
-        <!-- 敏感词错误提示 -->
-        <div class="sidebar" v-if="sensitiveWordsError">
-          <div class="sidebar-content">
-            <!-- 敏感词错误提示 -->
-            <div v-if="sensitiveWordsError" class="sensitive-words-alert">
-              <a-alert type="error" :content="sensitiveWordsError" />
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -1221,13 +1211,14 @@ const handleTopicChange = (value) => {
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .create-post-container {
-  width: 100%;
-  max-width: 100%;
+  width: 90%;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0;
+  padding: 0 20px;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -1332,107 +1323,20 @@ const handleTopicChange = (value) => {
   overflow-x: hidden !important;
 }
 
-/* 侧边栏样式 */
-.sidebar {
-  width: 300px;
+/* 敏感词错误提示 */
+.sensitive-words-alert {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  width: 90%;
+  max-width: 600px;
   background-color: #FFFDF7;
-  overflow-y: auto;
-  padding: 0;
-  flex-shrink: 0;
-  margin-left: 15px;
-}
-
-.sidebar-content {
-  padding: 15px;
-  background-color: #FFFDF7;
-  border-radius: 8px;
   border: 1px solid #D6C6AF;
-}
-
-.sidebar-title {
-  font-family: "STKaiti", "楷体", serif;
-  color: #582F0E;
-  margin-top: 0;
-  margin-bottom: 15px;
-  border-bottom: 1px solid #E4D9C3;
-  padding-bottom: 10px;
-}
-
-/* 图片上传相关样式 */
-.image-upload-container {
-  margin-bottom: 20px;
-}
-
-.image-previews {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-.image-preview-item {
-  width: 80px;
-  height: 80px;
   border-radius: 8px;
-  overflow: hidden;
-  position: relative;
-  border: 1px solid #D6C6AF;
-  background-color: #FFFDF7;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s;
-}
-
-.image-preview-item:hover {
-  transform: scale(1.05);
-}
-
-.preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.image-actions {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  display: flex;
-  gap: 5px;
-}
-
-.delete-btn {
-  width: 20px;
-  height: 20px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(140, 31, 40, 0.8);
-  border-color: transparent;
-}
-
-.delete-icon {
-  font-size: 14px;
-  line-height: 1;
-}
-
-.image-upload-trigger {
-  width: 80px;
-  height: 80px;
-  border: 1px dashed #D6C6AF;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background-color: #FFFDF7;
-  transition: all 0.3s;
-}
-
-.image-upload-trigger:hover {
-  border-color: #8C1F28;
-  background-color: #FFF7E9;
+  padding: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .upload-icon {
