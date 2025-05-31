@@ -1229,7 +1229,7 @@ const handleTopicChange = (value) => {
   display: flex;
   height: calc(100vh - 130px);
   position: relative;
-  margin-top: 20px;
+  margin-top: 40px;
   width: 100%;
   overflow-x: hidden; /* 防止水平溢出 */
 }
