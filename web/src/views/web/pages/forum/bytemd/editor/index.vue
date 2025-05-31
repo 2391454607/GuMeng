@@ -307,7 +307,7 @@ const fixPreviewImages = () => {
   flex: 0.3;
   display: flex;
   align-items: center;
-  gap: 48px;
+  gap: 20px;
   justify-content: flex-end;
 }
 
@@ -336,7 +336,7 @@ const fixPreviewImages = () => {
 }
 
 .editor-topic-select {
-  padding: 10px 12px;
+  padding: 0 12px;
   border: 1px solid #D6C6AF;
   border-radius: 4px;
   background-color: #FFFDF7;
@@ -353,7 +353,10 @@ const fixPreviewImages = () => {
   background-size: 16px;
   padding-right: 30px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  height: 38px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  line-height: 38px;
 }
 
 .editor-button {

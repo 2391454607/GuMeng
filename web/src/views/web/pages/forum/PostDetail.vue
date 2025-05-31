@@ -246,6 +246,39 @@ const fixPostImages = () => {
     // 提取原始Markdown文本
     const originalMarkdown = post.value.content || '';
     
+    // 查找文本中所有的标题和它们的位置
+    const headingRegex = /^(#{1,6})\s+(.+)$/gm;
+    const headings = [];
+    let headingMatch;
+    
+    while ((headingMatch = headingRegex.exec(originalMarkdown)) !== null) {
+      const level = headingMatch[1].length;
+      const text = headingMatch[2].trim();
+      const position = headingMatch.index;
+      const endPosition = headingMatch.index + headingMatch[0].length;
+      
+      headings.push({
+        level,
+        text,
+        position,
+        endPosition,
+      });
+    }
+    
+    // 排序标题，确保按照在文档中的顺序
+    headings.sort((a, b) => a.position - b.position);
+    
+    // 识别各标题的区块范围
+    for (let i = 0; i < headings.length; i++) {
+      headings[i].blockStart = headings[i].endPosition;
+      headings[i].blockEnd = i < headings.length - 1 ? headings[i + 1].position : originalMarkdown.length;
+      
+      // 特别标识第五标题，用于后面的匹配
+      headings[i].isFifthTitle = headings[i].text.includes('第五') || headings[i].text.includes('五、') || (i === 4);
+      
+      console.log(`标题 ${i + 1}: ${headings[i].text}, 是否第五标题: ${headings[i].isFifthTitle}`);
+    }
+    
     // 查找文本中的"图片x"引用
     const imageRefs = [];
     const imageRegex = /图片([0-9一二三四五六七八九十]+)/g;
@@ -267,17 +300,30 @@ const fixPostImages = () => {
       
       // 检查索引是否有效
       if (index >= 0 && index < post.value.images.length) {
-        // 找出图片引用前的文本上下文
-        const textBefore = originalMarkdown.substring(0, position).split('\n').pop() || '';
-        const textAfter = originalMarkdown.substring(position + fullMatch.length).split('\n')[0] || '';
+        // 找出图片引用前后的更多文本上下文（增加上下文窗口）
+        const contextStart = Math.max(0, position - 50);
+        const contextEnd = Math.min(originalMarkdown.length, position + fullMatch.length + 50);
+        const textBefore = originalMarkdown.substring(contextStart, position).trim();
+        const textAfter = originalMarkdown.substring(position + fullMatch.length, contextEnd).trim();
+        
+        // 找出这个图片引用所属的标题区块
+        let titleBlock = null;
+        for (const heading of headings) {
+          if (position >= heading.blockStart && position < heading.blockEnd) {
+            titleBlock = heading;
+            break;
+          }
+        }
         
         imageRefs.push({
           ref: fullMatch,
           index: index,
           position: position,
-          textBefore: textBefore.trim(),
-          textAfter: textAfter.trim(),
-          context: (textBefore + ' ' + fullMatch + ' ' + textAfter).trim()
+          textBefore: textBefore,
+          textAfter: textAfter,
+          context: (textBefore + ' ' + fullMatch + ' ' + textAfter).trim(),
+          titleBlock: titleBlock, // 记录所属标题区块
+          isUnderFifthTitle: titleBlock?.isFifthTitle || false // 是否在第五标题下
         });
       }
     }
@@ -286,41 +332,42 @@ const fixPostImages = () => {
     const markdownImageRegex = /!\[(.*?)\]\((.*?)\)/g;
     let mdMatch;
     while ((mdMatch = markdownImageRegex.exec(originalMarkdown)) !== null) {
-      // 对于Markdown格式的图片，我们已经有URL了，但还是需要找到对应的图片索引
       const altText = mdMatch[1];
       const urlText = mdMatch[2];
+      const position = mdMatch.index;
       
       // 检查这个URL是否在我们的图片列表中
       const index = post.value.images.findIndex(img => img === urlText || img.includes(urlText));
       
       if (index >= 0) {
+        // 找出这个图片引用所属的标题区块
+        let titleBlock = null;
+        for (const heading of headings) {
+          if (position >= heading.blockStart && position < heading.blockEnd) {
+            titleBlock = heading;
+            break;
+          }
+        }
+        
         imageRefs.push({
           ref: mdMatch[0],
           index: index,
-          position: mdMatch.index,
+          position: position,
           textBefore: '',
           textAfter: '',
-          context: mdMatch[0]
+          context: mdMatch[0],
+          titleBlock: titleBlock, // 记录所属标题区块
+          isUnderFifthTitle: titleBlock?.isFifthTitle || false // 是否在第五标题下
         });
       }
     }
     
+    // 按照在文档中的位置排序图片引用
+    imageRefs.sort((a, b) => a.position - b.position);
     console.log('找到图片引用:', imageRefs);
     
     // 跟踪已插入的图片
     const insertedImages = new Set();
-    
-    // 所有段落和文本节点
-    const allElements = markdownBody.querySelectorAll('*');
-    console.log('总元素数:', allElements.length);
-    
-    // 创建一个用于匹配的正则表达式Map
-    const regexMap = new Map();
-    imageRefs.forEach(ref => {
-      // 转义正则表达式特殊字符
-      const escapedRef = ref.ref.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      regexMap.set(ref.index, new RegExp(escapedRef, 'g'));
-    });
     
     // 记录所有文本节点
     const textNodes = [];
@@ -328,7 +375,9 @@ const fixPostImages = () => {
     // 递归查找所有文本节点
     function findTextNodes(node) {
       if (node.nodeType === Node.TEXT_NODE) {
-        textNodes.push(node);
+        if (node.nodeValue && node.nodeValue.trim()) {
+          textNodes.push(node);
+        }
       } else {
         Array.from(node.childNodes).forEach(findTextNodes);
       }
@@ -338,49 +387,84 @@ const fixPostImages = () => {
     findTextNodes(markdownBody);
     console.log('找到文本节点数:', textNodes.length);
     
-    // 处理每个文本节点，替换图片引用
-    textNodes.forEach(textNode => {
-      const text = textNode.nodeValue;
-      if (!text) return;
+    // 创建图片元素的辅助函数
+    function createImageElement(imageUrl, index) {
+      const img = document.createElement('img');
+      img.src = imageUrl;
+      img.alt = `图片${index + 1}`;
+      img.style.maxWidth = '80%';
+      img.style.margin = '10px auto';
+      img.style.display = 'block';
+      img.style.borderRadius = '4px';
+      img.style.border = '1px solid #E4D9C3';
+      img.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+      img.setAttribute('loading', 'lazy');
+      img.setAttribute('data-processed', 'true');
+      img.setAttribute('data-index', index);
       
-      // 对每个图片引用进行检查和替换
-      imageRefs.forEach(ref => {
-        // 如果这个图片已经被插入过，跳过
-        if (insertedImages.has(ref.index)) return;
-        
-        // 检查文本中是否包含这个引用
-        if (text.includes(ref.ref)) {
-          console.log(`找到引用"${ref.ref}"在文本节点中: "${text.substring(0, 50)}..."`);
-          
-          // 获取图片URL
-          const imageUrl = post.value.images[ref.index];
-          if (!imageUrl) {
-            console.warn(`没有找到索引 ${ref.index} 的图片`);
-            return;
+      // 创建包含图片的容器
+      const container = document.createElement('span');
+      container.className = 'image-container';
+      container.style.display = 'block';
+      container.style.textAlign = 'center';
+      container.style.margin = '15px auto';
+      container.appendChild(img);
+      
+      return container;
+    }
+    
+    // 按标题区块找到匹配节点的辅助函数
+    function findMatchingNodesByTitle(titleText) {
+      const result = [];
+      const titleRegex = new RegExp(titleText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      
+      for (const node of textNodes) {
+        if (titleRegex.test(node.nodeValue)) {
+          result.push(node);
+        }
+      }
+      return result;
+    }
+    
+    // 计算文本相似度的辅助函数（用于模糊匹配）
+    function calculateSimilarity(text1, text2) {
+      const s1 = text1.toLowerCase();
+      const s2 = text2.toLowerCase();
+      let matches = 0;
+      
+      // 简单的N-gram相似度计算
+      for (let i = 0; i < s1.length - 1; i++) {
+        const bigram1 = s1.substring(i, i + 2);
+        for (let j = 0; j < s2.length - 1; j++) {
+          const bigram2 = s2.substring(j, j + 2);
+          if (bigram1 === bigram2) {
+            matches++;
           }
-          
-          // 创建图片元素
-          const img = document.createElement('img');
-          img.src = imageUrl;
-          img.alt = `图片${ref.index + 1}`;
-          img.style.maxWidth = '80%';
-          img.style.margin = '10px auto';
-          img.style.display = 'block';
-          img.style.borderRadius = '4px';
-          img.style.border = '1px solid #E4D9C3';
-          img.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-          img.setAttribute('loading', 'lazy');
-          img.setAttribute('data-processed', 'true');
-          img.setAttribute('data-index', ref.index);
-          
-          // 创建包含图片的容器
-          const container = document.createElement('span');
-          container.className = 'image-container';
-          container.style.display = 'block';
-          container.style.textAlign = 'center';
-          container.style.margin = '15px auto';
-          container.appendChild(img);
-          
+        }
+      }
+      
+      return matches;
+    }
+    
+    // 处理图片引用，按照严格的位置匹配插入图片
+    for (const ref of imageRefs) {
+      // 图片已经被插入过，跳过
+      if (insertedImages.has(ref.index)) continue;
+      
+      const imageUrl = post.value.images[ref.index];
+      if (!imageUrl) {
+        console.warn(`没有找到索引 ${ref.index} 的图片`);
+        continue;
+      }
+      
+      // 创建图片元素
+      const imageContainer = createImageElement(imageUrl, ref.index);
+      let imageInserted = false;
+      
+      // 匹配策略1：精确匹配文本节点中的引用
+      for (const textNode of textNodes) {
+        const text = textNode.nodeValue;
+        if (text && text.includes(ref.ref)) {
           try {
             // 创建DOM范围并进行替换
             const range = document.createRange();
@@ -388,17 +472,125 @@ const fixPostImages = () => {
             range.setStart(textNode, startIndex);
             range.setEnd(textNode, startIndex + ref.ref.length);
             range.deleteContents();
-            range.insertNode(container);
+            range.insertNode(imageContainer);
             
             // 标记图片为已插入
             insertedImages.add(ref.index);
-            console.log(`已将图片${ref.index + 1}替换文本"${ref.ref}"`);
+            console.log(`已将图片${ref.index + 1}替换文本"${ref.ref}"（精确匹配）`);
+            imageInserted = true;
+            break;
           } catch (e) {
             console.error('替换文本时出错:', e);
           }
         }
-      });
-    });
+      }
+      
+      // 如果精确匹配失败，且图片在第五标题下，优先查找第五标题下的位置
+      if (!imageInserted && ref.isUnderFifthTitle) {
+        console.log(`图片${ref.index + 1}在第五标题下，尝试特殊处理`);
+        
+        // 匹配策略2：查找第五标题节点
+        const fifthTitleNodes = findMatchingNodesByTitle('第五') || 
+                                findMatchingNodesByTitle('五、') || 
+                                (headings[4] ? findMatchingNodesByTitle(headings[4].text) : []);
+        
+        if (fifthTitleNodes.length > 0) {
+          // 找到第五标题后的第一个段落或元素
+          let fifthTitleNode = fifthTitleNodes[0];
+          let targetNode = fifthTitleNode;
+          
+          // 找到标题元素
+          while (targetNode && 
+                 !['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(targetNode.parentNode.nodeName)) {
+            targetNode = targetNode.parentNode;
+            if (!targetNode) break;
+          }
+          
+          if (targetNode) {
+            // 找到标题后的下一个元素
+            let nextElement = targetNode.parentNode.nextElementSibling;
+            if (nextElement) {
+              // 在第五标题后的第一个元素后插入图片
+              nextElement.appendChild(imageContainer);
+              insertedImages.add(ref.index);
+              console.log(`已将图片${ref.index + 1}插入到第五标题后的元素中`);
+              imageInserted = true;
+            } else {
+              // 如果没有下一个元素，直接在标题后插入
+              const container = targetNode.parentNode.parentNode;
+              const div = document.createElement('div');
+              div.className = 'fifth-title-image-container';
+              div.appendChild(imageContainer);
+              container.insertBefore(div, targetNode.parentNode.nextSibling);
+              insertedImages.add(ref.index);
+              console.log(`已将图片${ref.index + 1}插入到第五标题后`);
+              imageInserted = true;
+            }
+          }
+        }
+      }
+      
+      // 如果还是未插入，尝试通过上下文匹配
+      if (!imageInserted) {
+        // 匹配策略3：通过上下文相似度查找最佳位置
+        let bestNode = null;
+        let bestScore = 0;
+        
+        for (const textNode of textNodes) {
+          const nodeText = textNode.nodeValue || '';
+          const score = calculateSimilarity(nodeText, ref.context);
+          
+          // 图片在第五标题下，且当前节点也在第五标题相关区域，增加权重
+          if (ref.isUnderFifthTitle && 
+              (nodeText.includes('第五') || nodeText.includes('五、'))) {
+            score += 100; // 大幅提高匹配权重
+          }
+          
+          if (score > bestScore) {
+            bestScore = score;
+            bestNode = textNode;
+          }
+        }
+        
+        if (bestNode && bestScore > 5) { // 阈值可以调整
+          try {
+            // 在最佳匹配的节点后插入图片
+            if (bestNode.parentNode) {
+              bestNode.parentNode.insertBefore(imageContainer, bestNode.nextSibling);
+              insertedImages.add(ref.index);
+              console.log(`已将图片${ref.index + 1}插入到上下文匹配的节点后（得分:${bestScore}）`);
+              imageInserted = true;
+            }
+          } catch (e) {
+            console.error('插入图片时出错:', e);
+          }
+        }
+      }
+      
+      // 所有方法都失败，但图片引用是在第五标题下，则强制插入到第五标题相关位置
+      if (!imageInserted && ref.isUnderFifthTitle) {
+        // 查找包含"第五"或"五、"的所有元素
+        const fifthRelatedElements = Array.from(markdownBody.querySelectorAll('*')).filter(el => {
+          const text = el.textContent || '';
+          return text.includes('第五') || text.includes('五、');
+        });
+        
+        if (fifthRelatedElements.length > 0) {
+          // 在第五相关元素后插入图片
+          const targetEl = fifthRelatedElements[fifthRelatedElements.length - 1];
+          if (targetEl) {
+            if (targetEl.nextElementSibling) {
+              targetEl.parentNode.insertBefore(imageContainer, targetEl.nextElementSibling);
+            } else {
+              targetEl.parentNode.appendChild(imageContainer);
+            }
+            insertedImages.add(ref.index);
+            console.log(`已将图片${ref.index + 1}强制插入到第五相关元素后`);
+            imageInserted = true;
+          }
+        }
+      }
+    }
     
     // 处理剩余未插入的图片
     if (insertedImages.size < post.value.images.length) {
@@ -424,32 +616,13 @@ const fixPostImages = () => {
             const targetBlock = allBlocks[blockIndex];
             blockIndex = (blockIndex + interval) % allBlocks.length;
             
-            // 创建图片
-            const img = document.createElement('img');
-            img.src = post.value.images[imgIndex];
-            img.alt = `图片${imgIndex + 1}`;
-            img.style.maxWidth = '80%';
-            img.style.margin = '10px auto';
-            img.style.display = 'block';
-            img.style.borderRadius = '4px';
-            img.style.border = '1px solid #E4D9C3';
-            img.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-            img.setAttribute('loading', 'lazy');
-            img.setAttribute('data-processed', 'true');
-            img.setAttribute('data-index', imgIndex);
-            
-            // 创建包含图片的容器
-            const container = document.createElement('div');
-            container.className = 'added-image-container';
-            container.style.display = 'block';
-            container.style.textAlign = 'center';
-            container.style.margin = '15px auto';
-            container.appendChild(img);
+            // 创建图片容器
+            const imageContainer = createImageElement(post.value.images[imgIndex], imgIndex);
             
             // 在目标元素后插入
             if (targetBlock.parentNode) {
-              targetBlock.parentNode.insertBefore(container, targetBlock.nextSibling);
-              console.log(`已将图片${imgIndex + 1}插入到元素后`);
+              targetBlock.parentNode.insertBefore(imageContainer, targetBlock.nextSibling);
+              console.log(`已将剩余图片${imgIndex + 1}插入到元素后`);
               insertedImages.add(imgIndex);
             }
           });
@@ -465,31 +638,12 @@ const fixPostImages = () => {
           const targetParagraph = paragraphs[paragraphIndex];
           paragraphIndex = (paragraphIndex + interval) % paragraphs.length;
           
-          // 创建图片
-          const img = document.createElement('img');
-          img.src = post.value.images[imgIndex];
-          img.alt = `图片${imgIndex + 1}`;
-          img.style.maxWidth = '80%';
-          img.style.margin = '10px auto';
-          img.style.display = 'block';
-          img.style.borderRadius = '4px';
-          img.style.border = '1px solid #E4D9C3';
-          img.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-          img.setAttribute('loading', 'lazy');
-          img.setAttribute('data-processed', 'true');
-          img.setAttribute('data-index', imgIndex);
-          
-          // 创建包含图片的容器
-          const container = document.createElement('div');
-          container.className = 'added-image-container';
-          container.style.display = 'block';
-          container.style.textAlign = 'center';
-          container.style.margin = '15px auto';
-          container.appendChild(img);
+          // 创建图片容器
+          const imageContainer = createImageElement(post.value.images[imgIndex], imgIndex);
           
           // 在目标段落内部插入图片
-          targetParagraph.appendChild(container);
-          console.log(`已将图片${imgIndex + 1}插入到段落内部`);
+          targetParagraph.appendChild(imageContainer);
+          console.log(`已将剩余图片${imgIndex + 1}插入到段落内部`);
           insertedImages.add(imgIndex);
         });
       }
