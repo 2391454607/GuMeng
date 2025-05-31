@@ -49,7 +49,7 @@ const fixImages = () => {
   console.log('Viewer中找到图片数量:', images.length);
   
   images.forEach((img, index) => {
-    // 强制应用样式以确保图片可见
+    // 强制应用样式，图片可见
     img.style.display = 'block';
     img.style.visibility = 'visible';
     img.style.opacity = '1';
@@ -106,6 +106,8 @@ const on = () => {
 <style>
 .bytemd {
   height: 100% !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
 }
 
 /* 增强预览区域样式 */
@@ -113,7 +115,11 @@ const on = () => {
   font-family: "SimSun", "宋体", serif;
   color: #582F0E;
   padding: 15px;
-  overflow-wrap: break-word; /* 确保长内容不会溢出 */
+  overflow-wrap: break-word;
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  word-break: break-word !important;
 }
 
 .markdown-body h1,
@@ -134,6 +140,8 @@ const on = () => {
 .markdown-body a {
   color: #8C1F28;
   text-decoration: none;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
 .markdown-body a:hover {
@@ -150,6 +158,9 @@ const on = () => {
   background-color: #FFF7E9;
   border: 1px solid #E4D9C3;
   border-radius: 4px;
+  overflow-x: auto !important;
+  max-width: 100% !important;
+  white-space: pre-wrap !important;
 }
 
 .markdown-body code {
@@ -158,6 +169,8 @@ const on = () => {
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  white-space: pre-wrap !important; /* 允许代码换行 */
+  word-break: break-word !important; /* 在适当的位置换行 */
 }
 
 .markdown-body img {
@@ -171,5 +184,13 @@ const on = () => {
   object-fit: contain !important;
   visibility: visible !important;
   opacity: 1 !important;
+}
+
+/* 添加表格样式，防止溢出 */
+.markdown-body table {
+  display: block !important;
+  width: 100% !important;
+  overflow-x: auto !important;
+  max-width: 100% !important;
 }
 </style> 

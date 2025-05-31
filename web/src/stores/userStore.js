@@ -65,7 +65,7 @@ export const useUserStore = defineStore('user', {
             if (timeUntilExpiration > 0) {
                 this.dailyCleanupTimeout = setTimeout(() => {
                     Message.warning('登录已过期，请重新登录');
-                    // 直接调用登出方法，确保完整的清理流程
+                    // 直接调用登出方法
                     this.logout();
                 }, timeUntilExpiration);
             } else {

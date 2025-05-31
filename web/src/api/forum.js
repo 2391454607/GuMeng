@@ -57,8 +57,7 @@ export function addCommentAPI(postId, content, parentComment = null) {
   if (typeof postId === 'object') {
     const data = postId;
     const id = data.postId;
-    
-    // 确保参数正确，前端使用postId，后端使用pageId
+
     if (!data.pageId && data.postId) {
       data.pageId = data.postId;
     }

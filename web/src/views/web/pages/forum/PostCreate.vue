@@ -4,7 +4,6 @@ import { useRouter, useRoute } from 'vue-router';
 import { Message } from '@arco-design/web-vue';
 import { getTopicsAPI, createPostAPI, getPostDetailAPI, updatePostAPI, checkSensitiveWordsAPI, uploadImageAPI } from '@/api/forum';
 import { useUserStore } from '@/stores/userStore.js';
-import Footer from "@/views/web/layout/Footer.vue";
 import { IconLoading } from '@arco-design/web-vue/es/icon';
 
 // 导入自定义Markdown编辑器和查看器
@@ -120,7 +119,7 @@ const handleUploadBytemdImages = async (files) => {
         const res = await uploadImageAPI(formData);
         
         if (res.code === 200 && res.data) {
-          // 确保URL是绝对URL
+          // 保证URL是绝对URL
           let imageUrl = res.data;
           
           // 如果不是绝对URL，转换为绝对URL
@@ -129,7 +128,7 @@ const handleUploadBytemdImages = async (files) => {
             imageUrl = new URL(imageUrl, baseUrl).href;
           }
           
-          // 确保图片URL不为undefined
+          // 保证图片URL不为undefined
           if (imageUrl && imageUrl !== 'undefined') {
             // 将URL添加到结果数组 - 这些URL将直接被ByteMD使用
             urls.push(imageUrl);
@@ -160,7 +159,7 @@ const handleUploadBytemdImages = async (files) => {
     // 打印上传完成的URL数组
     console.log('所有图片上传完成，URLs:', urls);
     
-    // 返回URL数组，确保不包含undefined
+    // 返回URL数组，不包含undefined
     return urls.filter(url => url && url !== 'undefined');
   } catch (err) {
     console.error('上传编辑器图片出错:', err);
@@ -261,7 +260,7 @@ const fetchPostDetail = async () => {
         const contentImages = matches.map(match => match[1]);
         console.log('从Markdown内容中提取的图片:', contentImages);
         
-        // 添加到图片列表中，确保不重复
+        // 添加到图片列表中，避免重复
         contentImages.forEach(url => {
           if (!postForm.images.includes(url)) {
             postForm.images.push(url);
@@ -417,11 +416,11 @@ onMounted(() => {
     }, 1000 + attempts * 500); // 依次增加间隔时间
   };
   
-  // 延迟启动刷新尝试，确保编辑器已完全初始化
+  // 延迟启动刷新尝试，完全初始化编辑器
   setTimeout(() => {
     attemptRefreshImages();
     
-    // 添加一个间隔检查，确保图片显示正常
+    // 添加一个间隔检查，正常显示图片
     const intervalId = setInterval(() => {
       refreshPreviewImages();
     }, 5000); // 每5秒检查一次
@@ -569,7 +568,6 @@ watch(() => postForm.topic, () => {
   }
 });
 
-// 进一步改进prepareContentForSubmission函数，确保不会有undefined图片URL
 const prepareContentForSubmission = (content) => {
   if (!content) return '';
   
@@ -583,7 +581,7 @@ const prepareContentForSubmission = (content) => {
     processedContent = processedContent.replace(/!\[.*?\]\(undefined\)/g, '');
     processedContent = processedContent.replace(/!\[.*?\]\(.*?undefined.*?\)/g, '');
     
-    // 3. 处理相对路径图片，确保URL是完整的
+    // 3. 处理相对路径图片
     const relativeImageRegex = /!\[(.*?)\]\((?!http)(.*?)\)/g;
     processedContent = processedContent.replace(relativeImageRegex, (match, alt, url) => {
       // 只处理非http开头的URL
@@ -615,8 +613,7 @@ const prepareContentForSubmission = (content) => {
       }
       return ''; // 如果找不到匹配，删除这个图片标记
     });
-    
-    // 5. 确保所有图片URL都是有效的http链接
+
     const allImagesRegex = /!\[(.*?)\]\((.*?)\)/g;
     processedContent = processedContent.replace(allImagesRegex, (match, alt, url) => {
       if (!url || !url.startsWith('http')) {
@@ -669,7 +666,7 @@ const submitForm = async () => {
     if (undefinedCheck) {
       console.warn('内容中仍然存在undefined的图片URL，继续尝试修复...');
       
-      // 移除所有undefined图片，确保内容干净
+      // 移除所有undefined图片
       postForm.content = postForm.content.replace(/!\[.*?\]\(undefined\)/g, '');
       editorValue.value = postForm.content;
       
@@ -747,7 +744,7 @@ const submitForm = async () => {
       }
     }
     
-    // 提取内容中所有的图片URL，确保图片不重复提交
+    // 提取内容中所有的图片URL，避免图片重复提交
     const imageRegex = /!\[.*?\]\((.*?)\)/g;
     const contentMatches = [...(postForm.content.matchAll(imageRegex))];
     const contentImageUrls = contentMatches.map(match => match[1]);
@@ -839,7 +836,7 @@ const fixImageUrlsInContent = (content) => {
       return match;
     }
     
-    // 确保URL是绝对路径
+    // 保证URL是绝对路径
     if (!url.startsWith('http')) {
       // 如果是相对路径，尝试转为绝对路径
       if (url.includes('/')) {
@@ -905,7 +902,7 @@ const enhancePreviewImages = () => {
       if (possibleImage) {
         img.src = possibleImage;
         
-        // 强制应用样式确保可见
+        // 强制应用样式
         img.style.display = 'block';
         img.style.maxWidth = '80%'; // 调整为更小的尺寸
         img.style.margin = '10px auto';
@@ -926,7 +923,7 @@ const enhancePreviewImages = () => {
         img.parentNode.insertBefore(placeholder, img.nextSibling);
       }
     } else {
-      // 图片URL正常，确保图片样式正确
+      // 图片URL正常
       img.style.display = 'block';
       img.style.maxWidth = '80%'; // 调整为更小的尺寸
       img.style.margin = '10px auto';
@@ -1026,7 +1023,7 @@ const refreshPreviewImages = () => {
       }
     }
     
-    // 应用样式以确保图片可见
+    // 应用样式
     img.style.display = 'block';
     img.style.visibility = 'visible';
     img.style.opacity = '1';
@@ -1092,7 +1089,7 @@ const handleEditorChange = (value) => {
   // 手动更新状态栏字数统计
   updateWordCount();
   
-  // 对内容进行预处理，确保能在列表中正确显示
+  // 对内容进行预处理，在列表中正确显示
   processContentForPreview(value);
 };
 
@@ -1101,7 +1098,7 @@ const processContentForPreview = (content) => {
   if (!content) return;
   
   try {
-    // 确保Markdown图片语法正确
+    // Markdown图片语法
     const imageRegex = /!\[(.*?)\]\((.*?)\)/g;
     let correctedContent = content;
     
@@ -1157,70 +1154,51 @@ const handleTopicChange = (value) => {
 <template>
   <div class="create-post-page">
     <div class="create-post-container">
-      <div class="page-header">
-        <div class="header-left">
-          <a-button @click="goBack" class="back-btn">
-            <i class="iconfont icon-arrow-left"></i> 返回
-          </a-button>
-        </div>
-        <div class="header-title">{{ isEdit ? '编辑帖子' : '发布帖子' }}</div>
-        <div class="header-right">
-          <!-- 只保留发布按钮 -->
-          <a-button 
-            type="primary" 
-            @click="submitForm" 
-            :loading="submitting || uploading" 
-            :disabled="submitting || uploading || loading"
-            class="submit-btn"
-          >
-            {{ isEdit ? '保存修改' : '发布帖子' }}
-          </a-button>
-        </div>
-      </div>
-      
       <div class="main-content">
         <a-spin :loading="loading" size="large">
           <template #icon><icon-loading /></template>
-          <div class="editor-container">
-            <a-form
-              ref="postFormRef"
-              :model="postForm"
-              :rules="rules"
-              class="post-form"
-            >
-              <!-- 集成式Markdown编辑器 -->
-              <a-form-item field="content" class="editor-form-item">
-                <div class="markdown-editor-wrapper">
-                  <Editor
-                    :value="editorValue"
-                    :plugins="plugins"
-                    :locale="zhHans"
-                    placeholder="请输入帖子内容（支持Markdown格式）"
-                    :uploadImages="handleUploadBytemdImages"
-                    @change="handleEditorChange"
-                    :split="true"
-                    :title="postForm.title"
-                    :topicId="postForm.topic"
-                    :topics="topics"
-                    @titleChange="handleTitleChange"
-                    @topicChange="handleTopicChange"
-                    :sanitize="false"
-                  />
-                  <!-- 添加调试信息显示区 -->
-                  <div v-if="previewImages.length > 0" class="debug-image-info" style="display:none;">
-                    <p>预览图片数量: {{ previewImages.length }}</p>
-                    <p>表单图片数量: {{ postForm.images.length }}</p>
-                    <div v-for="(img, index) in previewImages" :key="index" style="margin-bottom: 5px;">
-                      <span>图片 {{index+1}}: {{img}}</span>
-                    </div>
+          <a-form
+            ref="postFormRef"
+            :model="postForm"
+            :rules="rules"
+            class="post-form"
+            :label-col-props="{ span: 0 }"  
+            :wrapper-col-props="{ span: 24 }"
+          >
+            <!-- 集成式Markdown编辑器 -->
+            <a-form-item field="content" class="editor-form-item" :label="null" hide-label>
+              <div class="markdown-editor-wrapper">
+                <Editor
+                  :value="editorValue"
+                  :plugins="plugins"
+                  :locale="zhHans"
+                  placeholder="请输入帖子内容（支持Markdown格式）"
+                  :uploadImages="handleUploadBytemdImages"
+                  @change="handleEditorChange"
+                  :split="true"
+                  :title="postForm.title"
+                  :topicId="postForm.topic"
+                  :topics="topics"
+                  @titleChange="handleTitleChange"
+                  @topicChange="handleTopicChange"
+                  @back="goBack"
+                  @publish="submitForm"
+                  :sanitize="false"
+                />
+                <!-- 添加调试信息显示区 -->
+                <div v-if="previewImages.length > 0" class="debug-image-info" style="display:none;">
+                  <p>预览图片数量: {{ previewImages.length }}</p>
+                  <p>表单图片数量: {{ postForm.images.length }}</p>
+                  <div v-for="(img, index) in previewImages" :key="index" style="margin-bottom: 5px;">
+                    <span>图片 {{index+1}}: {{img}}</span>
                   </div>
                 </div>
-              </a-form-item>
-            </a-form>
-          </div>
+              </div>
+            </a-form-item>
+          </a-form>
         </a-spin>
         
-        <!-- 敏感词错误提示，保留该部分 -->
+        <!-- 敏感词错误提示 -->
         <div class="sidebar" v-if="sensitiveWordsError">
           <div class="sidebar-content">
             <!-- 敏感词错误提示 -->
@@ -1231,9 +1209,6 @@ const handleTopicChange = (value) => {
         </div>
       </div>
     </div>
-    
-    <!-- 页脚 -->
-    <Footer class="footer"></Footer>
   </div>
 </template>
 
@@ -1244,116 +1219,117 @@ const handleTopicChange = (value) => {
   background-color: #FFF7E9;
   background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23D6C6AF' fill-opacity='0.05'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z'/%3E%3C/g%3E%3C/svg%3E");
   overflow-x: hidden;
-}
-
-.create-post-container {
-  width: 98%;
-  max-width: 1900px;
-  margin: 0 auto;
-  padding: 0;
   display: flex;
   flex-direction: column;
 }
 
-.page-header {
-  background-color: #8C1F28;
-  padding: 14px 20px;
+.create-post-container {
+  width: 100%;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0;
   display: flex;
-  align-items: center;
-  color: #F9F3E9;
-  position: relative;
-  z-index: 10;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  margin-bottom: 15px;
-  border-radius: 0 0 8px 8px;
-}
-
-.header-left {
-  width: 80px;
-}
-
-.header-title {
-  font-size: 20px;
-  font-weight: bold;
+  flex-direction: column;
   flex: 1;
-  text-align: center;
-  letter-spacing: 2px;
-  font-family: "STKaiti", "楷体", serif;
+  min-height: calc(100vh - 176px);
 }
 
-.header-right {
-  width: 120px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.back-btn {
-  background-color: transparent;
-  border: 1px solid #F9F3E9;
-  color: #F9F3E9;
-}
-
-.back-btn:hover {
-  background-color: rgba(249, 243, 233, 0.1);
-}
-
-/* 主内容区布局 */
 .main-content {
   display: flex;
   height: calc(100vh - 130px);
   position: relative;
+  margin-top: 20px;
+  width: 100%;
+  overflow-x: hidden; /* 防止水平溢出 */
 }
 
 .post-form {
   flex: 1;
-  overflow: hidden;
+  overflow: hidden; /* 防止内容溢出 */
   margin-right: 15px;
-  min-width: 0; /* 确保flex子项不会溢出 */
+  width: 100%;
+  min-width: 0;
 }
 
 .editor-form-item {
   height: 100%;
+  width: 100%;
 }
 
 /* 移除表单项内边距 */
 :deep(.arco-form-item-content) {
   margin-bottom: 0;
+  width: 100%;
 }
 
 .markdown-editor-wrapper {
   height: 100%;
+  width: 100%;
   overflow: hidden;
   border: 1px solid #D6C6AF;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  min-height: 550px !important; /* 确保编辑器容器有足够的高度 */
+  min-height: 550px !important;
 }
 
-/* 确保ByteMD编辑器不会被缩放行为影响 */
+/* ByteMD编辑器防止溢出 */
 :deep(.bytemd) {
   height: 100% !important;
   min-height: 500px !important;
   max-height: none !important;
-  resize: none !important; /* 禁用调整大小功能 */
+  resize: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
 }
 
 :deep(.CodeMirror) {
   height: auto !important;
   min-height: 500px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+  overflow-x: hidden !important;
+}
+
+:deep(.CodeMirror-scroll) {
+  overflow-x: hidden !important;
 }
 
 :deep(.bytemd-preview) {
   height: auto !important;
   min-height: 500px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
 }
 
-/* 确保编辑与预览区域高度固定 */
+/* 编辑与预览区域高度固定，宽度合适 */
 :deep(.bytemd-split .bytemd-editor),
 :deep(.bytemd-split .bytemd-preview) {
   height: 500px !important;
   min-height: 500px !important;
   overflow-y: auto !important;
+  width: 50% !important;
+  overflow-x: hidden !important; /* 防止水平溢出 */
+}
+
+/* 处理markdown内容区域溢出问题 */
+:deep(.markdown-body) {
+  overflow-wrap: break-word !important;
+  word-break: break-all !important;
+  max-width: 100% !important;
+}
+
+/* 代码块和预格式文本的溢出处理 */
+:deep(.markdown-body pre),
+:deep(.markdown-body code),
+:deep(.markdown-body pre code) {
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  overflow-x: hidden !important;
 }
 
 /* 侧边栏样式 */
@@ -1506,14 +1482,6 @@ const handleTopicChange = (value) => {
   box-shadow: 0 4px 8px rgba(140, 31, 40, 0.3);
 }
 
-.footer {
-  display: flex;
-  justify-content: center;
-  margin-top: auto;
-  padding: 10px 0;
-  background-color: transparent;
-}
-
 /* Markdown预览样式增强 */
 :deep(.markdown-body) {
   font-family: "SimSun", "宋体", serif;
@@ -1576,7 +1544,7 @@ const handleTopicChange = (value) => {
   opacity: 1 !important;
 }
 
-/* 确保图片显示在预览区域 */
+/* 图片显示在预览区域 */
 :deep(.bytemd-preview img) {
   display: block !important;
   max-width: 100% !important;
@@ -1624,14 +1592,6 @@ const handleTopicChange = (value) => {
 @media screen and (max-width: 768px) {
   .create-post-container {
     width: 98%;
-  }
-  
-  .page-header {
-    padding: 12px;
-  }
-  
-  .header-title {
-    font-size: 18px;
   }
   
   .image-preview-item,

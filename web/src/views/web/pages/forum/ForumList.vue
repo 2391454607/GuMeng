@@ -107,7 +107,7 @@ const fetchPosts = async () => {
     if (res.code === 200) {
       const newPosts = res.data.records || [];
       
-      // 处理图片字段和确保评论数正确
+      // 处理图片字段和评论数
       newPosts.forEach(post => {
         if (post.images && typeof post.images === 'string') {
           post.images = post.images.split(',').filter(img => img);
@@ -115,11 +115,11 @@ const fetchPosts = async () => {
           post.images = [];
         }
         
-        // 确保点赞数和评论数不为空
+        // 点赞数和评论数不为空
         post.thumbsUpNum = post.thumbsUpNum || 0;
         post.commonNum = post.commonNum || 0;
         
-        // 确保用户名和头像字段正确
+        // 用户名和头像字段
         post.authorName = post.username || '匿名用户';
         post.authorAvatar = post.avatar || '/avatar/default-avatar.png';
         

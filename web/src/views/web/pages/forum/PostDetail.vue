@@ -127,7 +127,7 @@ const fetchPostDetail = async () => {
       if (res.code === 200) {
         post.value = res.data;
         
-        // 确保用户名和头像字段正确
+        // 用户名和头像字段正确
         post.value.username = post.value.username || post.value.authorName || '匿名用户';
         post.value.avatar = post.value.avatar || post.value.userPic || '/avatar/default-avatar.png';
         
@@ -192,7 +192,7 @@ const fetchComments = async (loadMore = false) => {
     console.log('评论列表响应:', res);
     
     if (res.code === 200) {
-      // 确保返回的数据是数组
+      // 返回的数据是数组
       let newComments = res.data || [];
       
       // 如果返回的是分页对象，则取records属性
@@ -383,7 +383,7 @@ const submitComment = async () => {
   try {
     const res = await addCommentAPI({
       postId: postId.value,
-      pageId: postId.value,  // 同时提供pageId参数，确保后端能正确识别
+      pageId: postId.value,
       content: commentContent.value.trim(),
       parentId: 0
     });
@@ -519,10 +519,10 @@ const submitReply = async () => {
   try {
     const res = await addCommentAPI({
       postId: postId.value,
-      pageId: postId.value,  // 同时提供pageId参数，确保后端能正确识别
+      pageId: postId.value,
       content: replyContent.value.trim(),
       parentId: parentComment.value.id,
-      parent: parentComment.value.id.toString(),  // 确保parent参数正确传递
+      parent: parentComment.value.id.toString(),
       replyToId: replyingTo.value.userId,
       forUser: replyingTo.value.userId.toString()  // 同时提供forUser参数
     });
@@ -566,7 +566,7 @@ const canDeleteComment = (comment) => {
     return true;
   }
   
-  // 确保ID是字符串格式进行比较
+  // ID是字符串格式进行比较
   const currentUserId = String(userStore.userInfo.id);
   const commentUserId = String(comment.userId);
   

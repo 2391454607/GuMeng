@@ -43,7 +43,16 @@ watch(localTopicId, (newVal) => {
   emit('topicChange', newVal);
 });
 
-const emit = defineEmits(["change", "titleChange", "topicChange"]);
+const emit = defineEmits(["change", "titleChange", "topicChange", "back", "publish"]);
+
+// 添加返回和发布按钮的点击处理函数
+const handleBack = () => {
+  emit('back');
+};
+
+const handlePublish = () => {
+  emit('publish');
+};
 
 //当前编辑器的el
 const el = ref(null);
@@ -145,7 +154,7 @@ const fixPreviewImages = () => {
       if (replacementUrl) {
         img.src = replacementUrl;
         
-        // 确保图片可见
+        // 图片可见
         img.style.display = 'block';
         img.style.maxWidth = '80%'; // 调整为更小的尺寸
         img.style.height = 'auto';
@@ -178,7 +187,7 @@ const fixPreviewImages = () => {
         }
       }
     } else {
-      // 确保图片正常显示
+      // 图片正常显示
       img.style.display = 'block';
       img.style.maxWidth = '80%'; // 调整为更小的尺寸
       img.style.height = 'auto';
@@ -237,6 +246,9 @@ const fixPreviewImages = () => {
     <!-- 顶部信息栏：集成标题输入和话题选择 -->
     <div class="editor-header">
       <div class="editor-header-left">
+        <button @click="handleBack" class="editor-button back-button">
+          <i class="iconfont icon-arrow-left"></i> 返回
+        </button>
         <input 
           v-model="localTitle" 
           class="editor-title-input" 
@@ -251,6 +263,9 @@ const fixPreviewImages = () => {
             {{ topic.name }}
           </option>
         </select>
+        <button @click="handlePublish" class="editor-button publish-button">
+          发布帖子
+        </button>
       </div>
     </div>
     
@@ -282,12 +297,18 @@ const fixPreviewImages = () => {
 }
 
 .editor-header-left {
-  flex: 0.9;
+  flex: 0.7;
   margin-right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .editor-header-right {
-  min-width: 200px;
+  flex: 0.3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .editor-title-input {
@@ -321,8 +342,7 @@ const fixPreviewImages = () => {
   background-color: #FFFDF7;
   color: #582F0E;
   font-family: "STKaiti", "楷体", serif;
-  width: 100%;
-  min-width: 180px;
+  min-width: 140px;
   cursor: pointer;
   transition: all 0.3s;
   appearance: none;
@@ -332,6 +352,44 @@ const fixPreviewImages = () => {
   background-size: 16px;
   padding-right: 30px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  height: 38px;
+}
+
+.editor-button {
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: "STKaiti", "楷体", serif;
+  font-size: 14px;
+  transition: all 0.3s;
+  white-space: nowrap;
+  height: 38px;
+  display: flex;
+  align-items: center;
+}
+
+.back-button {
+  background-color: #FFFDF7;
+  color: #582F0E;
+  border: 1px solid #D6C6AF;
+  padding: 8px 12px;
+}
+
+.back-button:hover {
+  border-color: #8C1F28;
+  background-color: #FFF7E9;
+}
+
+.publish-button {
+  background-color: #8C1F28;
+  color: #FFFDF7;
+  border: 1px solid #8C1F28;
+  padding: 8px 12px;
+}
+
+.publish-button:hover {
+  background-color: #A52A2A;
+  border-color: #A52A2A;
 }
 
 .editor-topic-select:focus {
@@ -349,15 +407,18 @@ const fixPreviewImages = () => {
 .md-editor {
   flex: 1;
   overflow: hidden;
+  width: 100%;
 }
 
 .bytemd {
   height: 100% !important;
   border-radius: 0;
   border: none !important;
-  min-height: 600px !important; /* 增加最小高度 */
-  max-height: none !important; /* 移除最大高度限制 */
-  resize: none !important; /* 禁用调整大小功能 */
+  min-height: 600px !important;
+  max-height: none !important;
+  resize: none !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
 }
 
 /* 增强编辑器样式 */
@@ -395,16 +456,18 @@ const fixPreviewImages = () => {
 .bytemd-preview {
   background-color: #FFFDF7;
   padding: 20px !important;
-  min-height: 600px !important; /* 确保预览区域也有足够高度 */
+  min-height: 600px !important;
 }
 
-/* 确保编辑与预览区域高度相同且固定 */
+/* 编辑与预览区域高度相同且固定 */
 .bytemd-split .bytemd-editor, 
 .bytemd-split .bytemd-preview {
   height: 600px !important;
   min-height: 600px !important;
   max-height: 600px !important;
   overflow-y: auto !important;
+  overflow-x: hidden !important; /* 禁止水平滚动 */
+  width: 50% !important;
 }
 
 /* 增强编辑区域样式 */
@@ -414,7 +477,15 @@ const fixPreviewImages = () => {
   line-height: 1.6 !important;
   padding: 0 10px !important;
   height: auto !important;
-  min-height: 600px !important; /* 确保代码编辑区域高度充足 */
+  min-height: 600px !important;
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+  overflow-x: hidden !important;
+  width: 100% !important;
+}
+
+.CodeMirror-scroll {
+  overflow-x: hidden !important; /* 防止水平溢出 */
 }
 
 .CodeMirror-lines {
@@ -482,24 +553,32 @@ const fixPreviewImages = () => {
     padding: 10px;
   }
   
+  .editor-header-left, 
   .editor-header-right {
     width: 100%;
-  }
-  
-  .editor-header-left {
-    margin-right: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
   
   .editor-title-input {
     font-size: 16px;
     padding: 8px 10px;
+    order: 2;
+  }
+  
+  .back-button {
+    order: 1;
   }
   
   .editor-topic-select {
     font-size: 14px;
     padding: 8px 10px;
     padding-right: 28px;
-    width: 100%;
+    flex: 1;
+  }
+  
+  .publish-button {
+    flex-shrink: 0;
   }
   
   /* 移动端也保持编辑器高度 */
@@ -536,12 +615,7 @@ const fixPreviewImages = () => {
   box-sizing: border-box !important;
 }
 
-:deep(.markdown-body) {
-  overflow-wrap: break-word !important;
-  word-break: break-word !important;
-}
-
-/* 确保图片在编辑器预览和实时预览中都能正确显示 */
+/* 图片在编辑器预览和实时预览中都能正确显示 */
 :deep(.markdown-body img) {
   max-width: 100% !important;
   box-sizing: content-box !important;
@@ -552,5 +626,74 @@ const fixPreviewImages = () => {
   height: auto !important;
   visibility: visible !important;
   opacity: 1 !important;
+}
+
+/* 解决长内容问题 - 针对代码块和表格等可能溢出的元素 */
+:deep(.markdown-body pre),
+:deep(.markdown-body table),
+:deep(.markdown-body code),
+:deep(.markdown-body a) {
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  max-width: 100% !important;
+  white-space: pre-wrap !important;
+}
+
+/* 修复代码编辑器中的长行问题 */
+.cm-content {
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+  overflow-x: hidden !important; /* 防止水平溢出 */
+}
+
+/* markdown内容不溢出 */
+:deep(.markdown-body) {
+  overflow-wrap: break-word !important;
+  word-break: break-word !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important; /* 防止水平溢出 */
+}
+
+/* 修复CodeMirror长行问题 */
+.CodeMirror pre.CodeMirror-line,
+.CodeMirror pre.CodeMirror-line-like {
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+}
+
+/* 隐藏滚动条但保留滚动功能 */
+.bytemd-preview::-webkit-scrollbar,
+.CodeMirror-vscrollbar::-webkit-scrollbar,
+.CodeMirror-hscrollbar::-webkit-scrollbar,
+.bytemd-preview::-webkit-scrollbar,
+.bytemd-editor::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+}
+
+/* Firefox */
+.bytemd-preview,
+.CodeMirror-vscrollbar,
+.CodeMirror-hscrollbar,
+.bytemd-editor {
+  scrollbar-width: none !important;
+}
+
+/* IE 和 Edge 旧版本 */
+.bytemd-preview,
+.CodeMirror-vscrollbar,
+.CodeMirror-hscrollbar,
+.bytemd-editor {
+  -ms-overflow-style: none !important;
+}
+
+/* 内容可滚动但隐藏滚动条 */
+.bytemd-split .bytemd-editor, 
+.bytemd-split .bytemd-preview {
+  overflow-y: auto !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
 }
 </style> 
