@@ -300,7 +300,7 @@ const fixPreviewImages = () => {
   flex: 0.7;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 35px;
 }
 
 .editor-header-right {
@@ -373,7 +373,8 @@ const fixPreviewImages = () => {
   background-color: #FFFDF7;
   color: #582F0E;
   border: 1px solid #D6C6AF;
-  padding: 8px 12px;
+  padding: 22px 16px;
+  font-size: 20px;
 }
 
 .back-button:hover {
