@@ -702,4 +702,70 @@ const fixPreviewImages = () => {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
+
+/* 修复帮助和目录显示问题 */
+.bytemd-help, .bytemd-toc {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 60% !important;
+  max-width: 600px !important;
+  height: auto !important;
+  max-height: 500px !important;
+  margin: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+  z-index: 1000 !important;
+  background-color: #FFFDF7 !important;
+  overflow: auto !important;
+  resize: both !important;
+  cursor: move !important;
+  border: 1px solid #D6C6AF !important;
+}
+
+/* 添加拖动标题样式 */
+.bytemd-help::before, .bytemd-toc::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background-color: #F9F3E9;
+  border-bottom: 1px solid #D6C6AF;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* 修复帮助和目录的滚动区域和尺寸 */
+.bytemd-help .markdown-body, 
+.bytemd-toc .markdown-body {
+  max-height: calc(100% - 30px) !important;
+  overflow-y: auto !important;
+  padding: 30px 20px 20px !important;
+  margin-top: 24px !important;
+}
+
+/* 调整关闭按钮的位置和大小 */
+.bytemd-help .bytemd-help-close,
+.bytemd-toc .bytemd-toc-close {
+  position: absolute !important;
+  top: 2px !important;
+  right: 2px !important;
+  padding: 4px !important;
+  cursor: pointer !important;
+  z-index: 1001 !important;
+  background-color: transparent !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 帮助和目录的内容与顶部有适当间距 */
+.bytemd-help .bytemd-help-content,
+.bytemd-toc .bytemd-toc-content {
+  margin-top: 24px !important;
+}
 </style> 
