@@ -308,28 +308,37 @@ const initCharts = async () => {
   const yunnanMapChart = echarts.init(document.getElementById('yunnanMapChart'));
   charts.value.push(yunnanMapChart);
   const yunnanData = [
-    { name: '昆明市', value: 120 },
-    { name: '曲靖市', value: 80 },
-    { name: '玉溪市', value: 60 },
-    { name: '保山市', value: 40 },
-    { name: '昭通市', value: 70 },
-    { name: '丽江市', value: 50 },
-    { name: '普洱市', value: 30 },
-    { name: '临沧市', value: 20 },
-    { name: '楚雄彝族自治州', value: 55 },
-    { name: '红河哈尼族彝族自治州', value: 65 },
-    { name: '文山壮族苗族自治州', value: 35 },
-    { name: '西双版纳傣族自治州', value: 25 },
-    { name: '大理白族自治州', value: 75 },
-    { name: '德宏傣族景颇acee州', value: 15 },
-    { name: '怒江傈僳族自治州', value: 10 },
-    { name: '迪庆藏族自治州', value: 5 }
+    { name: '昆明市', value: 120, count: 8, types: ['传统技艺', '传统音乐'], levels: ['国家级', '省级'] },
+    { name: '曲靖市', value: 80, count: 5, types: ['传统舞蹈'], levels: ['省级'] },
+    { name: '玉溪市', value: 60, count: 3, types: ['传统医药'], levels: ['市级'] },
+    { name: '保山市', value: 40, count: 2, types: ['传统美术'], levels: ['市级'] },
+    { name: '昭通市', value: 70, count: 4, types: ['传统技艺', '传统戏剧'], levels: ['省级'] },
+    { name: '丽江市', value: 50, count: 3, types: ['传统音乐'], levels: ['国家级'] },
+    { name: '普洱市', value: 30, count: 1, types: ['传统体育'], levels: ['市级'] },
+    { name: '临沧市', value: 20, count: 1, types: ['传统美术'], levels: ['市级'] },
+    { name: '楚雄彝族自治州', value: 55, count: 2, types: ['传统技艺'], levels: ['省级'] },
+    { name: '红河哈尼族彝族自治州', value: 65, count: 3, types: ['传统舞蹈', '传统音乐'], levels: ['省级', '市级'] },
+    { name: '文山壮族苗族自治州', value: 35, count: 1, types: ['传统戏剧'], levels: ['市级'] },
+    { name: '西双版纳傣族自治州', value: 25, count: 1, types: ['传统技艺'], levels: ['市级'] },
+    { name: '大理白族自治州', value: 75, count: 4, types: ['传统技艺', '传统美术'], levels: ['国家级', '省级'] },
+    { name: '德宏傣族景颇族州', value: 15, count: 1, types: ['传统舞蹈'], levels: ['市级'] },
+    { name: '怒江傈僳族自治州', value: 10, count: 1, types: ['传统医药'], levels: ['市级'] },
+    { name: '迪庆藏族自治州', value: 5, count: 1, types: ['传统美术'], levels: ['市级'] }
   ];
   yunnanMapChart.setOption({
     title: { text: '', left: 'center' },
     tooltip: {
       trigger: 'item',
-      formatter: '{b}<br/>热度: {c}'
+      formatter: function(params) {
+        const data = params.data || {};
+        return `
+          <b>${data.name}</b><br/>
+          热度: ${data.value || '-'}<br/>
+          非遗项目数量: ${data.count || '-'}<br/>
+          种类: ${(data.types || []).join('、') || '-'}<br/>
+          级别: ${(data.levels || []).join('、') || '-'}
+        `;
+      }
     },
     visualMap: {
       min: 0,
@@ -642,13 +651,13 @@ const closeYunnanMapModal = () => {
   margin: 40px 0;
 }
 .yunnan-map-chart {
-  width: 240px;
-  height: 180px;
+  width: 600px;
+  height: 450px;
   margin: 0 auto;
 }
 .modal-map-chart {
-  width: 600px;
-  height: 450px;
+  width: 900px;
+  height: 700px;
   max-width: 90vw;
   max-height: 80vh;
   background: transparent;
