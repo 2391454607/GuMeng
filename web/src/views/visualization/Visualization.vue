@@ -486,12 +486,14 @@ const closeYunnanMapModal = () => {
 
 <style scoped>
 .visualization-bg {
-  min-height: 100vh;
-  width: 100vw;
+  min-height: 120vh;
+  width: 1600px;
   background: url('/background/background.png') no-repeat center top;
-  background-size: 100% auto;
+  background-size: cover;
+  background-position: top center;
   overflow-x: hidden;
-  padding: 0;
+  padding: 0 0 80px 0;
+  margin-top: -60px;
 }
 .visualization-title {
   width: 100%;
@@ -501,19 +503,19 @@ const closeYunnanMapModal = () => {
   color: #8b1f1f;
   font-weight: bold;
   letter-spacing: 12px;
-  margin-top: 190px;
+  margin-top: 450px;
   margin-bottom: 32px;
   text-shadow: 0 2px 12px rgba(194,16,28,0.08);
   user-select: none;
 }
 .visualization-grid {
-  width: 1300px;
+  width: 900px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 32px 32px;
   padding: 0 0 64px 0;
-  margin-top: 85px;
+  margin-top: 80px;
 }
 .chart-block {
   background: rgba(255,255,255,0.18);
