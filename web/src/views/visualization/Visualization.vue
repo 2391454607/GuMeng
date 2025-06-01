@@ -8,20 +8,38 @@ import yunnanGeoJson from '@/utils/yunnan.json';
 
 
 // --- mockData 合并 ---
+// 更贴近云南省非遗真实数据的模拟
 const trendData = [
-  { title: '项目1', gender: '男', level: '国家级', ethnic: '汉族', batch: '2020', region: '北京', introduce: '介绍1' },
-  { title: '项目2', gender: '女', level: '省级', ethnic: '满族', batch: '2020', region: '上海', introduce: '介绍2' },
-  { title: '项目3', gender: '男', level: '市级', ethnic: '汉族', batch: '2021', region: '广州', introduce: '介绍3' },
-  { title: '项目4', gender: '女', level: '国家级', ethnic: '壮族', batch: '2021', region: '南京', introduce: '介绍4' },
-  { title: '项目5', gender: '男', level: '省级', ethnic: '汉族', batch: '2022', region: '武汉', introduce: '介绍5' },
-  { title: '项目6', gender: '女', level: '市级', ethnic: '回族', batch: '2022', region: '成都', introduce: '介绍6' },
-  { title: '项目7', gender: '男', level: '国家级', ethnic: '汉族', batch: '2023', region: '重庆', introduce: '介绍7' },
-  { title: '项目8', gender: '女', level: '省级', ethnic: '苗族', batch: '2023', region: '西安', introduce: '介绍8' },
+  { title: '白族扎染技艺', gender: '男', level: '国家级', ethnic: '白族', batch: '2006', region: '大理白族自治州', introduce: '白族传统染织工艺，国家级非遗。' },
+  { title: '彝族火把节', gender: '女', level: '省级', ethnic: '彝族', batch: '2008', region: '楚雄彝族自治州', introduce: '彝族传统节日，省级非遗。' },
+  { title: '傣族泼水节', gender: '男', level: '国家级', ethnic: '傣族', batch: '2006', region: '西双版纳傣族自治州', introduce: '傣族传统节日，国家级非遗。' },
+  { title: '哈尼梯田文化系统', gender: '女', level: '国家级', ethnic: '哈尼族', batch: '2013', region: '红河哈尼族彝族自治州', introduce: '哈尼族梯田文化，国家级非遗。' },
+  { title: '纳西古乐', gender: '男', level: '省级', ethnic: '纳西族', batch: '2008', region: '丽江市', introduce: '纳西族传统音乐，省级非遗。' },
+  { title: '普洱茶制作技艺', gender: '女', level: '国家级', ethnic: '汉族', batch: '2008', region: '普洱市', introduce: '普洱茶传统制作工艺，国家级非遗。' },
+  { title: '剑川木雕', gender: '男', level: '省级', ethnic: '白族', batch: '2011', region: '大理白族自治州', introduce: '白族传统木雕工艺，省级非遗。' },
+  { title: '乌铜走银', gender: '女', level: '市级', ethnic: '汉族', batch: '2015', region: '昆明市', introduce: '昆明传统金属工艺，市级非遗。' },
+  { title: '苗族银饰锻制技艺', gender: '男', level: '省级', ethnic: '苗族', batch: '2011', region: '文山壮族苗族自治州', introduce: '苗族传统银饰锻造，省级非遗。' },
+  { title: '景颇族目瑙纵歌', gender: '女', level: '省级', ethnic: '景颇族', batch: '2011', region: '德宏傣族景颇族州', introduce: '景颇族传统舞蹈，省级非遗。' },
+  { title: '藏族锅庄舞', gender: '男', level: '市级', ethnic: '藏族', batch: '2015', region: '迪庆藏族自治州', introduce: '藏族传统舞蹈，市级非遗。' },
+  { title: '傈僳族刺绣', gender: '女', level: '市级', ethnic: '傈僳族', batch: '2015', region: '怒江傈僳族自治州', introduce: '傈僳族传统刺绣，市级非遗。' },
+  { title: '壮族铜鼓舞', gender: '男', level: '省级', ethnic: '壮族', batch: '2011', region: '文山壮族苗族自治州', introduce: '壮族传统舞蹈，省级非遗。' },
+  { title: '回族清真饮食文化', gender: '女', level: '市级', ethnic: '回族', batch: '2015', region: '昆明市', introduce: '回族传统饮食文化，市级非遗。' },
+  { title: '汉族剪纸', gender: '男', level: '市级', ethnic: '汉族', batch: '2015', region: '曲靖市', introduce: '汉族传统剪纸艺术，市级非遗。' },
+  { title: '佤族木鼓舞', gender: '女', level: '省级', ethnic: '佤族', batch: '2011', region: '临沧市', introduce: '佤族传统舞蹈，省级非遗。' },
 ];
+
+// 数据概览（取部分代表性项目）
 const overviewData = [
-  { title: '项目1', gender: '男', level: '国家级', ethnic: '汉族', batch: '2023', region: '北京', introduce: '介绍1' },
-  { title: '项目2', gender: '女', level: '省级', ethnic: '满族', batch: '2023', region: '上海', introduce: '介绍2' },
-  { title: '项目3', gender: '男', level: '市级', ethnic: '汉族', batch: '2022', region: '广州', introduce: '介绍3' },
+  { title: '白族扎染技艺', gender: '男', level: '国家级', ethnic: '白族', batch: '2006', region: '大理白族自治州', introduce: '白族传统染织工艺，国家级非遗。' },
+  { title: '傣族泼水节', gender: '男', level: '国家级', ethnic: '傣族', batch: '2006', region: '西双版纳傣族自治州', introduce: '傣族传统节日，国家级非遗。' },
+  { title: '彝族火把节', gender: '女', level: '省级', ethnic: '彝族', batch: '2008', region: '楚雄彝族自治州', introduce: '彝族传统节日，省级非遗。' },
+  { title: '哈尼梯田文化系统', gender: '女', level: '国家级', ethnic: '哈尼族', batch: '2013', region: '红河哈尼族彝族自治州', introduce: '哈尼族梯田文化，国家级非遗。' },
+  { title: '纳西古乐', gender: '男', level: '省级', ethnic: '纳西族', batch: '2008', region: '丽江市', introduce: '纳西族传统音乐，省级非遗。' },
+  { title: '普洱茶制作技艺', gender: '女', level: '国家级', ethnic: '汉族', batch: '2008', region: '普洱市', introduce: '普洱茶传统制作工艺，国家级非遗。' },
+  { title: '苗族银饰锻制技艺', gender: '男', level: '省级', ethnic: '苗族', batch: '2011', region: '文山壮族苗族自治州', introduce: '苗族传统银饰锻造，省级非遗。' },
+  { title: '景颇族目瑙纵歌', gender: '女', level: '省级', ethnic: '景颇族', batch: '2011', region: '德宏傣族景颇族州', introduce: '景颇族传统舞蹈，省级非遗。' },
+  { title: '藏族锅庄舞', gender: '男', level: '市级', ethnic: '藏族', batch: '2015', region: '迪庆藏族自治州', introduce: '藏族传统舞蹈，市级非遗。' },
+  { title: '傈僳族刺绣', gender: '女', level: '市级', ethnic: '傈僳族', batch: '2015', region: '怒江傈僳族自治州', introduce: '傈僳族传统刺绣，市级非遗。' },
 ];
 const contentData = [
   { category: '传统技艺', count: 120, avgViews: 1500, avgComments: 45 },
@@ -35,34 +53,40 @@ const contentData = [
 ];
 const relationData = {
   nodes: [
-    { name: '传统技艺', category: 0 },
-    { name: '陶瓷', category: 1 },
-    { name: '青花瓷', category: 2 },
-    { name: '景德镇', category: 3 },
-    { name: '传统音乐', category: 0 },
-    { name: '古琴', category: 1 },
-    { name: '琵琶', category: 1 },
-    { name: '二胡', category: 1 },
-    { name: '传统舞蹈', category: 0 },
-    { name: '秧歌', category: 1 },
-    { name: '龙舞', category: 1 },
-    { name: '狮舞', category: 1 }
+    { name: '白族', category: 0 },
+    { name: '彝族', category: 0 },
+    { name: '傣族', category: 0 },
+    { name: '哈尼族', category: 0 },
+    { name: '纳西族', category: 0 },
+    { name: '白族扎染技艺', category: 1 },
+    { name: '剑川木雕', category: 1 },
+    { name: '彝族火把节', category: 1 },
+    { name: '傣族泼水节', category: 1 },
+    { name: '哈尼梯田文化系统', category: 1 },
+    { name: '纳西古乐', category: 1 },
+    { name: '大理', category: 2 },
+    { name: '楚雄', category: 2 },
+    { name: '西双版纳', category: 2 },
+    { name: '红河', category: 2 },
+    { name: '丽江', category: 2 }
   ],
   links: [
-    { source: '传统技艺', target: '陶瓷', value: 1 },
-    { source: '陶瓷', target: '青花瓷', value: 1 },
-    { source: '青花瓷', target: '景德镇', value: 1 },
-    { source: '传统音乐', target: '古琴', value: 1 },
-    { source: '传统音乐', target: '琵琶', value: 1 },
-    { source: '传统音乐', target: '二胡', value: 1 },
-    { source: '传统舞蹈', target: '秧歌', value: 1 },
-    { source: '传统舞蹈', target: '龙舞', value: 1 },
-    { source: '传统舞蹈', target: '狮舞', value: 1 }
+    { source: '白族', target: '白族扎染技艺', value: 1 },
+    { source: '白族', target: '剑川木雕', value: 1 },
+    { source: '大理', target: '白族扎染技艺', value: 1 },
+    { source: '大理', target: '剑川木雕', value: 1 },
+    { source: '彝族', target: '彝族火把节', value: 1 },
+    { source: '楚雄', target: '彝族火把节', value: 1 },
+    { source: '傣族', target: '傣族泼水节', value: 1 },
+    { source: '西双版纳', target: '傣族泼水节', value: 1 },
+    { source: '哈尼族', target: '哈尼梯田文化系统', value: 1 },
+    { source: '红河', target: '哈尼梯田文化系统', value: 1 },
+    { source: '纳西族', target: '纳西古乐', value: 1 },
+    { source: '丽江', target: '纳西古乐', value: 1 }
   ],
   categories: [
-    { name: '非遗类别' },
-    { name: '具体项目' },
-    { name: '子项目' },
+    { name: '民族' },
+    { name: '非遗项目' },
     { name: '发源地' }
   ]
 };
@@ -87,6 +111,29 @@ const charts = ref([]);
 const modalVisible = ref(false);
 const modalChartIdx = ref(0);
 const yunnanMapModalVisible = ref(false);
+
+// 民族分布数据（用于民族分布图）
+const overviewEthnicData = [
+  { ethnic: '汉族', count: 100 },
+  { ethnic: '白族', count: 80 },
+  { ethnic: '哈尼族', count: 60 },
+  { ethnic: '傣族', count: 50 },
+  { ethnic: '傈僳族', count: 40 },
+  { ethnic: '佤族', count: 35 },
+  { ethnic: '纳西族', count: 30 },
+  { ethnic: '普米族', count: 25 },
+  { ethnic: '基诺族', count: 15 },
+  { ethnic: '德昂族', count: 15 },
+  { ethnic: '独龙族', count: 10 },
+  { ethnic: '回族', count: 20 },
+  { ethnic: '苗族', count: 45 },
+  { ethnic: '壮族', count: 30 },
+  { ethnic: '瑶族', count: 25 },
+  { ethnic: '景颇族', count: 30 },
+  { ethnic: '布朗族', count: 20 },
+  { ethnic: '阿昌族', count: 15 },
+  { ethnic: '怒族', count: 15 }
+];
 
 const initCharts = async () => {
   await nextTick();
@@ -157,17 +204,13 @@ const initCharts = async () => {
   // 2. 民族分布条形图
   const overviewEthnicChart = echarts.init(document.getElementById('overviewEthnicChart'));
   charts.value.push(overviewEthnicChart);
-  const ethnicData = overviewData.reduce((acc, cur) => {
-    acc[cur.ethnic] = (acc[cur.ethnic] || 0) + 1;
-    return acc;
-  }, {});
   overviewEthnicChart.setOption({
     title: { text: '', left: 'center' },
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'value' },
-    yAxis: { type: 'category', data: Object.keys(ethnicData) },
+    yAxis: { type: 'category', data: overviewEthnicData.map(item => item.ethnic) },
     series: [{
-      data: Object.values(ethnicData),
+      data: overviewEthnicData.map(item => item.count),
       type: 'bar',
       showBackground: true,
       backgroundStyle: { color: 'rgba(180, 180, 180, 0.2)' }
@@ -448,52 +491,67 @@ const closeYunnanMapModal = () => {
 </script>
 
 <template>
-  <div class="visualization-bg">
-    <div class="visualization-title">故梦阑珊数据可视化</div>
-    <div class="visualization-grid">
-      <div
-        v-for="(chart, idx) in filteredChartConfigs"
-        :key="chart.id"
-        class="chart-block"
-        :class="{ left: idx % 2 === 0, right: idx % 2 === 1 }"
-      >
-        <div class="chart-title">{{ chart.title }}</div>
-        <div :id="chart.id" class="chart"></div>
-        <button class="enlarge-btn" @click="enlargeChart(idx)" title="放大">🔍</button>
-      </div>
-    </div>
-    <!-- 云南省热度分布地图 -->
-    <div class="yunnan-map-block">
-      <div class="chart-title">云南省热度分布</div>
-      <div id="yunnanMapChart" class="yunnan-map-chart"></div>
-      <button class="enlarge-btn" @click="enlargeYunnanMap" title="放大">🔍</button>
-    </div>
-    <transition name="modal-fade">
-      <div v-if="modalVisible" class="modal-mask" @click.self="closeModal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <span class="modal-title">{{ chartConfigs[modalChartIdx].title }}</span>
-            <button class="modal-close" @click="closeModal">×</button>
-          </div>
-          <div :id="chartConfigs[modalChartIdx].id + '-modal'" class="modal-chart"></div>
+  <div>
+    <div class="visualization-root-bg"></div>
+    <div class="visualization-bg">
+      
+      <div class="visualization-title">故梦阑珊数据可视化</div>
+      <div class="visualization-grid">
+        <div
+          v-for="(chart, idx) in filteredChartConfigs"
+          :key="chart.id"
+          class="chart-block"
+          :class="{ left: idx % 2 === 0, right: idx % 2 === 1 }"
+        >
+          <div class="chart-title">{{ chart.title }}</div>
+          <div :id="chart.id" class="chart"></div>
+          <button class="enlarge-btn" @click="enlargeChart(idx)" title="放大">🔍</button>
         </div>
       </div>
-    </transition>
-    <transition name="modal-fade">
-      <div v-if="yunnanMapModalVisible" class="modal-mask" @click.self="closeYunnanMapModal">
-        <div class="modal-content">
-          <div class="modal-header">
-            <span class="modal-title">云南省热度分布</span>
-            <button class="modal-close" @click="closeYunnanMapModal">×</button>
-          </div>
-          <div id="yunnanMapChart-modal" class="modal-map-chart"></div>
-        </div>
+      <!-- 云南省热度分布地图 -->
+      <div class="yunnan-map-block">
+        <div class="chart-title">非遗足迹</div>
+        <div id="yunnanMapChart" class="yunnan-map-chart"></div>
+        <button class="enlarge-btn" @click="enlargeYunnanMap" title="放大">🔍</button>
       </div>
-    </transition>
+      <transition name="modal-fade">
+        <div v-if="modalVisible" class="modal-mask" @click.self="closeModal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <span class="modal-title">{{ chartConfigs[modalChartIdx].title }}</span>
+              <button class="modal-close" @click="closeModal">×</button>
+            </div>
+            <div :id="chartConfigs[modalChartIdx].id + '-modal'" class="modal-chart"></div>
+          </div>
+        </div>
+      </transition>
+      <transition name="modal-fade">
+        <div v-if="yunnanMapModalVisible" class="modal-mask" @click.self="closeYunnanMapModal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <span class="modal-title">云南省热度分布</span>
+              <button class="modal-close" @click="closeYunnanMapModal">×</button>
+            </div>
+            <div id="yunnanMapChart-modal" class="modal-map-chart"></div>
+          </div>
+        </div>
+      </transition>
+    </div>
   </div>
 </template>
 
-<style scoped>
+<style>
+.visualization-root-bg {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -2;
+  background: url('/background/BB.jpg') no-repeat center center;
+  background-size: cover;
+  background-attachment: fixed;
+}
 .visualization-bg {
   min-height: 120vh;
   width: 1600px;
@@ -502,7 +560,7 @@ const closeYunnanMapModal = () => {
   background-position: top center;
   overflow-x: hidden;
   padding: 0 0 80px 0;
-  margin-top: -60px;
+  margin-top: -120px;
 }
 .visualization-title {
   width: 100%;
