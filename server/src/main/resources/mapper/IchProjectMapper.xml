@@ -10,14 +10,13 @@
             <result property="categoryId" column="category_id" jdbcType="INTEGER"/>
             <result property="levelId" column="level_id" jdbcType="INTEGER"/>
             <result property="coverImage" column="cover_image" jdbcType="VARCHAR"/>
-            <result property="summary" column="summary" jdbcType="VARCHAR"/>
             <result property="viewCount" column="view_count" jdbcType="INTEGER"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,name,category_id,level_id,cover_image,summary,
+        id,name,category_id,level_id,cover_image,
         view_count,create_time,update_time
     </sql>
 
@@ -28,7 +27,6 @@
             c.name AS categoryName,
             l.name AS levelName,
             p.cover_image AS coverImage,
-            p.summary,
             p.view_count AS viewCount,
             p.create_time AS createTime,
             p.update_time AS updateTime
@@ -65,7 +63,6 @@
             c.name AS categoryName,
             l.name AS levelName,
             p.cover_image AS coverImage,
-            p.summary,
             p.video,
             p.view_count AS viewCount,
             p.create_time AS createTime

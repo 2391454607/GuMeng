@@ -54,10 +54,6 @@ public class IchProjectDetailVO {
      */
     private String coverImage;
 
-    /**
-     * 项目简介
-     */
-    private String summary;
 
     /**
      * 视频URL
