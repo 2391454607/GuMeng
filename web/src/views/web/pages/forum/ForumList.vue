@@ -329,7 +329,7 @@ onMounted(() => {
       <div class="forum-body">
         <!-- 帖子列表 -->
         <div class="forum-content">
-          <a-spin :loading="loading" size="large">
+          <a-spin :loading="loading" :size="40">
             <template #icon><icon-loading /></template>
             <div class="post-container">
               <!-- 空状态 -->

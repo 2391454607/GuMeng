@@ -122,7 +122,7 @@ const viewDetail = (id) => {
         </div>
       </div>
 
-      <a-spin :loading="loading" size="32" tip="加载中">
+      <a-spin :loading="loading" :size="32" tip="加载中">
         <template #icon><icon-loading /></template>
         <div class="project-grid">
           <a-card

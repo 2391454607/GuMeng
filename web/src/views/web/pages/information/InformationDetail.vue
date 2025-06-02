@@ -57,7 +57,7 @@ const goBack = () => {
 <template>
   <div>
     <div class="information-detail-container">
-      <a-spin :loading="loading" size="large">
+      <a-spin :loading="loading" :size="40">
         <template #icon><icon-loading /></template>
         
         <div class="detail-header">
