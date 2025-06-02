@@ -5,6 +5,7 @@ import {getProjectList} from "@/api/web/IchProject.js";
 import { IconSearch, IconLoading, IconPlayArrowFill } from '@arco-design/web-vue/es/icon';
 import { Message } from "@arco-design/web-vue";
 import { useRouter } from 'vue-router';
+import BaikeAssistant from "@/components/BaikeAssistant.vue"; // 引入非遗小助手
 
 // 初始化路由器
 const router = useRouter();
@@ -179,6 +180,9 @@ const viewDetail = (id) => {
     </div>
 
     <Footer class="footer"/>
+    
+    <!-- 添加非遗百科助手 -->
+    <BaikeAssistant />
   </div>
 </template>
 

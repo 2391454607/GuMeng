@@ -5,6 +5,7 @@ import { getProjectDetail } from '@/api/web/IchProject.js';
 import { Message } from '@arco-design/web-vue';
 import { IconArrowLeft, IconCalendar, IconEye, IconLoading } from '@arco-design/web-vue/es/icon';
 import Footer from "@/views/web/layout/Footer.vue";
+import BaikeAssistant from "@/components/BaikeAssistant.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -126,6 +127,8 @@ const goBack = () => {
     </div>
     
     <Footer class="footer"/>
+    
+    <BaikeAssistant />
   </div>
 </template>
 
