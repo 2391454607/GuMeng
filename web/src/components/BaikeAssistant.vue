@@ -78,6 +78,47 @@ const simulateAIResponse = (question) => {
   return responses.default;
 };
 
+// 处理流式响应
+const handleStreamResponse = async (data, messageIndex) => {
+  if (data.choices && data.choices.length > 0) {
+    const delta = data.choices[0].delta;
+    if (delta && delta.content) {
+      // 使用打字机效果显示内容，而不是直接追加
+      await typeWriterEffect(delta.content, messageIndex, 20, true);
+    }
+  }
+};
+
+// 模拟打字机效果的函数
+const typeWriterEffect = async (text, messageIndex, speed = 30, isAppend = false) => {
+  let i = 0;
+  const len = text.length;
+  
+  return new Promise((resolve) => {
+    const typeChar = () => {
+      if (i < len) {
+        // 每次添加一个字符
+        if (isAppend) {
+          // 追加模式，添加到现有内容后面
+          chatHistory.value[messageIndex].content += text.charAt(i);
+        } else {
+          // 覆盖模式，替换整个内容（用于模拟响应）
+          const currentContent = chatHistory.value[messageIndex].content;
+          chatHistory.value[messageIndex].content = currentContent + text.charAt(i);
+        }
+        i++;
+        scrollToBottom();
+        setTimeout(typeChar, speed);
+      } else {
+        resolve();
+      }
+    };
+    
+    // 开始打字效果
+    typeChar();
+  });
+};
+
 // 发送消息
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return;
@@ -98,54 +139,65 @@ const sendMessage = async () => {
   scrollToBottom();
   
   try {
-    // 延迟模拟网络请求时间
-    setTimeout(() => {
-      try {
-        // 准备发送给API的消息历史
-        const messages = chatHistory.value.map(msg => ({
-          role: msg.role,
-          content: msg.content
-        }));
-        
-        // 尝试调用API获取回复
-        sendAssistantMessage(messages).then(response => {
-          if (response && response.code === 200) {
-            chatHistory.value.push({
-              role: 'assistant',
-              content: response.data
-            });
-          } else {
-            throw new Error(response?.msg || '请求失败');
-          }
-        }).catch(error => {
-          console.error('API请求失败，使用模拟响应:', error);
-          // 调用失败则使用模拟响应
-          chatHistory.value.push({
-            role: 'assistant',
-            content: simulateAIResponse(userQuestion)
-          });
-        }).finally(() => {
-          isLoading.value = false;
-          scrollToBottom();
-        });
-      } catch (error) {
-        console.error('API调用异常，使用模拟响应:', error);
-        // 出现异常则使用模拟响应
-        chatHistory.value.push({
-          role: 'assistant',
-          content: simulateAIResponse(userQuestion)
-        });
-        isLoading.value = false;
-        scrollToBottom();
-      }
-    }, 800); // 添加一点延迟，使体验更自然
+    // 准备发送给API的消息历史
+    const messages = chatHistory.value.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
     
+    // 先添加一条空的助手消息，用于流式显示
+    chatHistory.value.push({
+      role: 'assistant',
+      content: ''
+    });
+    
+    // 最新消息的索引
+    const newMessageIndex = chatHistory.value.length - 1;
+    
+    try {
+      // 尝试调用API获取流式回复
+      const response = await sendAssistantMessage(messages, true);
+      
+      if (response && response.code === 200) {
+        // 处理流式响应
+        if (response.data && typeof response.data === 'object') {
+          // 如果是流式响应对象
+          if (response.data.choices && Array.isArray(response.data.choices)) {
+            // 从流式响应中提取完整文本
+            const fullContent = response.data.choices.reduce((text, choice) => {
+              if (choice.delta && choice.delta.content) {
+                return text + choice.delta.content;
+              }
+              return text;
+            }, '');
+            
+            // 使用打字机效果显示
+            await typeWriterEffect(fullContent, newMessageIndex, 20);
+          } else {
+            // 单块响应处理
+            await handleStreamResponse(response.data, newMessageIndex);
+          }
+        } else if (typeof response.data === 'string') {
+          // 如果不是流式响应，但返回了文本，使用打字机效果显示
+          await typeWriterEffect(response.data || '抱歉，我没能理解您的问题。', newMessageIndex, 20);
+        }
+      } else {
+        throw new Error(response?.msg || '请求失败');
+      }
+    } catch (error) {
+      console.error('API请求失败，使用模拟响应:', error);
+      
+      // 模拟流式打字效果
+      const simulatedResponse = simulateAIResponse(userQuestion);
+      await typeWriterEffect(simulatedResponse, newMessageIndex, 20);
+    }
   } catch (error) {
     console.error('聊天处理错误:', error);
     chatHistory.value.push({
       role: 'assistant',
       content: '抱歉，我暂时无法回答您的问题。请稍后再试。'
     });
+  } finally {
     isLoading.value = false;
     scrollToBottom();
   }
