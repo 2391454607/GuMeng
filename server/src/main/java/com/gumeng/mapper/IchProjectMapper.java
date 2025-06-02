@@ -20,6 +20,23 @@ public interface IchProjectMapper extends BaseMapper<IchProject> {
     Page<IchProjectListVO> getIchProject(Page<IchProjectListVO> page, 
                                        @Param("levelId") Integer levelId,
                                        @Param("categoryId") Integer categoryId);
+    
+    /**
+     * 根据分类ID获取分类名称
+     */
+    String getCategoryNameById(@Param("categoryId") Integer categoryId);
+    
+    /**
+     * 根据级别ID获取级别名称
+     */
+    String getLevelNameById(@Param("levelId") Integer levelId);
+    
+    /**
+     * 获取相关项目（同类别的其他项目）
+     */
+    List<IchProjectListVO> getRelatedProjects(@Param("id") Integer id, 
+                                             @Param("categoryId") Integer categoryId,
+                                             @Param("limit") Integer limit);
 }
 
 
