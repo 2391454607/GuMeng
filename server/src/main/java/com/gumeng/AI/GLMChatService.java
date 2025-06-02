@@ -54,11 +54,4 @@ public class GLMChatService {
                     .getString("content");
         }
     }
-
-    public String getSystemPrompt() {
-        return "你是一个云学工坊精心打造的云学助手，专注于提供专业、友好的对话服务。" +
-               "你的回答应该简洁明了，直接回应用户的问题。" +
-               "如果遇到不明确的问题，请礼貌地请求用户提供更多信息。" +
-               "你应该表现出对话的连贯性和上下文理解能力。";
-    }
 }
