@@ -13,6 +13,11 @@ const webRouters = [
         component: ()=> import("@/views/web/pages/information/Information.vue")
     },
     {
+        path: "/information/detail/:id",
+        name: "InformationDetail",
+        component: () => import("@/views/web/pages/information/InformationDetail.vue")
+    },
+    {
         path: "/forum",
         name: "Forum",
         component: () => import("@/views/web/pages/forum/Forum.vue"),
