@@ -441,7 +441,7 @@ onBeforeUnmount(() => {
 /* 聊天窗口向左打开 */
 .chat-window-left {
   right: 80px;
-  top: -150px;
+  top: -370px;
 }
 
 .chat-header {
