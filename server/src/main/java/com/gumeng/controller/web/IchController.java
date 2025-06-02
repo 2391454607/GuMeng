@@ -1,6 +1,7 @@
 package com.gumeng.controller.web;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.gumeng.annotation.LogOperation;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.pages.IchCategory;
 import com.gumeng.domain.pages.IchLevel;
@@ -52,6 +53,7 @@ public class IchController {
     }
 
     //获取非遗项目列表
+    @LogOperation(module = "非遗百科", operation = "获取非遗项目列表")
     @GetMapping("/getProject")
     public HttpResponse getIchProject(
             @RequestParam(defaultValue = "1") Integer current,
@@ -62,6 +64,7 @@ public class IchController {
         return HttpResponse.success(ichProjects);
     }
 
+    @LogOperation(module = "非遗百科",operation = "获取非遗项目详情")
     //获取非遗项目详情
     @GetMapping("/getProjectDetail/{id}")
     public HttpResponse getProjectDetail(@PathVariable("id") Integer id) {
