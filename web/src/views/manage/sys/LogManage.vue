@@ -20,7 +20,8 @@
           <a-range-picker
               v-model="dateRange"
               style="width: 100%"
-              :show-time="{ format: 'HH:mm:ss' }"
+              :show-time="true"
+              time-format="HH:mm:ss"
               format="YYYY-MM-DD HH:mm:ss"
           />
         </a-col>

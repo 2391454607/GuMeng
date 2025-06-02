@@ -46,5 +46,38 @@
         </where>
         ORDER BY p.create_time DESC
     </select>
+    
+    <!-- 根据分类ID获取分类名称 -->
+    <select id="getCategoryNameById" resultType="java.lang.String">
+        SELECT name FROM ich_category WHERE id = #{categoryId}
+    </select>
+    
+    <!-- 根据级别ID获取级别名称 -->
+    <select id="getLevelNameById" resultType="java.lang.String">
+        SELECT name FROM ich_level WHERE id = #{levelId}
+    </select>
+    
+    <!-- 获取相关项目（同类别的其他项目） -->
+    <select id="getRelatedProjects" resultType="com.gumeng.entity.vo.IchProjectListVO">
+        SELECT
+            p.id,
+            p.name,
+            c.name AS categoryName,
+            l.name AS levelName,
+            p.cover_image AS coverImage,
+            p.summary,
+            p.video,
+            p.view_count AS viewCount,
+            p.create_time AS createTime
+        FROM
+            ich_project p
+        LEFT JOIN ich_category c ON p.category_id = c.id
+        LEFT JOIN ich_level l ON p.level_id = l.id
+        WHERE 
+            p.id != #{id} 
+            AND p.category_id = #{categoryId}
+        ORDER BY p.view_count DESC
+        LIMIT #{limit}
+    </select>
 
 </mapper>

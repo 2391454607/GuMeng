@@ -87,12 +87,12 @@ public class ForumPostServiceImpl extends ServiceImpl<ForumPostMapper, ForumPost
         LambdaQueryWrapper<ForumPost> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ForumPost::getDeleted, "0");
 
-        // 如果指定了话题，则按话题筛选
+        // 指定了话题，则按话题筛选
         if (StrUtil.isNotBlank(topic)) {
             queryWrapper.eq(ForumPost::getTopic, topic);
         }
 
-        // 如果指定了关键词，则进行模糊搜索（标题或内容包含关键词）
+        // 指定了关键词，则进行模糊搜索（标题或内容包含关键词）
         if (StrUtil.isNotBlank(keyword)) {
             queryWrapper.and(wrapper -> wrapper
                     .like(ForumPost::getTitle, keyword)
@@ -322,12 +322,12 @@ public class ForumPostServiceImpl extends ServiceImpl<ForumPostMapper, ForumPost
             queryWrapper.eq(ForumPost::getUserId, userId);
         }
         
-        // 如果指定了话题，则按话题筛选
+        // 指定了话题，则按话题筛选
         if (StrUtil.isNotBlank(topic)) {
             queryWrapper.eq(ForumPost::getTopic, topic);
         }
 
-        // 如果指定了关键词，则进行模糊搜索（标题或内容包含关键词）
+        // 指定了关键词，则进行模糊搜索（标题或内容包含关键词）
         if (StrUtil.isNotBlank(keyword)) {
             queryWrapper.and(wrapper -> wrapper
                     .like(ForumPost::getTitle, keyword)

@@ -2,10 +2,12 @@
 import Footer from "@/views/web/layout/Footer.vue";
 import {onMounted, reactive, ref} from 'vue';
 import {getProjectList} from "@/api/web/IchProject.js";
-import { IconSearch, IconLoading } from '@arco-design/web-vue/es/icon';
+import { IconSearch, IconLoading, IconPlayArrowFill } from '@arco-design/web-vue/es/icon';
 import { Message } from "@arco-design/web-vue";
 import { useRouter } from 'vue-router';
 
+// 初始化路由器
+const router = useRouter();
 
 //分页器状态
 const status = reactive({
@@ -76,105 +78,109 @@ const selectedCategories = ref({
 
 // 添加查看详情方法
 const viewDetail = (id) => {
-  Message.success("查看详情")
+  router.push(`/information/detail/${id}`);
 }
 
 </script>
 
 
 <template>
-
-  <div class="project-title">
-    <div class="title-content">
-      <h1>非遗百科</h1>
-      <p>传承文化精髓 · 守护非遗瑰宝</p>
-    </div>
-  </div>
-
-  <div class="information-container">
-    <div class="search-section">
-      <div class="search-wrapper">
-        <IconSearch class="search-icon"/>
-        <input 
-          v-model="searchKeyword"
-          type="text" 
-          placeholder="请输入关键词搜索" 
-          class="search-input"
-          @keyup.enter="handleSearch"
-        >
+  <div>
+    <div class="project-title">
+      <div class="title-content">
+        <h1>非遗百科</h1>
+        <p>传承文化精髓 · 守护非遗瑰宝</p>
       </div>
     </div>
 
-    <!-- 分类筛选 -->
-    <div class="categories-section">
-      <div v-for="category in categories" :key="category.name" class="category-group">
-        <span class="category-name">{{ category.name }}</span>
-        <div class="category-items">
-          <span v-for="item in category.items"
-                :key="item"
-                :class="['category-item', { 'category-item-active': selectedCategories[category.name] === item }]"
-                @click="handleCategorySelect(category.name, item)">
-            {{ item }}
-          </span>
+    <div class="information-container">
+      <div class="search-section">
+        <div class="search-wrapper">
+          <IconSearch class="search-icon"/>
+          <input 
+            v-model="searchKeyword"
+            type="text" 
+            placeholder="请输入关键词搜索" 
+            class="search-input"
+            @keyup.enter="handleSearch"
+          >
         </div>
       </div>
-    </div>
 
-    <a-spin :loading="loading" size="32" tip="加载中">
-      <template #icon><icon-loading /></template>
-      <div class="project-grid">
-        <a-card
-          v-for="project in ichProject"
-          :key="project.id"
-          class="project-card"
-          :bordered="false"
-          hoverable
-        >
-          <div class="project-image">
-            <img :src="project.coverImage" :alt="project.name">
-            <div class="project-overlay" @click="viewDetail(project.id)">
-              <div class="overlay-content">
-                <icon-eye class="overlay-icon" />
-                <span>查看详情</span>
-              </div>
-            </div>
+      <!-- 分类筛选 -->
+      <div class="categories-section">
+        <div v-for="category in categories" :key="category.name" class="category-group">
+          <span class="category-name">{{ category.name }}</span>
+          <div class="category-items">
+            <span v-for="item in category.items"
+                  :key="item"
+                  :class="['category-item', { 'category-item-active': selectedCategories[category.name] === item }]"
+                  @click="handleCategorySelect(category.name, item)">
+              {{ item }}
+            </span>
           </div>
-          <div class="project-content">
-            <h3>{{ project.name }}</h3>
-            <p>{{ project.summary }}</p>
-            <div class="project-tags">
-              <a-tag>{{ project.levelName }}</a-tag>
-              <a-tag>{{ project.categoryName }}</a-tag>
-            </div>
-  
-            <div class="project-card-bottom">
-              <div class="create-time">
-                {{ new Date(project.createTime).toLocaleDateString() }}
-              </div>
-              <div>
-                <a-space class="view-count">
-                  <icon-eye />
-                  {{ project.viewCount }}
-                </a-space>
-              </div>
-            </div>
-          </div>
-        </a-card>
+        </div>
       </div>
-    </a-spin>
 
-    <!-- 分页器 -->
-    <div class="pagination-container">
-      <a-pagination
-        :total="total"
-        :current="status.current"
-        :page-size="status.size"
-        @change="handlePageChange"
-      />
+      <a-spin :loading="loading" :size="32" tip="加载中">
+        <template #icon><icon-loading /></template>
+        <div class="project-grid">
+          <a-card
+            v-for="project in ichProject"
+            :key="project.id"
+            class="project-card"
+            :bordered="false"
+            hoverable
+          >
+            <div class="project-image">
+              <img :src="project.coverImage" :alt="project.name">
+              <div class="project-overlay" @click="viewDetail(project.id)">
+                <div class="overlay-content">
+                  <icon-eye class="overlay-icon" />
+                  <span>查看详情</span>
+                </div>
+              </div>
+              <div class="video-badge" v-if="project.video">
+                <icon-play-arrow-fill class="video-icon" />
+              </div>
+            </div>
+            <div class="project-content">
+              <h3>{{ project.name }}</h3>
+              <p>{{ project.summary }}</p>
+              <div class="project-tags">
+                <a-tag>{{ project.levelName }}</a-tag>
+                <a-tag>{{ project.categoryName }}</a-tag>
+              </div>
+    
+              <div class="project-card-bottom">
+                <div class="create-time">
+                  {{ new Date(project.createTime).toLocaleDateString() }}
+                </div>
+                <div>
+                  <a-space class="view-count">
+                    <icon-eye />
+                    {{ project.viewCount }}
+                  </a-space>
+                </div>
+              </div>
+            </div>
+          </a-card>
+        </div>
+      </a-spin>
+
+      <!-- 分页器 -->
+      <div class="pagination-container">
+        <a-pagination
+          :total="total"
+          :current="status.current"
+          :page-size="status.size"
+          @change="handlePageChange"
+        />
+      </div>
     </div>
-  </div>
 
-  <Footer class="footer"/>
+    <Footer class="footer"/>
+  </div>
 </template>
 
 <style scoped>
@@ -492,5 +498,26 @@ const viewDetail = (id) => {
   color: #C2101C;
   font-size: 14px;
   margin-top: 8px;
+}
+
+/* 添加视频标识样式 */
+.video-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background-color: rgba(211, 47, 47, 0.85);
+  padding: 4px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.video-icon {
+  color: white;
+  font-size: 18px;
 }
 </style>

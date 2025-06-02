@@ -5,11 +5,13 @@ import com.gumeng.code.HttpResponse;
 import com.gumeng.domain.pages.IchCategory;
 import com.gumeng.domain.pages.IchLevel;
 import com.gumeng.entity.vo.IchProjectListVO;
+import com.gumeng.entity.vo.IchProjectDetailVO;
 import com.gumeng.service.IchCategoryService;
 import com.gumeng.service.IchLevelService;
 import com.gumeng.service.IchProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -58,5 +60,15 @@ public class IchController {
             @RequestParam(required = false) Integer categoryId) {
         Page<IchProjectListVO> ichProjects = ichProjectService.getIchProject(current, size, levelId, categoryId);
         return HttpResponse.success(ichProjects);
+    }
+
+    //获取非遗项目详情
+    @GetMapping("/getProjectDetail/{id}")
+    public HttpResponse getProjectDetail(@PathVariable("id") Integer id) {
+        IchProjectDetailVO projectDetail = ichProjectService.getProjectDetail(id);
+        if (projectDetail != null) {
+            return HttpResponse.success(projectDetail);
+        }
+        return HttpResponse.error("项目不存在");
     }
 }

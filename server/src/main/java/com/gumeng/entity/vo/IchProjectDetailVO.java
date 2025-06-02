@@ -5,13 +5,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
+ * 非遗项目详情视图对象
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class IchProjectListVO {
+public class IchProjectDetailVO {
     /**
      * 非遗项目id
      */
@@ -23,14 +25,29 @@ public class IchProjectListVO {
     private String name;
 
     /**
+     * 所属类别id
+     */
+    private Integer categoryId;
+
+    /**
      * 所属类别name
      */
     private String categoryName;
 
     /**
+     * 保护级别id
+     */
+    private Integer levelId;
+
+    /**
      * 保护级别
      */
     private String levelName;
+
+    /**
+     * 地区名称
+     */
+    private String regionName;
 
     /**
      * 封面
@@ -48,6 +65,11 @@ public class IchProjectListVO {
     private String video;
 
     /**
+     * 详细内容
+     */
+    private String content;
+
+    /**
      * 浏览次数
      */
     private Long viewCount;
@@ -61,4 +83,14 @@ public class IchProjectListVO {
      * 更新时间
      */
     private LocalDateTime updateTime;
-}
+
+    /**
+     * 传承人列表
+     */
+    private List<InheritorVO> inheritors;
+
+    /**
+     * 相关项目列表
+     */
+    private List<IchProjectListVO> relatedProjects;
+} 
