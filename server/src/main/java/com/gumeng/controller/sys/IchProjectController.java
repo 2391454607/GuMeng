@@ -66,13 +66,14 @@ public class IchProjectController {
     //新增非遗项目信息和图片文件
     @PostMapping("/addProject")
     public HttpResponse addIchProject(@RequestParam("file") MultipartFile file,
-                                      @RequestParam("projectInfo") String projectInfo) {
+                                      @RequestParam("projectInfo") String projectInfo,
+                                      @RequestParam(value = "videoFile", required = false) MultipartFile videoFile) {
         try {
             // 将JSON字符串转换为IchProject对象
             ObjectMapper mapper = new ObjectMapper();
             IchProject ichProject = mapper.readValue(projectInfo, IchProject.class);
 
-            // 处理文件上传
+            // 处理封面图片上传
             if (!file.isEmpty()) {
                 // 验证文件类型是否为图片
                 String contentType = file.getContentType();
@@ -87,7 +88,7 @@ public class IchProjectController {
                 }
                 
                 String originalFilename = file.getOriginalFilename();
-                String fileName = System.currentTimeMillis() + "_" + originalFilename;
+                String fileName = "image/" + System.currentTimeMillis() + "_" + originalFilename;
 
                 // 上传到七牛云
                 String url = qiniuUtils.upload(file.getBytes(), fileName);
@@ -96,7 +97,35 @@ public class IchProjectController {
                     // 设置文件URL到项目信息中
                     ichProject.setCoverImage(url);
                 } else {
-                    return HttpResponse.error("文件上传失败");
+                    return HttpResponse.error("封面图片上传失败");
+                }
+            }
+            
+            // 处理视频文件上传
+            if (videoFile != null && !videoFile.isEmpty()) {
+                // 验证文件类型是否为视频
+                String contentType = videoFile.getContentType();
+                if (contentType == null || !contentType.startsWith("video/")) {
+                    return HttpResponse.error("只允许上传视频文件");
+                }
+
+                // 验证视频文件大小
+                long fileSize = videoFile.getSize();
+                if (fileSize > 1000 * 1024 * 1024) { 
+                    return HttpResponse.error("视频文件大小不能超过1000MB");
+                }
+                
+                String originalFilename = videoFile.getOriginalFilename();
+                String fileName = "video/" + System.currentTimeMillis() + "_" + originalFilename;
+
+                // 上传到七牛云
+                String videoUrl = qiniuUtils.upload(videoFile.getBytes(), fileName);
+
+                if (videoUrl != null && !videoUrl.isEmpty()) {
+                    // 设置视频URL到项目信息中
+                    ichProject.setVideo(videoUrl);
+                } else {
+                    return HttpResponse.error("视频上传失败");
                 }
             }
 
@@ -119,7 +148,8 @@ public class IchProjectController {
     //修改非遗项目信息
     @PostMapping("/updateProject")
     public HttpResponse updateProject(@RequestParam(value = "file", required = false) MultipartFile file,
-                                    @RequestParam("projectInfo") String projectInfo) {
+                                    @RequestParam("projectInfo") String projectInfo,
+                                    @RequestParam(value = "videoFile", required = false) MultipartFile videoFile) {
         try {
             ObjectMapper mapper = new ObjectMapper();
             IchProject ichProject = mapper.readValue(projectInfo, IchProject.class);
@@ -129,6 +159,7 @@ public class IchProjectController {
                 return HttpResponse.error("项目不存在");
             }
 
+            // 处理封面图片更新
             if (file != null && !file.isEmpty()) {
                 // 验证文件类型是否为图片
                 String contentType = file.getContentType();
@@ -150,16 +181,50 @@ public class IchProjectController {
 
                 // 上传新文件
                 String originalFilename = file.getOriginalFilename();
-                String fileName = System.currentTimeMillis() + "_" + originalFilename;
+                String fileName = "image/" + System.currentTimeMillis() + "_" + originalFilename;
                 String url = qiniuUtils.upload(file.getBytes(), fileName);
 
                 if (url != null && !url.isEmpty()) {
                     ichProject.setCoverImage(url);
                 } else {
-                    return HttpResponse.error("文件上传失败");
+                    return HttpResponse.error("封面图片上传失败");
                 }
             } else {
                 ichProject.setCoverImage(oldProject.getCoverImage());
+            }
+            
+            // 处理视频文件更新
+            if (videoFile != null && !videoFile.isEmpty()) {
+                // 验证文件类型是否为视频
+                String contentType = videoFile.getContentType();
+                if (contentType == null || !contentType.startsWith("video/")) {
+                    return HttpResponse.error("只允许上传视频文件");
+                }
+
+                // 验证视频文件大小
+                long fileSize = videoFile.getSize();
+                if (fileSize > 1000 * 1024 * 1024) {
+                    return HttpResponse.error("视频文件大小不能超过1000MB");
+                }
+                
+                // 如果原来有视频，先删除
+                if (oldProject.getVideo() != null && !oldProject.getVideo().isEmpty()) {
+                    String oldVideoFileName = oldProject.getVideo().substring(oldProject.getVideo().lastIndexOf("/") + 1);
+                    qiniuUtils.delete(oldVideoFileName);
+                }
+
+                // 上传新视频文件
+                String originalFilename = videoFile.getOriginalFilename();
+                String fileName = "video/" + System.currentTimeMillis() + "_" + originalFilename;
+                String videoUrl = qiniuUtils.upload(videoFile.getBytes(), fileName);
+
+                if (videoUrl != null && !videoUrl.isEmpty()) {
+                    ichProject.setVideo(videoUrl);
+                } else {
+                    return HttpResponse.error("视频上传失败");
+                }
+            } else {
+                ichProject.setVideo(oldProject.getVideo());
             }
 
             ichProject.setUpdateTime(LocalDateTime.now());
@@ -190,6 +255,12 @@ public class IchProjectController {
                 String fileName = project.getCoverImage().substring(project.getCoverImage().lastIndexOf("/") + 1);
                 qiniuUtils.delete(fileName);
             }
+            
+            // 如果有视频，删除七牛云上的文件
+            if (project.getVideo() != null && !project.getVideo().isEmpty()) {
+                String videoFileName = project.getVideo().substring(project.getVideo().lastIndexOf("/") + 1);
+                qiniuUtils.delete(videoFileName);
+            }
 
             // 删除项目信息
             boolean result = ichProjectService.removeById(id);
@@ -203,6 +274,118 @@ public class IchProjectController {
             return HttpResponse.error("删除失败：" + e.getMessage());
         }
     }
-
-
+    
+    // 单独上传视频文件接口
+    @PostMapping("/uploadVideo")
+    public HttpResponse uploadVideo(@RequestParam("file") MultipartFile file, 
+                                    @RequestParam(value = "projectId", required = false) String projectIdStr) {
+        try {
+            // 验证参数
+            if (file.isEmpty()) {
+                return HttpResponse.error("上传文件不能为空");
+            }
+            
+            // 验证文件类型是否为视频
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("video/")) {
+                return HttpResponse.error("只允许上传视频文件");
+            }
+            
+            // 验证视频文件大小
+            long fileSize = file.getSize();
+            if (fileSize > 1000 * 1024 * 1024) {
+                return HttpResponse.error("视频文件大小不能超过1000MB");
+            }
+            
+            // 处理projectId参数
+            Integer projectId = null;
+            if (projectIdStr != null && !projectIdStr.equals("undefined") && !projectIdStr.isEmpty()) {
+                try {
+                    projectId = Integer.parseInt(projectIdStr);
+                } catch (NumberFormatException e) {
+                    return HttpResponse.error("项目ID格式不正确");
+                }
+                
+                // 查询项目是否存在
+                IchProject project = ichProjectService.getById(projectId);
+                if (project == null) {
+                    return HttpResponse.error("项目不存在");
+                }
+                
+                // 如果原来有视频，先删除
+                if (project.getVideo() != null && !project.getVideo().isEmpty()) {
+                    String oldVideoFileName = project.getVideo().substring(project.getVideo().lastIndexOf("/") + 1);
+                    qiniuUtils.delete(oldVideoFileName);
+                }
+            }
+            
+            // 上传视频文件到七牛云
+            String originalFilename = file.getOriginalFilename();
+            String fileName = "video/" + System.currentTimeMillis() + "_" + originalFilename;
+            String videoUrl = qiniuUtils.upload(file.getBytes(), fileName);
+            
+            if (videoUrl == null || videoUrl.isEmpty()) {
+                return HttpResponse.error("视频上传失败");
+            }
+            
+            // 如果有项目ID，更新项目信息
+            if (projectId != null) {
+                IchProject project = ichProjectService.getById(projectId);
+                project.setVideo(videoUrl);
+                project.setUpdateTime(LocalDateTime.now());
+                boolean result = ichProjectService.updateById(project);
+                
+                if (!result) {
+                    return HttpResponse.error("视频信息更新失败");
+                }
+            }
+            
+            // 返回视频URL
+            return HttpResponse.success(videoUrl);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return HttpResponse.error("视频上传失败：" + e.getMessage());
+        }
+    }
+    
+    // 添加单独删除文件的API
+    @GetMapping("/deleteFile")
+    public HttpResponse deleteFile(@RequestParam String fileName) {
+        try {
+            if (fileName == null || fileName.isEmpty()) {
+                return HttpResponse.error("文件名不能为空");
+            }
+            
+            // 从URL中提取文件名（如果是完整URL）
+            if (fileName.startsWith("http")) {
+                // 尝试获取域名后面的路径
+                String path = fileName;
+                try {
+                    if (fileName.contains("://")) {
+                        path = fileName.split("://")[1];
+                        if (path.contains("/")) {
+                            path = path.substring(path.indexOf("/") + 1);
+                        }
+                    }
+                } catch (Exception e) {
+                    // 解析失败
+                    path = fileName.substring(fileName.lastIndexOf("/") + 1);
+                }
+                fileName = path;
+                System.out.println("提取的文件名: " + fileName);
+            }
+            
+            boolean result = qiniuUtils.delete(fileName);
+            
+            if (result) {
+                return HttpResponse.success("文件删除成功或文件已不存在");
+            } else {
+                return HttpResponse.error("文件删除失败");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return HttpResponse.error("文件删除失败: " + e.getMessage());
+        }
+    }
 }

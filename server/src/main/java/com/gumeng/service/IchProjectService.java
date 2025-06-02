@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.domain.pages.IchProject;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.gumeng.entity.vo.IchProjectListVO;
+import com.gumeng.entity.vo.IchProjectDetailVO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,4 +18,6 @@ import java.util.List;
 @Service
 public interface IchProjectService extends IService<IchProject> {
     Page<IchProjectListVO> getIchProject(Integer current, Integer size, Integer levelId, Integer categoryId);
+    
+    IchProjectDetailVO getProjectDetail(Integer id);
 }

@@ -43,6 +43,11 @@ public class IchProjectListVO {
     private String summary;
 
     /**
+     * 视频URL
+     */
+    private String video;
+
+    /**
      * 浏览次数
      */
     private Long viewCount;
