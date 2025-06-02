@@ -6,13 +6,15 @@ import axios from "axios";
  */
 const request = axios.create({
     baseURL: "/api",
-    timeout: 30000,
+    timeout: 60000,
     headers: {
         "Content-Type": "application/json;charset=UTF-8",
         'Accept': 'application/json',
     },
     responseType: "json",
     withCredentials: true,
+    maxContentLength: 1000 * 1024 * 1024,
+    maxBodyLength: 1000 * 1024 * 1024
 });
 
 // 获取通用headers
@@ -78,11 +80,12 @@ export const http = {
             params: data,
         });
     },
-    post: (url, data) => {
+    post: (url, data, config = {}) => {
         return request.request({
             url: url,
             method: "POST",
             data: data,
+            ...config
         });
     },
     put: (url, data) => {
