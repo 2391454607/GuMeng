@@ -2,22 +2,23 @@
 import {ref, watch, nextTick, onMounted, reactive} from 'vue';
 import Footer from "@/views/web/layout/Footer.vue";
 import { createConversationAPI, chatWithAI } from '@/api/web/Web.js';
+import {Message} from "@arco-design/web-vue";
 
 // 左侧菜单数据
 const menuItems = ref([
-  { title: '今天', items: ['Greeting and Offering Assistance'] },
+  { title: '今天', items: ['糖画'] },
   { title: '7 天内', items: [
-    '影响他人人生决定的深度图谱',
+    '云南有哪些非遗',
   ]},
   { title: '30 天内', items: [
-    '国内外校园家庭心理干预研究',
-    '故事细节项目日记与自动化方向'
+    '建水紫陶',
+    '中国非遗有哪些'
   ]}
 ]);
 
 // 聊天记录
 const messages = ref([
-  { role: 'ai', text: '你好！请问有什么可以帮你的呢？ 😊' }
+  { role: 'ai', text: '嗨，你好！我是故梦阑珊非遗守护精灵，专注于非物质文化遗产领域，能为你解答你想要了解的非遗文化领域的相关知识哦。 😊' }
 ]);
 
 // 添加会话ID
@@ -61,12 +62,29 @@ function scrollToBottom() {
   });
 }
 
+// 添加预设问题
+const suggestedQuestions = ref([
+    "有哪些非遗技艺濒临失传？",
+    "非遗项目如何传承发展？",
+    "介绍一个有趣的非遗项目吧。"
+]);
 // 发送消息
-async function sendMessage() {
-  if (!userInput.value.trim()) return;
+async function sendMessage(content = '') {
+  if (isTyping.value) {
+    Message.warning('非遗小精灵 正在回复，请稍候...');
+    return;
+  }
+  const messageText = content || userInput.value;
+  if (!messageText || messageText.trim() === '') {
+    Message.warning('不能发送空消息');
+    return;
+  }
 
-  messages.value.push({ role: 'user', text: userInput.value });
-  const question = userInput.value;
+  //发送信息清空预设问题
+  suggestedQuestions.value = [];
+
+  messages.value.push({ role: 'user', text: messageText });
+  const question = messageText;
   userInput.value = '';
   isTyping.value = true;
 
@@ -75,52 +93,35 @@ async function sendMessage() {
       conversationId: conversationId.value,
       message: question
     });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
-
     let aiMessage = reactive({ role: 'ai', text: '' });
     messages.value.push(aiMessage);
     let buffer = '';
-
+    let tempSuggested = [];
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
-
       const chunk = decoder.decode(value, { stream: true });
       buffer += chunk;
-
       while (buffer.includes('\n')) {
         const newlineIndex = buffer.indexOf('\n');
         const line = buffer.slice(0, newlineIndex);
         buffer = buffer.slice(newlineIndex + 1);
-
         if (line.startsWith('data:')) {
           const data = line.slice('data:'.length).trim();
-
-          if (!data) continue;
-
-          if (data.startsWith('{')) {
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.msg_type === 'generate_answer_finish') {
-                break;
-              } else if (parsed.msg_type === 'time_capsule_recall') {
-                continue;
-              }
-            } catch (e) {
-              console.error('JSON 解析失败', e);
-            }
+          // 判断是否为中文且长度大于5
+          if (/[一-龥]/.test(data) && data.length > 5) {
+            tempSuggested.push(data);
           } else {
-            // 真正流式追加，每个 chunk 打字输出
-            await typewriterEffect(data, aiMessage, 10);
+            await typewriterEffect(data, aiMessage, 30);
           }
         }
       }
+    }
+    // 替换预设问题
+    if (tempSuggested.length > 0) {
+      suggestedQuestions.value = tempSuggested.filter(q => q.trim() !== '');
     }
   } catch (error) {
     console.error('发送消息失败:', error);
@@ -138,7 +139,7 @@ async function startNewChat() {
   try {
     const response = await createConversationAPI();
     conversationId.value = response.data.conversationId;
-    messages.value = [{ role: 'ai', text: '你好！请问有什么可以帮你的呢？ 😊' }];
+    messages.value = [{ role: 'ai', text: '嗨，你好！我是故梦阑珊非遗守护精灵，专注于非物质文化遗产领域，能为你解答你想要了解的非遗文化领域的相关知识哦。 😊' }];
   } catch (error) {
     console.error('创建新对话失败:', error);
     messages.value.push({
@@ -156,6 +157,17 @@ async function typewriterEffect(text, message, delay = 30) {
   }
 }
 
+// 处理预设问题点击
+const handleSuggestionClick = (question) => {
+  userInput.value = question;
+  sendMessage();
+  suggestedQuestions.value = [];
+};
+
+// 处理菜单项点击
+function handleMenuItemClick(item) {
+  Message.info(item)
+}
 </script>
 
 <template>
@@ -171,7 +183,12 @@ async function typewriterEffect(text, message, delay = 30) {
       <div class="menu-container">
         <div v-for="(section, index) in menuItems" :key="index" class="menu-section">
           <div class="section-title">{{ section.title }}</div>
-          <div v-for="(item, itemIndex) in section.items" :key="itemIndex" class="menu-item">
+          <div
+            v-for="(item, itemIndex) in section.items"
+            :key="itemIndex"
+            class="menu-item"
+            @click="handleMenuItemClick(item)"
+          >
             {{ item }}
           </div>
         </div>
@@ -207,23 +224,29 @@ async function typewriterEffect(text, message, delay = 30) {
 
       <!-- 输入区域 -->
       <div class="input-area">
-        <input 
-          v-model="userInput" 
-          @keyup.enter="sendMessage" 
-          placeholder="请输入您的问题..." 
-          class="message-input"
-        />
-        <div class="input-buttons">
-          <button class="action-button" title="上传文件">
-            <i class="fas fa-paperclip"></i>
-          </button>
-          <button class="action-button" title="录音">
-            <i class="fas fa-microphone"></i>
-          </button>
-          <button 
-            @click="sendMessage" 
+        <!-- 预设问题建议 -->
+        <div class="suggested-questions">
+          <div
+            v-for="(question, index) in suggestedQuestions"
+            :key="index"
+            class="suggestion"
+            @click="handleSuggestionClick(question)"
+          >
+            {{ question }}
+          </div>
+        </div>
+
+        <div class="input-wrapper">
+          <input
+            v-model="userInput"
+            @keyup.enter="sendMessage()"
+            placeholder="请输入您的问题..."
+            class="message-input"
+          />
+          <button
+            @click="sendMessage()"
             class="send-button"
-            :disabled="!userInput.trim()"
+            :disabled="!userInput.trim() || isTyping"
           >
             发送
           </button>
@@ -390,10 +413,34 @@ async function typewriterEffect(text, message, delay = 30) {
   0%, 80%, 100% { transform: scale(0.6); opacity: 0.6; }
   40% { transform: scale(1); opacity: 1; }
 }
-
 .input-area {
   border-top: 1px solid #e0e0e0;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.suggested-questions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.suggestion {
+  background-color: #f0f0f0;
+  padding: 8px 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-size: 14px;
+}
+
+.suggestion:hover {
+  background-color: #e0e0e0;
+}
+
+.input-wrapper {
   display: flex;
   gap: 12px;
 }
@@ -410,25 +457,6 @@ async function typewriterEffect(text, message, delay = 30) {
 
 .message-input:focus {
   border-color: #4a55e6;
-}
-
-.input-buttons {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.action-button {
-  padding: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #666;
-  border-radius: 4px;
-}
-
-.action-button:hover {
-  background-color: #f5f5f5;
 }
 
 .send-button {
