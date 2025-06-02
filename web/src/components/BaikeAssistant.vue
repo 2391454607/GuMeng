@@ -5,6 +5,10 @@ import { IconClose, IconSend } from '@arco-design/web-vue/es/icon';
 import { sendAssistantMessage } from '@/api/web/baikeAssistant';
 import { useUserStore } from '@/stores/userStore';
 
+// 本地存储键名
+const CHAT_HISTORY_KEY = 'baike_assistant_chat_history';
+const MAX_HISTORY_LENGTH = 20; // 最大历史记录数量
+
 const props = defineProps({
   // 传入属性，如果需要的话
 });
@@ -24,13 +28,42 @@ const position = reactive({
 // 拖动起始位置
 const dragOffset = reactive({ x: 0, y: 0 });
 
-// 聊天消息历史
-const chatHistory = ref([
-  {
-    role: 'assistant',
-    content: '您好，我是非遗小助手，有什么关于非物质文化遗产的问题，我很乐意为您解答！'
+// 从localStorage加载聊天历史
+const loadChatHistory = () => {
+  try {
+    const savedHistory = localStorage.getItem(CHAT_HISTORY_KEY);
+    if (savedHistory) {
+      const parsedHistory = JSON.parse(savedHistory);
+      if (Array.isArray(parsedHistory) && parsedHistory.length > 0) {
+        return parsedHistory;
+      }
+    }
+  } catch (error) {
+    console.error('加载聊天历史失败:', error);
   }
-]);
+  
+  // 默认欢迎消息
+  return [
+    {
+      role: 'assistant',
+      content: '您好，我是非遗小助手，有什么关于非物质文化遗产的问题，我很乐意为您解答！'
+    }
+  ];
+};
+
+// 保存聊天历史到localStorage
+const saveChatHistory = (history) => {
+  try {
+    // 限制历史记录长度，防止localStorage超出限制
+    const limitedHistory = history.slice(-MAX_HISTORY_LENGTH);
+    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(limitedHistory));
+  } catch (error) {
+    console.error('保存聊天历史失败:', error);
+  }
+};
+
+// 聊天消息历史，从localStorage加载
+const chatHistory = ref(loadChatHistory());
 
 // 用户输入
 const userInput = ref('');
@@ -129,6 +162,9 @@ const sendMessage = async () => {
     content: userInput.value
   });
   
+  // 保存更新后的历史(包含用户消息)
+  saveChatHistory(chatHistory.value);
+  
   const userQuestion = userInput.value;
   userInput.value = '';
   
@@ -140,10 +176,12 @@ const sendMessage = async () => {
   
   try {
     // 准备发送给API的消息历史
-    const messages = chatHistory.value.map(msg => ({
-      role: msg.role,
-      content: msg.content
-    }));
+    const messagesToSend = chatHistory.value
+      .slice(-10) // 只发送最近的10条消息，避免过多数据
+      .map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
     
     // 先添加一条空的助手消息，用于流式显示
     chatHistory.value.push({
@@ -156,7 +194,7 @@ const sendMessage = async () => {
     
     try {
       // 尝试调用API获取流式回复
-      const response = await sendAssistantMessage(messages, true);
+      const response = await sendAssistantMessage(messagesToSend);
       
       if (response && response.code === 200) {
         // 处理流式响应
@@ -181,6 +219,9 @@ const sendMessage = async () => {
           // 如果不是流式响应，但返回了文本，使用打字机效果显示
           await typeWriterEffect(response.data || '抱歉，我没能理解您的问题。', newMessageIndex, 20);
         }
+        
+        // 保存更新后的历史(包含AI回复)
+        saveChatHistory(chatHistory.value);
       } else {
         throw new Error(response?.msg || '请求失败');
       }
@@ -190,6 +231,9 @@ const sendMessage = async () => {
       // 模拟流式打字效果
       const simulatedResponse = simulateAIResponse(userQuestion);
       await typeWriterEffect(simulatedResponse, newMessageIndex, 20);
+      
+      // 保存更新后的历史(包含模拟回复)
+      saveChatHistory(chatHistory.value);
     }
   } catch (error) {
     console.error('聊天处理错误:', error);
@@ -197,10 +241,21 @@ const sendMessage = async () => {
       role: 'assistant',
       content: '抱歉，我暂时无法回答您的问题。请稍后再试。'
     });
+    // 保存更新后的历史
+    saveChatHistory(chatHistory.value);
   } finally {
     isLoading.value = false;
     scrollToBottom();
   }
+};
+
+// 清除聊天历史
+const clearChatHistory = () => {
+  chatHistory.value = [{
+    role: 'assistant',
+    content: '您好，我是非遗小助手，有什么关于非物质文化遗产的问题，我很乐意为您解答！'
+  }];
+  saveChatHistory(chatHistory.value);
 };
 
 // 滚动到聊天窗口底部
@@ -304,6 +359,9 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  // 组件卸载前保存聊天历史
+  saveChatHistory(chatHistory.value);
+  
   document.removeEventListener('mousemove', onDrag);
   document.removeEventListener('mouseup', stopDrag);
 });
