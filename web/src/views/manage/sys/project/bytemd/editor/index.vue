@@ -23,7 +23,6 @@ const props = defineProps({
   name: String, // 项目名称
   levelId: [String, Number], // 保护级别ID
   categoryId: [String, Number], // 项目类别ID
-  summary: String, // 项目简介
   levelOptions: Array, // 保护级别选项
   categoryOptions: Array, // 项目类别选项
   coverImage: String, // 当前封面图片URL
@@ -34,7 +33,6 @@ const props = defineProps({
 const localName = ref(props.name || '');
 const localLevelId = ref(props.levelId || '');
 const localCategoryId = ref(props.categoryId || '');
-const localSummary = ref(props.summary || '');
 const imageFile = ref(null);
 const imagePreview = ref(props.coverImage || ''); // 添加图片预览URL
 const videoFile = ref(null);
@@ -55,9 +53,6 @@ watch(() => props.categoryId, (newVal) => {
   localCategoryId.value = newVal;
 });
 
-watch(() => props.summary, (newVal) => {
-  localSummary.value = newVal;
-});
 
 watch(() => props.video, (newVal) => {
   videoUrl.value = newVal;
@@ -76,16 +71,12 @@ watch(localCategoryId, (newVal) => {
   emit('categoryChange', newVal);
 });
 
-watch(localSummary, (newVal) => {
-  emit('summaryChange', newVal);
-});
 
 const emit = defineEmits([
   "change", 
   "nameChange", 
   "levelChange", 
-  "categoryChange", 
-  "summaryChange", 
+  "categoryChange",
   "fileChange", 
   "videoChange",
   "back", 
