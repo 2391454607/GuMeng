@@ -55,82 +55,80 @@ const goBack = () => {
 </script>
 
 <template>
-  <div class="information-detail-container">
-    <a-spin :loading="loading" size="large">
-      <template #icon><icon-loading /></template>
-      
-      <div class="detail-header">
-        <div class="back-button" @click="goBack">
-          <icon-arrow-left />
-          <span>返回列表</span>
-        </div>
-        <h1 class="project-title">{{ projectDetail.name }}</h1>
+  <div>
+    <div class="information-detail-container">
+      <a-spin :loading="loading" size="large">
+        <template #icon><icon-loading /></template>
         
-        <!-- 基本信息整合在标题下方 -->
-        <div class="project-meta">
-          <span v-if="projectDetail.levelName" class="meta-item">{{ projectDetail.levelName }}</span>
-          <span v-if="projectDetail.categoryName" class="meta-item">{{ projectDetail.categoryName }}</span>
-          <span class="meta-item">
-            <icon-eye /> {{ projectDetail.viewCount || 0 }} 次浏览
-          </span>
-          <span class="meta-item">
-            <icon-calendar /> 创建时间: {{ projectDetail.createTime ? new Date(projectDetail.createTime).toLocaleDateString() : '未知日期' }}
-          </span>
-        </div>
-      </div>
-      
-      <div class="detail-content">
-        <div class="detail-main">
-          <!-- 移除了封面图片部分 -->
+        <div class="detail-header">
+          <div class="back-button" @click="goBack">
+            <icon-arrow-left />
+            <span>返回列表</span>
+          </div>
+          <h1 class="project-title">{{ projectDetail.name }}</h1>
           
-          <div class="detail-info">
-            <div class="info-section">
-              <h2>项目简介</h2>
-              <div class="summary">{{ projectDetail.summary }}</div>
-            </div>
+          <!-- 基本信息整合在标题下方 -->
+          <div class="project-meta">
+            <span v-if="projectDetail.levelName" class="meta-item">{{ projectDetail.levelName }}</span>
+            <span v-if="projectDetail.categoryName" class="meta-item">{{ projectDetail.categoryName }}</span>
+            <span class="meta-item">
+              <icon-eye /> {{ projectDetail.viewCount || 0 }} 次浏览
+            </span>
+            <span class="meta-item">
+              <icon-calendar /> 创建时间: {{ projectDetail.createTime ? new Date(projectDetail.createTime).toLocaleDateString('zh-CN', {year: 'numeric', month: '2-digit', day: '2-digit'}) : '未知日期' }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="detail-content">
+          <div class="detail-main">
+            <!-- 移除了封面图片部分 -->
             
-            <div class="info-section" v-if="projectDetail.video">
-              <h2>项目视频</h2>
-              <div class="project-video">
-                <video 
-                  :src="projectDetail.video" 
-                  controls 
-                  class="video-player"
-                  :poster="projectDetail.coverImage"
-                  preload="metadata"
-                ></video>
+            <div class="detail-info">
+              <div class="info-section">
+                <h2>项目简介</h2>
+                <div class="summary">{{ projectDetail.summary }}</div>
               </div>
-            </div>
-            
-            <div class="info-section" v-if="projectDetail.content">
-              <h2>详细介绍</h2>
-              <div class="content" v-html="projectDetail.content"></div>
-            </div>
-            
-            <div class="info-section" v-if="projectDetail.inheritors && projectDetail.inheritors.length > 0">
-              <h2>传承人</h2>
-              <div class="inheritors-list">
-                <div v-for="(inheritor, index) in projectDetail.inheritors" :key="index" class="inheritor-item">
-                  <div class="inheritor-avatar">
-                    <img :src="inheritor.avatar || '/image/default-avatar.png'" :alt="inheritor.name">
-                  </div>
-                  <div class="inheritor-info">
-                    <h3>{{ inheritor.name }}</h3>
-                    <p>{{ inheritor.level }}</p>
-                    <p>{{ inheritor.description }}</p>
+              
+              <div class="info-section" v-if="projectDetail.video">
+                <h2>项目视频</h2>
+                <div class="project-video">
+                  <video 
+                    :src="projectDetail.video" 
+                    controls 
+                    class="video-player"
+                    :poster="projectDetail.coverImage"
+                    preload="metadata"
+                  ></video>
+                </div>
+              </div>
+              
+              <div class="info-section" v-if="projectDetail.content">
+                <h2>详细介绍</h2>
+                <div class="content" v-html="projectDetail.content"></div>
+              </div>
+              
+              <div class="info-section" v-if="projectDetail.inheritors && projectDetail.inheritors.length > 0">
+                <h2>传承人</h2>
+                <div class="inheritors-list">
+                  <div v-for="(inheritor, index) in projectDetail.inheritors" :key="index" class="inheritor-item">
+                    <div class="inheritor-avatar">
+                      <img :src="inheritor.avatar || '/image/default-avatar.png'" :alt="inheritor.name">
+                    </div>
+                    <div class="inheritor-info">
+                      <h3>{{ inheritor.name }}</h3>
+                      <p>{{ inheritor.level }}</p>
+                      <p>{{ inheritor.description }}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- 留出页脚空间 -->
-      <div class="footer-spacer"></div>
-    </a-spin>
+      </a-spin>
+    </div>
     
-    <!-- 使用现有Footer组件 -->
     <Footer class="footer"/>
   </div>
 </template>
@@ -138,12 +136,11 @@ const goBack = () => {
 <style scoped>
 .information-detail-container {
   background-color: #FFF7E9;
-  min-height: calc(100vh - 64px);
+  min-height: calc(100vh - 169px);
   padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-bottom: 60px; 
 }
 
 .detail-header, .detail-content {
@@ -192,14 +189,12 @@ const goBack = () => {
 
 /* 页脚样式 */
 .footer {
-  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
   bottom: 0;
-  left: 0;
-  width: 100%;
-  padding: 0px 0;
-  background-color: #8C1F28;
-  color: white;
-  z-index: 100;
+  color: #b71c1c;
 }
 
 /* 新增标题下方元数据样式 */
@@ -224,10 +219,8 @@ const goBack = () => {
 }
 
 .detail-content {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  padding: 20px;
+  background-color: #FFF7E9;
+  padding: 20px 0;
 }
 
 .detail-main {
