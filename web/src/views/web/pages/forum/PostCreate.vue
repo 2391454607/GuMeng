@@ -15,6 +15,8 @@ import gemoji from '@bytemd/plugin-gemoji'
 import zhHans from 'bytemd/locales/zh_Hans.json'
 // 导入ByteMD样式
 import 'bytemd/dist/index.css'
+// 导入getProcessor用于Markdown到HTML的转换
+import { getProcessor } from 'bytemd';
 
 const router = useRouter();
 const route = useRoute();
@@ -231,9 +233,32 @@ const fetchPostDetail = async () => {
         postForm.topic = defaultTopic;
       }
       
-      postForm.content = post.content;
+      // 检查内容是否为HTML格式
+      const contentIsHTML = post.content && (
+        post.content.includes('<p>') || 
+        post.content.includes('<div>') || 
+        post.content.includes('<h1>') ||
+        post.content.includes('<h2>') ||
+        post.content.includes('<h3>') ||
+        post.content.includes('<span>') ||
+        post.content.includes('<ul>') ||
+        post.content.includes('<ol>') ||
+        post.content.includes('<li>')
+      );
+      
+      if (contentIsHTML) {
+        // 在前端显示的内容需要添加HTML格式的注释，以便用户在编辑时了解
+        postForm.content = `<!-- 注意：此内容为HTML格式，保存后将会保留当前视觉效果 -->\n${post.content}`;
+        
+        // 给用户显示提示信息
+        Message.info('当前内容为HTML格式，保存后将保留渲染后的视觉效果。');
+      } else {
+        // 正常的Markdown内容
+        postForm.content = post.content;
+      }
+      
       // 同时更新editorValue      
-      editorValue.value = post.content;
+      editorValue.value = postForm.content;
       
       // 处理已有的图片
       if (post.images && post.images.length > 0) {
@@ -267,6 +292,24 @@ const fetchPostDetail = async () => {
             previewImages.value.push(url);
           }
         });
+      }
+      
+      // 如果内容是HTML格式，还需要提取HTML中的图片
+      if (contentIsHTML) {
+        const imgTagRegex = /<img[^>]+src\s*=\s*["']([^"']+)["'][^>]*>/g;
+        const imgMatches = [...(post.content || '').matchAll(imgTagRegex)];
+        if (imgMatches.length > 0) {
+          const htmlImages = imgMatches.map(match => match[1]);
+          console.log('从HTML内容中提取的图片:', htmlImages);
+          
+          // 添加到图片列表中，避免重复
+          htmlImages.forEach(url => {
+            if (!postForm.images.includes(url)) {
+              postForm.images.push(url);
+              previewImages.value.push(url);
+            }
+          });
+        }
       }
     } else {
       Message.error(res.msg || '获取帖子详情失败');
@@ -762,9 +805,44 @@ const submitForm = async () => {
     const selectedTopic = topics.value.find(t => t.id === postForm.topic);
     const topicValue = selectedTopic ? selectedTopic.name : '';
     
+    // 将Markdown内容转换为HTML (关键修改)
+    
+    // 检查内容是否已经是HTML格式
+    const contentIsHTML = postForm.content && (
+      postForm.content.includes('<p>') || 
+      postForm.content.includes('<div>') || 
+      postForm.content.includes('<h1>') ||
+      postForm.content.includes('<h2>') ||
+      postForm.content.includes('<h3>') ||
+      postForm.content.includes('<span>') ||
+      postForm.content.includes('<ul>') ||
+      postForm.content.includes('<ol>') ||
+      postForm.content.includes('<li>')
+    );
+    
+    let htmlContent;
+    
+    if (contentIsHTML) {
+      // 如果内容已经是HTML格式，移除可能的注释标记后直接使用
+      htmlContent = postForm.content.replace(/<!--\s*注意：此内容为HTML格式，保存后将会保留当前视觉效果\s*-->\n?/g, '');
+      console.log('内容已经是HTML格式，跳过转换');
+    } else {
+      // 创建与预览区相同的转换选项
+      const processorOptions = {
+        plugins: plugins,
+        sanitize: undefined, // 保持默认或与预览区相同
+        remarkRehype: undefined // 保持默认或与预览区相同
+      };
+      
+      // 将Markdown转换为HTML格式
+      const processor = getProcessor(processorOptions);
+      htmlContent = processor.processSync(postForm.content).toString();
+      console.log('转换后的HTML内容长度:', htmlContent.length);
+    }
+    
     const formData = {
       title: postForm.title,
-      content: postForm.content, // 保持原始Markdown格式
+      content: htmlContent, // 使用转换后的HTML而不是原始Markdown
       topic: topicValue,
       images: serverImageUrls.join(',') // 将去重后的图片URL数组转换为逗号分隔的字符串
     };
