@@ -19,7 +19,7 @@ const isDragging = ref(false);
 // 助手位置
 const position = reactive({
   x: window.innerWidth - 100,
-  y: window.innerHeight / 2
+  y: window.innerHeight * 0.8
 });
 // 拖动起始位置
 const dragOffset = reactive({ x: 0, y: 0 });
