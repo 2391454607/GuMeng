@@ -515,19 +515,7 @@ const fixPreviewImages = () => {
           </select>
         </div>
       </div>
-      
-      <div class="project-info-row">
-        <div class="project-info-item full-width">
-          <label>项目简介</label>
-          <textarea 
-            v-model="localSummary" 
-            class="project-summary"
-            placeholder="请输入项目简介"
-            rows="2"
-          ></textarea>
-        </div>
-      </div>
-      
+
       <div class="project-info-row">
         <div class="project-info-item">
           <label>封面图片</label>
@@ -746,18 +734,6 @@ const fixPreviewImages = () => {
   padding-right: 30px;
 }
 
-.project-summary {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #D6C6AF;
-  border-radius: 4px;
-  background-color: #FFFDF7;
-  color: #582F0E;
-  font-family: "SimSun", "宋体", serif;
-  font-size: 14px;
-  resize: vertical;
-  min-height: 60px;
-}
 
 /* 图片上传相关样式 */
 .image-uploader, .video-uploader {

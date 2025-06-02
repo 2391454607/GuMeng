@@ -82,7 +82,6 @@ const ProjectAddClick = async () => {
   newProject.name = '';
   newProject.levelId = '';
   newProject.categoryId = '';
-  newProject.summary = '';
   newProject.file = null;
   newProject.video = null;
   imgFile.value = null;
@@ -92,7 +91,6 @@ const newProject = reactive({
   name: "",
   levelId: "",
   categoryId: "",
-  summary: "",
   file: null,
   video: null,
 });
@@ -167,7 +165,6 @@ const addOk = async () => {
     name: newProject.name,
     levelId: newProject.levelId,
     categoryId: newProject.categoryId,
-    summary: newProject.summary,
     content: editorValue.value,
     video: newProject.video
   }));
@@ -196,7 +193,6 @@ const viewProjectData = reactive({
   name: "",
   levelName: "",
   categoryName: "",
-  summary: "",
   coverImage: "",
   video: "",
   content: "",
@@ -210,7 +206,6 @@ const viewProjectClick = (record) => {
   viewProjectData.name = record.name;
   viewProjectData.levelName = record.levelName;
   viewProjectData.categoryName = record.categoryName;
-  viewProjectData.summary = record.summary;
   viewProjectData.coverImage = record.coverImage;
   viewProjectData.video = record.video || '';
   viewProjectData.viewCount = record.viewCount;
@@ -243,7 +238,6 @@ const updateProjectData = reactive({
   levelName: "",
   categoryId: "",
   categoryName: "",
-  summary: "",
   coverImage: "",
   video: "",
   content: "",
@@ -277,7 +271,6 @@ const updateProjectClick = async (record) => {
   // 根据名称找到对应的ID
   updateProjectData.levelId = levelOptions.find(option => option.label === record.levelName)?.value || '';
   updateProjectData.categoryId = categoryOptions.find(option => option.label === record.categoryName)?.value || '';
-  updateProjectData.summary = record.summary;
   updateProjectData.coverImage = record.coverImage;
   updateProjectData.video = record.video || '';
   
@@ -323,7 +316,6 @@ const updateOk = async () => {
     name: updateProjectData.name,
     levelId: updateProjectData.levelId,
     categoryId: updateProjectData.categoryId,
-    summary: updateProjectData.summary,
     content: updateEditorValue.value,
     video: updateProjectData.video
   }));
@@ -510,11 +502,7 @@ const closeUpdateDialog = async () => {
             ></video>
           </div>
         </div>
-        
-        <div class="project-summary">
-          <h3>项目简介</h3>
-          <p>{{ viewProjectData.summary }}</p>
-        </div>
+
         
         <div class="project-content">
           <h3>项目详情</h3>
@@ -549,13 +537,11 @@ const closeUpdateDialog = async () => {
           :name="newProject.name"
           :levelId="newProject.levelId"
           :categoryId="newProject.categoryId"
-          :summary="newProject.summary"
           :levelOptions="levelOptions"
           :categoryOptions="categoryOptions"
           @nameChange="val => newProject.name = val"
           @levelChange="val => newProject.levelId = val"
           @categoryChange="val => newProject.categoryId = val"
-          @summaryChange="val => newProject.summary = val"
           @fileChange="getFile"
           @videoChange="getVideoFile"
           @cleanupVideo="handleCleanupVideo"
@@ -586,7 +572,6 @@ const closeUpdateDialog = async () => {
           :name="updateProjectData.name"
           :levelId="updateProjectData.levelId"
           :categoryId="updateProjectData.categoryId"
-          :summary="updateProjectData.summary"
           :levelOptions="levelOptions"
           :categoryOptions="categoryOptions"
           :coverImage="updateProjectData.coverImage"
@@ -594,7 +579,6 @@ const closeUpdateDialog = async () => {
           @nameChange="val => updateProjectData.name = val"
           @levelChange="val => updateProjectData.levelId = val"
           @categoryChange="val => updateProjectData.categoryId = val"
-          @summaryChange="val => updateProjectData.summary = val"
           @fileChange="getUpdateFile"
           @videoChange="getUpdateVideo"
           @cleanupVideo="handleCleanupVideo"
@@ -687,27 +671,6 @@ const closeUpdateDialog = async () => {
   margin-bottom: 10px;
   font-family: "STKaiti", "楷体", serif;
   align-self: flex-start;
-}
-
-.project-summary {
-  margin: 20px 0;
-  padding: 15px;
-  background-color: #FFF7E9;
-  border-radius: 8px;
-  border-left: 3px solid #8C1F28;
-}
-
-.project-summary h3 {
-  font-size: 18px;
-  color: #8C1F28;
-  margin-bottom: 10px;
-  font-family: "STKaiti", "楷体", serif;
-}
-
-.project-summary p {
-  font-size: 16px;
-  line-height: 1.6;
-  color: #582F0E;
 }
 
 .project-content {

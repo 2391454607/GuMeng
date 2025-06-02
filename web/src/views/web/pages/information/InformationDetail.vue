@@ -85,10 +85,6 @@ const goBack = () => {
             <!-- 移除了封面图片部分 -->
             
             <div class="detail-info">
-              <div class="info-section">
-                <h2>项目简介</h2>
-                <div class="summary">{{ projectDetail.summary }}</div>
-              </div>
               
               <div class="info-section" v-if="projectDetail.video">
                 <h2>项目视频</h2>
@@ -245,11 +241,6 @@ const goBack = () => {
   font-family: "STKaiti", "楷体", serif;
 }
 
-.summary, .content {
-  color: #333;
-  line-height: 1.6;
-  font-size: 1rem;
-}
 
 .content {
   max-width: 100%;

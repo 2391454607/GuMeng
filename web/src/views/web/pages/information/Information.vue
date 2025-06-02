@@ -146,7 +146,6 @@ const viewDetail = (id) => {
             </div>
             <div class="project-content">
               <h3>{{ project.name }}</h3>
-              <p>{{ project.summary }}</p>
               <div class="project-tags">
                 <a-tag>{{ project.levelName }}</a-tag>
                 <a-tag>{{ project.categoryName }}</a-tag>
