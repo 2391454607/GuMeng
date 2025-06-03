@@ -4,6 +4,7 @@ import { Message } from '@arco-design/web-vue';
 import { IconClose, IconSend } from '@arco-design/web-vue/es/icon';
 import { sendAssistantMessage } from '@/api/web/baikeAssistant';
 import { useUserStore } from '@/stores/userStore';
+import { useRouter } from 'vue-router';
 
 // 本地存储键名
 const CHAT_HISTORY_KEY = 'baike_assistant_chat_history';
@@ -15,6 +16,9 @@ const props = defineProps({
 
 // 获取用户store
 const userStore = useUserStore();
+
+// 在setup中获取路由器实例
+const router = useRouter();
 
 // 控制聊天窗口的显示状态
 const isOpen = ref(false);
@@ -155,6 +159,14 @@ const typeWriterEffect = async (text, messageIndex, speed = 30, isAppend = false
 // 发送消息
 const sendMessage = async () => {
   if (!userInput.value.trim() || isLoading.value) return;
+  
+  // 检查用户是否已登录
+  if (!userStore.isLogin) {
+    Message.warning('请先登录后再使用非遗小助手');
+    toggleChat(); // 关闭聊天窗口
+    router.push('/login'); // 导航到登录页面
+    return;
+  }
   
   // 添加用户消息到聊天历史
   chatHistory.value.push({
@@ -335,6 +347,13 @@ const handleKeyDown = (e) => {
 
 // 处理双击事件
 const handleDoubleClick = () => {
+  // 检查用户是否已登录
+  if (!userStore.isLogin) {
+    Message.warning('请先登录后再使用非遗小助手');
+    router.push('/login'); // 导航到登录页面
+    return;
+  }
+  
   toggleChat();
 };
 
