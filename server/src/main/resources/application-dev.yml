@@ -142,3 +142,12 @@ coze:
 #    assistant:
 #      bot-id: your-assistant-bot-id
 #      access-token: your-assistant-access-token
+
+tripo3d:
+  api:
+    key: tsk_wcVAUXVOJwpPDo3C2Y0WjEiGGyS-7H9f1bOmlbp-Pve
+    upload-url: https://api.tripo3d.ai/v2/openapi/upload
+    generation-url: https://api.tripo3d.ai/v2/openapi/task
+    balance-url: https://api.tripo3d.ai/v2/openapi/user/balance
+    polling: https://api.tripo3d.ai/v2/openapi/task/:task_id
+    STS-url: https://api.tripo3d.ai/v2/openapi/upload/sts/token
