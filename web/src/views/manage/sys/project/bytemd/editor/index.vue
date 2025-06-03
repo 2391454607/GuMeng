@@ -464,252 +464,176 @@ const fixPreviewImages = () => {
 
 <template>
   <div class="editor-container">
-    <!-- 顶部信息栏：集成项目信息输入 -->
-    <div class="editor-header">
-      <div class="editor-header-left">
-        <button @click="handleBack" class="editor-button back-button">
-          <i class="iconfont icon-arrow-left"></i> 返回
-        </button>
+    <!-- 左侧编辑器 -->
+    <div class="editor-left-section">
+      <!-- 编辑器主体 -->
+      <div ref="el" class="md-editor"></div>
+    </div>
+    
+    <!-- 右侧表单 -->
+    <div class="editor-right-section">
+      <div class="form-header">
+        <div class="form-title">项目信息</div>
+      </div>
+      
+      <div class="form-item">
+        <label class="form-label">项目名称</label>
         <input 
           v-model="localName" 
-          class="editor-title-input" 
+          class="form-input" 
           placeholder="请输入项目名称"
           maxlength="50"
         >
       </div>
-      <div class="editor-header-right">
+      
+      <div class="form-item">
+        <label class="form-label">保护级别</label>
+        <select v-model="localLevelId" class="form-select">
+          <option value="" disabled>请选择保护级别</option>
+          <option v-for="option in props.levelOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="form-item">
+        <label class="form-label">项目类别</label>
+        <select v-model="localCategoryId" class="form-select">
+          <option value="" disabled>请选择项目类别</option>
+          <option v-for="option in props.categoryOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="form-item">
+        <label class="form-label">封面图片</label>
+        <div class="image-uploader">
+          <div v-if="imagePreview" class="current-image">
+            <img :src="imagePreview" class="preview-image" alt="当前封面图片">
+          </div>
+          <input 
+            type="file" 
+            accept="image/*" 
+            class="file-input" 
+            id="cover-image"
+            @change="handleFileChange"
+          >
+          <label for="cover-image" class="file-input-label">
+            选择图片
+          </label>
+          <span class="selected-filename">{{ imageFile ? imageFile.name : '未选择文件' }}</span>
+        </div>
+      </div>
+      
+      <div class="form-item">
+        <label class="form-label">项目视频</label>
+        <div class="video-uploader">
+          <div v-if="videoUrl" class="current-video">
+            <video 
+              :src="videoUrl" 
+              class="preview-video" 
+              controls 
+              alt="项目视频"
+              width="160"
+              height="90"
+            ></video>
+          </div>
+          <div class="video-upload-controls">
+            <input 
+              type="file" 
+              accept="video/*" 
+              class="file-input" 
+              id="project-video"
+              @change="handleVideoChange"
+            >
+            <label for="project-video" class="file-input-label" :class="{ 'disabled': uploading }">
+              {{ uploading ? '上传中...' : '选择视频' }}
+            </label>
+            <span class="selected-filename">{{ videoFile ? videoFile.name : videoUrl ? '已上传视频' : '未选择文件' }}</span>
+          </div>
+          <!-- 添加上传进度条 -->
+          <div v-if="uploading" class="upload-progress-container">
+            <div class="upload-progress-bar" :style="{ width: uploadProgress + '%' }"></div>
+            <span class="upload-progress-text">{{ uploadProgress }}%</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button @click="handleBack" class="editor-button back-button">
+          返回
+        </button>
         <button @click="handleSave" class="editor-button publish-button">
           保存项目
         </button>
       </div>
     </div>
-    
-    <!-- 项目信息栏 -->
-    <div class="project-info-container">
-      <div class="project-info-row">
-        <div class="project-info-item">
-          <label>保护级别</label>
-          <select v-model="localLevelId" class="project-select">
-            <option value="" disabled>请选择保护级别</option>
-            <option v-for="option in props.levelOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-        </div>
-        <div class="project-info-item">
-          <label>项目类别</label>
-          <select v-model="localCategoryId" class="project-select">
-            <option value="" disabled>请选择项目类别</option>
-            <option v-for="option in props.categoryOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-        </div>
-      </div>
-
-      <div class="project-info-row">
-        <div class="project-info-item">
-          <label>封面图片</label>
-          <div class="image-uploader">
-            <div v-if="imagePreview" class="current-image">
-              <img :src="imagePreview" class="preview-image" alt="当前封面图片">
-            </div>
-            <input 
-              type="file" 
-              accept="image/*" 
-              class="file-input" 
-              id="cover-image"
-              @change="handleFileChange"
-            >
-            <label for="cover-image" class="file-input-label">
-              选择图片
-            </label>
-            <span class="selected-filename">{{ imageFile ? imageFile.name : '未选择文件' }}</span>
-          </div>
-        </div>
-        <div class="project-info-item">
-          <label>项目视频</label>
-          <div class="video-uploader">
-            <div v-if="videoUrl" class="current-video">
-              <video 
-                :src="videoUrl" 
-                class="preview-video" 
-                controls 
-                alt="项目视频"
-                width="160"
-                height="90"
-              ></video>
-            </div>
-            <div class="video-upload-controls">
-              <input 
-                type="file" 
-                accept="video/*" 
-                class="file-input" 
-                id="project-video"
-                @change="handleVideoChange"
-              >
-              <label for="project-video" class="file-input-label" :class="{ 'disabled': uploading }">
-                {{ uploading ? '上传中...' : '选择视频' }}
-              </label>
-              <span class="selected-filename">{{ videoFile ? videoFile.name : videoUrl ? '已上传视频' : '未选择文件' }}</span>
-            </div>
-            <!-- 添加上传进度条 -->
-            <div v-if="uploading" class="upload-progress-container">
-              <div class="upload-progress-bar" :style="{ width: uploadProgress + '%' }"></div>
-              <span class="upload-progress-text">{{ uploadProgress }}%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- 编辑器主体 -->
-    <div ref="el" class="md-editor"></div>
   </div>
 </template>
 
 <style>
 .editor-container {
   display: flex;
-  flex-direction: column;
   height: 100%;
   border-radius: 8px;
-  background-color: #FFFDF7;
+  background-color: #ffffff;
   overflow: hidden;
   position: relative;
   width: 100%;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  background-color: #F9F3E9;
-  border-bottom: 1px solid #D6C6AF;
-}
-
-.editor-header-left {
-  flex: 0.7;
-  display: flex;
-  align-items: center;
-  gap: 35px;
-}
-
-.editor-header-right {
-  flex: 0.3;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  justify-content: flex-end;
-}
-
-.editor-title-input {
-  width: 100%;
-  padding: 10px 12px;
-  font-size: 20px;
-  border: 1px solid #D6C6AF;
-  border-radius: 4px;
-  background-color: #FFFDF7;
-  color: #582F0E;
-  font-family: "STKaiti", "楷体", serif;
-  transition: all 0.3s;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-}
-
-.editor-title-input:focus {
-  outline: none;
-  border-color: #8C1F28;
-  box-shadow: 0 0 0 2px rgba(140, 31, 40, 0.1);
-}
-
-.editor-title-input::placeholder {
-  color: #A89D84;
-  opacity: 0.8;
-}
-
-.editor-button {
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: "STKaiti", "楷体", serif;
-  font-size: 16px;
-  transition: all 0.3s;
-  white-space: nowrap;
-  height: 38px;
-  display: flex;
-  align-items: center;
-}
-
-.back-button {
-  background-color: #FFFDF7;
-  color: #582F0E;
-  border: 1px solid #D6C6AF;
-  padding: 22px 16px;
-  font-size: 20px;
-}
-
-.back-button:hover {
-  border-color: #8C1F28;
-  background-color: #FFF7E9;
-}
-
-.publish-button {
-  background-color: #8C1F28;
-  color: #FFFDF7;
-  border: 1px solid #8C1F28;
-  padding: 8px 16px;
-  font-weight: bold;
-}
-
-.publish-button:hover {
-  background-color: #A52A2A;
-  border-color: #A52A2A;
+/* 左侧编辑器区域 */
+.editor-left-section {
+  flex: 2;
+  height: 100%;
+  overflow: hidden;
+  border-right: 1px solid #D6C6AF;
 }
 
 .md-editor {
-  flex: 1;
-  overflow: hidden;
+  height: 100%;
   width: 100%;
 }
 
-/* 项目信息样式 */
-.project-info-container {
-  background-color: #FFF7E9;
-  padding: 16px;
-  border-bottom: 1px solid #D6C6AF;
-}
-
-.project-info-row {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 12px;
-}
-
-.project-info-row:last-child {
-  margin-bottom: 0;
-}
-
-.project-info-item {
+/* 右侧表单区域 */
+.editor-right-section {
   flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  padding: 16px;
   display: flex;
   flex-direction: column;
 }
 
-.project-info-item.full-width {
-  width: 100%;
+.form-header {
+  margin-bottom: 20px;
+  border-bottom: 1px solid #D6C6AF;
+  padding-bottom: 10px;
 }
 
-.project-info-item label {
+.form-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #8C1F28;
+  font-family: "STKaiti", "楷体", serif;
+}
+
+.form-item {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
   font-size: 14px;
   color: #582F0E;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   font-weight: 500;
   font-family: "STKaiti", "楷体", serif;
 }
 
-.project-select {
+.form-input, .form-select {
+  width: 100%;
   padding: 8px 10px;
   border: 1px solid #D6C6AF;
   border-radius: 4px;
@@ -717,6 +641,9 @@ const fixPreviewImages = () => {
   color: #582F0E;
   font-family: "STKaiti", "楷体", serif;
   font-size: 14px;
+}
+
+.form-select {
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23582F0E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -725,17 +652,23 @@ const fixPreviewImages = () => {
   padding-right: 30px;
 }
 
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: #8C1F28;
+  box-shadow: 0 0 0 2px rgba(140, 31, 40, 0.1);
+}
 
 /* 图片上传相关样式 */
 .image-uploader, .video-uploader {
   display: flex;
-  align-items: center;
-  gap: 15px;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .current-image, .current-video {
-  width: 100px;
-  height: 60px;
+  width: 100%;
+  max-width: 160px;
+  height: 90px;
   border: 1px solid #D6C6AF;
   border-radius: 4px;
   overflow: hidden;
@@ -772,6 +705,7 @@ const fixPreviewImages = () => {
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
+  max-width: fit-content;
 }
 
 .file-input-label:hover {
@@ -789,140 +723,58 @@ const fixPreviewImages = () => {
 .selected-filename {
   font-size: 14px;
   color: #7F4F24;
-  max-width: 150px;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* ByteMD编辑器样式 */
-.bytemd {
-  height: 100% !important;
-  border-radius: 0;
-  border: none !important;
-  min-height: 400px !important;
-  max-height: none !important;
-  resize: none !important;
-  width: 100% !important;
-  overflow-x: hidden !important;
+.video-upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-/* 增强编辑器样式 */
-.bytemd-toolbar {
-  background-color: #FFFBF0;
-  border-bottom: 1px solid #D6C6AF;
-  padding: 8px;
-}
-
-.bytemd-toolbar-icon {
-  transition: all 0.2s;
-  border-radius: 4px;
-  width: 34px;
-  height: 34px;
-  margin: 0 1px;
-}
-
-.bytemd-toolbar-icon:hover {
-  background-color: rgba(140, 31, 40, 0.1);
-}
-
-.bytemd-toolbar-icon.bytemd-tippy-active {
-  color: #8C1F28;
-  background-color: rgba(140, 31, 40, 0.08);
-}
-
-.bytemd-status {
-  background-color: #FFFBF0;
+/* 按钮样式 */
+.form-actions {
+  margin-top: auto;
+  padding-top: 20px;
   border-top: 1px solid #D6C6AF;
-  padding: 6px 12px;
-  color: #6B5B45;
+  display: flex;
+  justify-content: space-between;
 }
 
-/* 预览区域样式 */
-.bytemd-preview {
+.editor-button {
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: "STKaiti", "楷体", serif;
+  font-size: 14px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.back-button {
   background-color: #FFFDF7;
-  padding: 20px !important;
-  min-height: 400px !important;
+  color: #582F0E;
+  border: 1px solid #D6C6AF;
 }
 
-/* 编辑与预览区域高度相同且固定 */
-.bytemd-split .bytemd-editor, 
-.bytemd-split .bytemd-preview {
-  height: 400px !important;
-  min-height: 400px !important;
-  max-height: 400px !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important; /* 禁止水平滚动 */
-  width: 50% !important;
+.back-button:hover {
+  border-color: #8C1F28;
+  background-color: #FFF7E9;
 }
 
-/* 增强编辑区域样式 */
-.CodeMirror {
-  font-family: "SimSun", "宋体", serif !important;
-  font-size: 16px !important;
-  line-height: 1.6 !important;
-  padding: 0 10px !important;
-  height: auto !important;
-  min-height: 400px !important;
-  word-wrap: break-word !important;
-  white-space: pre-wrap !important;
-  overflow-x: hidden !important;
-  width: 100% !important;
+.publish-button {
+  background-color: #8C1F28;
+  color: #FFFDF7;
+  border: 1px solid #8C1F28;
+  font-weight: bold;
 }
 
-.CodeMirror-scroll {
-  overflow-x: hidden !important; /* 防止水平溢出 */
-}
-
-.CodeMirror-lines {
-  padding: 30px 0 !important;
-}
-
-/* 响应式样式 */
-@media screen and (max-width: 768px) {
-  .editor-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 10px;
-  }
-  
-  .editor-header-left, 
-  .editor-header-right {
-    width: 100%;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-  
-  .editor-title-input {
-    font-size: 16px;
-    padding: 8px 10px;
-    order: 2;
-  }
-  
-  .back-button {
-    order: 1;
-  }
-  
-  .publish-button {
-    flex-shrink: 0;
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .project-info-row {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .image-uploader, .video-uploader {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .selected-filename {
-    max-width: 100%;
-  }
+.publish-button:hover {
+  background-color: #A52A2A;
+  border-color: #A52A2A;
 }
 
 /* 添加上传进度条样式 */
@@ -954,24 +806,106 @@ const fixPreviewImages = () => {
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
 }
 
-.video-upload-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* ByteMD编辑器样式 */
+.bytemd {
+  height: 100% !important;
+  border-radius: 0;
+  border: none !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  resize: none !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
 }
 
-.current-video {
-  margin-bottom: 10px;
-  width: 160px;
-  height: 90px;
-  border: 1px solid #D6C6AF;
+/* 增强编辑器样式 */
+.bytemd-toolbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #D6C6AF;
+  padding: 8px;
+}
+
+.bytemd-toolbar-icon {
+  transition: all 0.2s;
   border-radius: 4px;
-  overflow: hidden;
+  width: 34px;
+  height: 34px;
+  margin: 0 1px;
 }
 
-.preview-image, .preview-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.bytemd-toolbar-icon:hover {
+  background-color: rgba(140, 31, 40, 0.1);
+}
+
+.bytemd-toolbar-icon.bytemd-tippy-active {
+  color: #8C1F28;
+  background-color: rgba(140, 31, 40, 0.08);
+}
+
+.bytemd-status {
+  background-color: #ffffff;
+  border-top: 1px solid #D6C6AF;
+  padding: 6px 12px;
+  color: #6B5B45;
+}
+
+/* 预览区域样式 */
+.bytemd-preview {
+  background-color: #ffffff;
+  padding: 20px !important;
+  min-height: 100% !important;
+}
+
+/* 编辑与预览区域高度相同且占满容器 */
+.bytemd-split .bytemd-editor, 
+.bytemd-split .bytemd-preview {
+  height: 100% !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important; /* 禁止水平滚动 */
+  width: 50% !important;
+}
+
+/* 增强编辑区域样式 */
+.CodeMirror {
+  font-family: "SimSun", "宋体", serif !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  padding: 0 10px !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  word-wrap: break-word !important;
+  white-space: pre-wrap !important;
+  overflow-x: hidden !important;
+  width: 100% !important;
+  background-color: #ffffff !important;
+}
+
+.CodeMirror-scroll {
+  overflow-x: hidden !important; /* 防止水平溢出 */
+}
+
+.CodeMirror-lines {
+  padding: 30px 0 !important;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 768px) {
+  .editor-container {
+    flex-direction: column;
+  }
+  
+  .editor-left-section, 
+  .editor-right-section {
+    flex: none;
+    width: 100%;
+    max-height: 50%;
+  }
+  
+  .editor-left-section {
+    border-right: none;
+    border-bottom: 1px solid #D6C6AF;
+  }
 }
 </style> 
