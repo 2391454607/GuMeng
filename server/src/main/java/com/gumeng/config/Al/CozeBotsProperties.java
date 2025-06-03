@@ -1,4 +1,4 @@
-package com.gumeng.config.coze;
+package com.gumeng.config.Al;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
