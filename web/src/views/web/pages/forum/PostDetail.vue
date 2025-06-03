@@ -102,11 +102,11 @@ const totalCommentCount = computed(() => {
 
 // 是否可以删除帖子
 const canDelete = computed(() => {
-  console.log('删除帖子权限检查:');
-  console.log('- 是否管理员:', userStore.isAdmin);
-  console.log('- 当前用户ID:', userStore.userInfo?.id);
-  console.log('- 帖子用户ID字段:', post.value.userId);
-  console.log('- 帖子作者ID:', post.value.userId);
+  // console.log('删除帖子权限检查:');
+  // console.log('- 是否管理员:', userStore.isAdmin);
+  // console.log('- 当前用户ID:', userStore.userInfo?.id);
+  // console.log('- 帖子用户ID字段:', post.value.userId);
+  // console.log('- 帖子作者ID:', post.value.userId);
   
   return userStore.isAdmin || (post.value.userId === userStore.userInfo?.id);
 });
@@ -130,9 +130,9 @@ const fetchPostDetail = async () => {
   
   const attemptFetch = async () => {
     try {
-      console.log(`获取帖子详情: ${postId.value}, 尝试次数: ${retryCount + 1}/${maxRetries + 1}`);
+      // console.log(`获取帖子详情: ${postId.value}, 尝试次数: ${retryCount + 1}/${maxRetries + 1}`);
       const res = await getPostDetailAPI(postId.value);
-      console.log('帖子详情响应:', res);
+      // console.log('帖子详情响应:', res);
       
       if (res.code === 200) {
         post.value = res.data;
@@ -164,7 +164,7 @@ const fetchPostDetail = async () => {
         // 获取失败，判断是否重试
         if (retryCount < maxRetries) {
           retryCount++;
-          console.log(`获取帖子详情失败，将在1秒后进行第${retryCount + 1}次尝试`);
+          // console.log(`获取帖子详情失败，将在1秒后进行第${retryCount + 1}次尝试`);
           setTimeout(attemptFetch, 1000);
         } else {
           // 达到最大重试次数，显示错误
@@ -179,7 +179,7 @@ const fetchPostDetail = async () => {
       // 发生错误，判断是否重试
       if (retryCount < maxRetries) {
         retryCount++;
-        console.log(`获取帖子详情出错，将在1秒后进行第${retryCount + 1}次尝试`);
+        // console.log(`获取帖子详情出错，将在1秒后进行第${retryCount + 1}次尝试`);
         setTimeout(attemptFetch, 1000);
       } else {
         // 达到最大重试次数，显示错误
@@ -205,13 +205,13 @@ const fixPostImages = () => {
     
     // 检查是否存在图片数组
     if (!post.value.images || post.value.images.length === 0) {
-      console.log('帖子没有图片数据');
+      // console.log('帖子没有图片数据');
       imagesProcessed.value = true;
       hideOriginalImages.value = false;
       return;
     }
     
-    console.log('帖子图片数据:', post.value.images);
+    // console.log('帖子图片数据:', post.value.images);
     
     // 找到Markdown内容区域
     const contentElement = document.querySelector('.content-markdown');
@@ -233,11 +233,11 @@ const fixPostImages = () => {
     
     // 先检查是否已有处理过的图片元素，避免重复插入
     const existingImages = markdownBody.querySelectorAll('img[data-processed="true"]');
-    console.log('已存在处理过的图片元素数量:', existingImages.length);
+    // console.log('已存在处理过的图片元素数量:', existingImages.length);
     
     // 已有图片，检查是否足够
     if (existingImages.length > 0 && existingImages.length >= post.value.images.length) {
-      console.log('已存在足够图片，跳过处理');
+      // console.log('已存在足够图片，跳过处理');
       imagesProcessed.value = true;
       hideOriginalImages.value = false;
       return;
@@ -327,7 +327,7 @@ const fixPostImages = () => {
     
     // 按照在文档中的位置排序图片引用
     imageRefs.sort((a, b) => a.position - b.position);
-    console.log('找到图片引用:', imageRefs);
+    // console.log('找到图片引用:', imageRefs);
     
     // 跟踪已插入的图片
     const insertedImages = new Set();
@@ -346,7 +346,7 @@ const fixPostImages = () => {
     
     // 找到所有文本节点
     const allTextNodes = findAllTextNodes(markdownBody);
-    console.log('找到文本节点数:', allTextNodes.length);
+    // console.log('找到文本节点数:', allTextNodes.length);
     
     // 创建图片元素的辅助函数
     function createImageElement(imageUrl, index) {
@@ -423,11 +423,11 @@ const fixPostImages = () => {
       for (const textNode of allTextNodes) {
         const text = textNode.nodeValue || '';
         if (text.includes(imageRef.ref)) {
-          console.log(`在文本节点中找到引用 "${imageRef.ref}": ${text.substring(0, 50)}...`);
+          // console.log(`在文本节点中找到引用 "${imageRef.ref}": ${text.substring(0, 50)}...`);
           
           if (replaceTextWithImage(textNode, imageRef, imageContainer)) {
             insertedImages.add(imageRef.index);
-            console.log(`已将图片${imageRef.index + 1}替换文本引用"${imageRef.ref}"`);
+            // console.log(`已将图片${imageRef.index + 1}替换文本引用"${imageRef.ref}"`);
             imageInserted = true;
             break;
           }
@@ -448,7 +448,7 @@ const fixPostImages = () => {
               div.appendChild(imageContainer.cloneNode(true));
               textNode.parentNode.insertBefore(div, textNode.nextSibling);
               insertedImages.add(imageRef.index);
-              console.log(`已将图片${imageRef.index + 1}插入到上下文匹配的节点后`);
+              // console.log(`已将图片${imageRef.index + 1}插入到上下文匹配的节点后`);
               imageInserted = true;
               break;
             }
@@ -480,7 +480,7 @@ const fixPostImages = () => {
           if (score > 15) { // 设置一个合理的阈值
             para.appendChild(imageContainer.cloneNode(true));
             insertedImages.add(imageRef.index);
-            console.log(`已将图片${imageRef.index + 1}插入到段落相似度匹配的节点后(得分:${score})`);
+            // console.log(`已将图片${imageRef.index + 1}插入到段落相似度匹配的节点后(得分:${score})`);
             imageInserted = true;
             break;
           }
@@ -498,7 +498,7 @@ const fixPostImages = () => {
           if (text.includes(`图片${refNumber}`) || (chineseNumber && text.includes(`图片${chineseNumber}`))) {
             element.appendChild(imageContainer.cloneNode(true));
             insertedImages.add(imageRef.index);
-            console.log(`已将图片${imageRef.index + 1}插入到包含数字引用的元素中`);
+            // console.log(`已将图片${imageRef.index + 1}插入到包含数字引用的元素中`);
             imageInserted = true;
             break;
           }
@@ -508,11 +508,11 @@ const fixPostImages = () => {
     
     // 处理剩余未插入的图片
     if (insertedImages.size < post.value.images.length) {
-      console.log(`还有 ${post.value.images.length - insertedImages.size} 张图片未插入，将它们分散插入`);
+      // console.log(`还有 ${post.value.images.length - insertedImages.size} 张图片未插入，将它们分散插入`);
       
       // 查找所有段落
       const paragraphs = Array.from(markdownBody.querySelectorAll('p'));
-      console.log('找到段落数:', paragraphs.length);
+      // console.log('找到段落数:', paragraphs.length);
       
       if (paragraphs.length >= 2) {
         // 有足够的段落，使用段落来插入剩余图片
@@ -530,14 +530,14 @@ const fixPostImages = () => {
           
           // 在目标段落内部插入图片
           targetParagraph.appendChild(imageContainer);
-          console.log(`已将剩余图片${imgIndex + 1}插入到段落内部`);
+          // console.log(`已将剩余图片${imgIndex + 1}插入到段落内部`);
           insertedImages.add(imgIndex);
         });
       } else {
         // 没有找到足够的段落，使用其它元素
         const allBlocks = Array.from(markdownBody.querySelectorAll('div, p, h1, h2, h3, h4, h5, h6, blockquote, ul, ol'));
         if (allBlocks.length > 0) {
-          console.log('使用备选块元素:', allBlocks.length);
+          // console.log('使用备选块元素:', allBlocks.length);
           
           // 计算剩余图片的间隔
           const remainingImages = [...post.value.images.keys()].filter(i => !insertedImages.has(i));
@@ -555,7 +555,7 @@ const fixPostImages = () => {
             // 在目标元素后插入
             if (targetBlock.parentNode) {
               targetBlock.parentNode.insertBefore(imageContainer, targetBlock.nextSibling);
-              console.log(`已将剩余图片${imgIndex + 1}插入到元素后`);
+              // console.log(`已将剩余图片${imgIndex + 1}插入到元素后`);
               insertedImages.add(imgIndex);
             }
           });
@@ -565,7 +565,7 @@ const fixPostImages = () => {
     
     imagesProcessed.value = true;
     hideOriginalImages.value = false;
-    console.log('图片处理完成');
+    // console.log('图片处理完成');
     
   } catch (error) {
     console.error('修复图片位置时出错:', error);
@@ -577,7 +577,7 @@ const fixPostImages = () => {
 // 获取评论列表
 const fetchComments = async (loadMore = false) => {
   try {
-    console.log('获取评论列表, 帖子ID:', postId.value);
+    // console.log('获取评论列表, 帖子ID:', postId.value);
     const currentPage = loadMore ? page.value : 1;
     
     const res = await getCommentsAPI({
@@ -586,7 +586,7 @@ const fetchComments = async (loadMore = false) => {
       pageSize: pageSize.value
     });
     
-    console.log('评论列表响应:', res);
+    // console.log('评论列表响应:', res);
     
     if (res.code === 200) {
       // 返回的数据是数组
@@ -597,7 +597,7 @@ const fetchComments = async (loadMore = false) => {
         newComments = res.data.records;
       }
       
-      console.log('处理后的评论数据:', newComments);
+      // console.log('处理后的评论数据:', newComments);
       
       if (loadMore) {
         comments.value = [...comments.value, ...newComments];
@@ -716,7 +716,7 @@ const submitComment = async () => {
   const attemptCheck = async () => {
     try {
       const checkResult = await checkSensitiveWordsAPI({ text: commentContent.value.trim() });
-      console.log('内容审核结果:', checkResult);
+      // console.log('内容审核结果:', checkResult);
       
       // 处理多种审核失败情况
       if (checkResult.code === 200) {
@@ -967,28 +967,19 @@ const canDeleteComment = (comment) => {
   const currentUserId = String(userStore.userInfo.id);
   const commentUserId = String(comment.userId);
   
-  console.log('删除评论权限检查:');
-  console.log('- 当前用户ID:', currentUserId, '类型:', typeof userStore.userInfo.id);
-  console.log('- 评论用户ID:', commentUserId, '类型:', typeof comment.userId);
-  console.log('- 是否相等:', currentUserId === commentUserId);
-  
   return currentUserId === commentUserId;
 };
 
 // 显示删除评论确认框
 const showDeleteCommentConfirm = (comment) => {
-  console.log('准备删除评论:', comment);
-  console.log('评论ID:', comment.id);
-  console.log('评论用户ID:', comment.userId);
-  console.log('当前用户ID:', userStore.userInfo?.id);
   
   const canDelete = canDeleteComment(comment);
-  console.log('是否可以删除:', canDelete);
+  // console.log('是否可以删除:', canDelete);
   
   if (canDelete) {
     commentToDelete.value = comment;
     deleteCommentModalVisible.value = true;
-    console.log('显示删除确认框，状态:', deleteCommentModalVisible.value);
+    // console.log('显示删除确认框，状态:', deleteCommentModalVisible.value);
   } else {
     Message.warning('您没有权限删除此评论');
   }
@@ -996,16 +987,16 @@ const showDeleteCommentConfirm = (comment) => {
 
 // 删除评论
 const confirmDeleteComment = async () => {
-  console.log('开始执行删除操作');
+  // console.log('开始执行删除操作');
   if (!commentToDelete.value) {
     console.log('没有要删除的评论');
     return;
   }
   
   try {
-    console.log('删除评论ID:', commentToDelete.value.id);
+    // console.log('删除评论ID:', commentToDelete.value.id);
     const res = await deleteCommentAPI(commentToDelete.value.id);
-    console.log('删除评论响应:', res);
+    // console.log('删除评论响应:', res);
     
     if (res.code === 200) {
       Message.success('删除成功');
