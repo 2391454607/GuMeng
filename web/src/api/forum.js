@@ -10,7 +10,8 @@ export function getPostListAPI(params) {
     keyword: params.keyword || ''
   };
   
-  // console.log('API调用参数:', convertedParams);    return http.get('/forum/getPosts', convertedParams);
+  // console.log('API调用参数:', convertedParams);
+  return http.get('/forum/getPosts', convertedParams);
 }
 
 // 获取帖子详情
