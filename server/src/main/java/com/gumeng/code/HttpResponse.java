@@ -1,5 +1,6 @@
 package com.gumeng.code;
 
+import com.gumeng.enums.AppCode;
 import lombok.Data;
 
 /**
@@ -49,6 +50,25 @@ public class HttpResponse {
     public static HttpResponse error(String msg){
         HttpResponse r = error();
         r.setMsg(msg);
+        return r;
+    }
+
+    /**
+     * 请求成功
+     */
+    public static HttpResponse success(AppCode appCode) {
+        HttpResponse r = new HttpResponse();
+        r.setCode(appCode.getCode());
+        r.setMsg(appCode.getMsg());
+        return r;
+    }
+
+    /**
+     * 请求成功
+     */
+    public static HttpResponse success(AppCode appCode,Object data) {
+        HttpResponse r = success(appCode);
+        r.setData(data);
         return r;
     }
 }

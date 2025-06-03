@@ -55,4 +55,19 @@ public class QiniuUtils {
             return false;
         }
     }
+
+
+    /**
+     * 上传图片到七牛云 model/image/ 目录
+     */
+    public String uploadModelImage(byte[] fileBytes, String fileName) {
+        return upload(fileBytes, "model/image/" + fileName);
+    }
+
+    /**
+     * 上传模型文件到七牛云 model/model/ 目录
+     */
+    public String uploadModelFile(byte[] fileBytes, String fileName) {
+        return upload(fileBytes, "model/model/" + fileName);
+    }
 }
