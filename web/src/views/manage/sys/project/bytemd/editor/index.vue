@@ -615,7 +615,7 @@ const fixPreviewImages = () => {
 .form-title {
   font-size: 18px;
   font-weight: bold;
-  color: #8C1F28;
+  color: #000000;
   font-family: "STKaiti", "楷体", serif;
 }
 
@@ -626,7 +626,7 @@ const fixPreviewImages = () => {
 .form-label {
   display: block;
   font-size: 14px;
-  color: #582F0E;
+  color: #000000;
   margin-bottom: 8px;
   font-weight: 500;
   font-family: "STKaiti", "楷体", serif;
@@ -635,10 +635,10 @@ const fixPreviewImages = () => {
 .form-input, .form-select {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid #D6C6AF;
+  border: 1px solid #165dff;
   border-radius: 4px;
-  background-color: #FFFDF7;
-  color: #582F0E;
+  background-color: #FFFFFF;
+  color: #000000;
   font-family: "STKaiti", "楷体", serif;
   font-size: 14px;
 }
@@ -654,8 +654,7 @@ const fixPreviewImages = () => {
 
 .form-input:focus, .form-select:focus {
   outline: none;
-  border-color: #8C1F28;
-  box-shadow: 0 0 0 2px rgba(140, 31, 40, 0.1);
+  border-color: #165dff;
 }
 
 /* 图片上传相关样式 */
@@ -695,9 +694,9 @@ const fixPreviewImages = () => {
 
 .file-input-label {
   padding: 8px 12px;
-  background-color: #FFFDF7;
-  color: #582F0E;
-  border: 1px solid #D6C6AF;
+  background-color: #FFFFFF;
+  color: #165dff;
+  border: 1px solid #165dff;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
@@ -709,12 +708,12 @@ const fixPreviewImages = () => {
 }
 
 .file-input-label:hover {
-  background-color: #FFF7E9;
+  background-color: #FFFFFF;
   border-color: #8C1F28;
 }
 
 .file-input-label.disabled {
-  background-color: #e9e9e9;
+  background-color: #FFFFFF;
   color: #999;
   cursor: not-allowed;
   border-color: #ccc;
@@ -722,7 +721,7 @@ const fixPreviewImages = () => {
 
 .selected-filename {
   font-size: 14px;
-  color: #7F4F24;
+  color: #000000;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -755,26 +754,26 @@ const fixPreviewImages = () => {
 }
 
 .back-button {
-  background-color: #FFFDF7;
-  color: #582F0E;
-  border: 1px solid #D6C6AF;
+  background-color: #ffffff;
+  color: #165dff;
+  border: 1px solid #165dff;
 }
 
 .back-button:hover {
-  border-color: #8C1F28;
-  background-color: #FFF7E9;
+  border-color: #165dff;
+  background-color: #FFFFFF;
 }
 
 .publish-button {
-  background-color: #8C1F28;
+  background-color: #165dff;
   color: #FFFDF7;
   border: 1px solid #8C1F28;
   font-weight: bold;
 }
 
 .publish-button:hover {
-  background-color: #A52A2A;
-  border-color: #A52A2A;
+  background-color: #165dff;
+  border-color: #165dff;
 }
 
 /* 添加上传进度条样式 */
