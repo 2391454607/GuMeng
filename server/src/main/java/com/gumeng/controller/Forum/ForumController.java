@@ -195,7 +195,6 @@ public class ForumController {
     /**
      * 获取话题列表
      */
-    @LogOperation(module = "论坛", operation = "获取话题列表")
     @GetMapping("/getTopics")
     public HttpResponse getTopics() {
         return HttpResponse.success(forumTopicService.getTopicList());

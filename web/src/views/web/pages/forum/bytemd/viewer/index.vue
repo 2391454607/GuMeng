@@ -46,7 +46,7 @@ const fixImages = () => {
   
   // 查找所有图片并应用样式
   const images = markdownBody.value.querySelectorAll('img');
-  console.log('Viewer中找到图片数量:', images.length);
+  // console.log('Viewer中找到图片数量:', images.length);
   
   images.forEach((img, index) => {
     // 强制应用样式，图片可见

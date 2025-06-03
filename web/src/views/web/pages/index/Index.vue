@@ -3,7 +3,7 @@ import {onMounted, onUnmounted, ref} from 'vue'
 import {getCarouselAPI} from "@/api/web/Web.js";
 import Footer from "@/views/web/layout/Footer.vue";
 import Category from "@/views/web/pages/index/Category.vue"
-
+import BaikeAssistant from "@/components/BaikeAssistant.vue";
 
 const currentSection = ref(0);
 let isScrolling = false;
@@ -114,6 +114,7 @@ onUnmounted(() => {
       <section class="section">
         <Footer class="footer"></Footer>
       </section>
+      <BaikeAssistant />
       
     </div>
   </a-layout-content>

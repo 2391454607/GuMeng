@@ -67,18 +67,29 @@ const testBackendConnection = async () => {
   }
 };
 
-// 处理搜索
-const handleSearch = () => {
-  pageNum.value = 1;
-  fetchPosts();
+// 添加防抖函数
+const debounce = (fn, delay = 300) => {
+  let timer = null;
+  return function(...args) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn.apply(this, args);
+    }, delay);
+  };
 };
 
+// 处理搜索
+const handleSearch = debounce(() => {
+  pageNum.value = 1;
+  fetchPosts();
+}, 300);
+
 // 切换话题
-const switchTopic = (topicId) => {
+const switchTopic = debounce((topicId) => {
   activeTab.value = topicId;
   pageNum.value = 1;
   fetchPosts();
-};
+}, 200);
 
 // 获取帖子列表
 const fetchPosts = async () => {
@@ -91,12 +102,9 @@ const fetchPosts = async () => {
       keyword: searchText.value,
     };
     
-    // 添加话题筛选
     if (activeTab.value !== 'all') {
-      // 查找选中话题的名称
       const selectedTopic = topics.value.find(t => t.id === activeTab.value);
       if (selectedTopic) {
-        // 使用话题名称传递而非ID
         params.topic = selectedTopic.name;
       } else {
         params.topic = activeTab.value;
@@ -107,53 +115,40 @@ const fetchPosts = async () => {
     if (res.code === 200) {
       const newPosts = res.data.records || [];
       
-      // 处理图片字段和评论数
-      newPosts.forEach(post => {
-        if (post.images && typeof post.images === 'string') {
-          post.images = post.images.split(',').filter(img => img);
-        } else {
-          post.images = [];
-        }
+      // 使用批量处理减少重排重绘
+      const processedPosts = newPosts.map(post => {
+        // 图片处理
+        const images = typeof post.images === 'string' 
+          ? post.images.split(',').filter(img => img) 
+          : [];
         
-        // 点赞数和评论数不为空
-        post.thumbsUpNum = post.thumbsUpNum || 0;
-        post.commonNum = post.commonNum || 0;
-        
-        // 确保isLiked属性有默认值，防止未定义时显示为已点赞状态
-        post.isLiked = post.isLiked === true ? true : false;
-        
-        // 用户名和头像字段
-        post.authorName = post.username || '匿名用户';
-        post.authorAvatar = post.avatar || '/avatar/default-avatar.png';
-        
-        // 创建简短预览内容（去除图片标记等）
+        // 内容处理 - 优化正则表达式
+        let previewText = '';
         if (post.content) {
-          // 预处理内容，去除任何undefined图片链接
-          let processedContent = post.content;
+          const processedContent = post.content
+            .replace(/!\[.*?\]\((undefined|.*?undefined.*?)\)/g, '') // 合并两个正则
+            .replace(/!\[.*?\]\(.*?\)/g, '[图片]')
+            .replace(/\n{3,}/g, '\n\n');
           
-          // 1. 首先移除所有包含undefined的图片标记
-          processedContent = processedContent.replace(/!\[.*?\]\(undefined\)/g, '');
-          processedContent = processedContent.replace(/!\[.*?\]\(.*?undefined.*?\)/g, '');
-          
-          // 2. 将剩余的图片标记替换为[图片]文本
-          processedContent = processedContent.replace(/!\[.*?\]\(.*?\)/g, '[图片]');
-          
-          // 3. 去除多余的空行
-          processedContent = processedContent.replace(/\n{3,}/g, '\n\n');
-          
-          // 4. 截取前150个字符作为预览
-          const previewText = processedContent.length > 150 ? 
-            processedContent.slice(0, 150) + '...' : 
-            processedContent;
-          
-          // 添加处理后的预览文本字段
-          post.previewText = previewText;
-        } else {
-          post.previewText = '';
+          previewText = processedContent.length > 150 
+            ? processedContent.slice(0, 150) + '...' 
+            : processedContent;
         }
+        
+        return {
+          ...post,
+          images,
+          thumbsUpNum: post.thumbsUpNum || 0,
+          commonNum: post.commonNum || 0,
+          isLiked: !!post.isLiked,
+          authorName: post.username || '匿名用户',
+          authorAvatar: post.avatar || '/avatar/default-avatar.png',
+          previewText,
+        };
       });
       
-      posts.value = newPosts;
+      // 一次性更新状态，减少重渲染
+      posts.value = processedPosts;
       total.value = res.data.total || 0;
     } else {
       Message.warning(res.msg || '获取帖子列表失败');
@@ -179,15 +174,14 @@ const fetchTopics = async () => {
 };
 
 // 处理分页变化
-const handlePageChange = (page) => {
+const handlePageChange = debounce((page) => {
   pageNum.value = page;
   fetchPosts();
-  // 滚动到顶部
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
   });
-};
+}, 200);
 
 // 跳转到帖子详情
 const goToDetail = (id) => {
@@ -256,13 +250,12 @@ const handleLikePost = async (post) => {
   }
 };
 
-// 监听搜索文本变化
-watch(searchText, (newVal, oldVal) => {
+// 优化搜索文本监听
+watch(searchText, debounce((newVal, oldVal) => {
   if (oldVal && !newVal) {
-    // 清空搜索时重新加载
     handleSearch();
   }
-});
+}, 500));
 
 onMounted(() => {
   fetchTopics();
@@ -347,7 +340,12 @@ onMounted(() => {
                   <!-- 帖子内容 -->
                   <div class="post-info">
                     <div class="post-author">
-                      <img :src="post.authorAvatar || '/avatar/default-avatar.png'" alt="头像" class="author-avatar" />
+                      <img 
+                        :src="post.authorAvatar || '/avatar/default-avatar.png'" 
+                        alt="头像" 
+                        class="author-avatar"
+                        loading="lazy"
+                      />
                       <span class="author-name">{{ post.authorName }}</span>
                       <span class="post-time">{{ formatDate(post.createTime) }}</span>
                     </div>
@@ -358,7 +356,13 @@ onMounted(() => {
                       <!-- 帖子图片 - 只显示第一张 -->
                       <div v-if="post.images && post.images.length > 0" class="post-images single-image">
                         <div class="post-image-wrapper">
-                          <img :src="post.images[0]" alt="帖子图片" class="post-image" />
+                          <img 
+                            :src="post.images[0]" 
+                            alt="帖子图片" 
+                            class="post-image"
+                            loading="lazy" 
+                            decoding="async"
+                          />
                         </div>
                       </div>
                       
@@ -369,6 +373,7 @@ onMounted(() => {
                           :plugins="plugins" 
                           :sanitize="false"
                           class="preview-markdown"
+                          v-once
                         />
                       </div>
                     </div>
@@ -561,6 +566,8 @@ onMounted(() => {
 /* 主体区域 */
 .forum-body {
   min-height: calc(100vh - 270px);
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 /* 帖子列表 */
@@ -607,6 +614,7 @@ onMounted(() => {
 
 .post-list {
   padding: 0;
+  contain: content;
 }
 
 .post-item {
@@ -615,6 +623,8 @@ onMounted(() => {
   cursor: pointer;
   transition: background-color 0.3s;
   position: relative;
+  contain: layout style;
+  will-change: transform;
 }
 
 .post-item:hover {
@@ -654,6 +664,7 @@ onMounted(() => {
   object-fit: cover;
   margin-right: 10px;
   border: 2px solid #E4D9C3;
+  will-change: transform;
 }
 
 .author-name {
@@ -690,6 +701,7 @@ onMounted(() => {
   flex: 1;
   max-height: 60px;
   overflow: hidden;
+  contain: content;
 }
 
 .post-content-markdown :deep(.markdown-body) {
@@ -757,6 +769,7 @@ onMounted(() => {
   margin: 0;
   flex-shrink: 0;
   width: 180px;
+  height: 120px;
 }
 
 .post-images.single-image .post-image-wrapper {
@@ -775,6 +788,7 @@ onMounted(() => {
   height: auto;
   object-fit: cover;
   border-radius: 4px;
+  will-change: transform;
 }
 
 .post-image-wrapper {
@@ -797,6 +811,7 @@ onMounted(() => {
   height: auto;
   object-fit: contain;
   transition: transform 0.3s;
+  will-change: transform;
 }
 
 .post-image-more {

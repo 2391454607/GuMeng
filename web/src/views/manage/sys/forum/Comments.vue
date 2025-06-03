@@ -96,7 +96,7 @@ const processCommentTopics = async (comments) => {
 
 // 获取评论列表
 const getCommentList = () => {
-  console.log("获取评论列表, 参数:", status);
+  // console.log("获取评论列表, 参数:", status);
   loading.value = true;
   
   // 创建参数对象，将pageNum映射为page，将pageSize映射为size
@@ -106,11 +106,11 @@ const getCommentList = () => {
     postId: status.postId,
     userId: status.userId
   };
-  console.log("API请求参数:", params);
+  // console.log("API请求参数:", params);
   
   getCommentsAPI(params).then(async res => {
     if (res.code === 200) {
-      console.log("获取评论列表结果:", res.data);
+      // console.log("获取评论列表结果:", res.data);
       let comments = res.data.records;
       // 处理评论的话题信息
       commentList.value = await processCommentTopics(comments);
@@ -140,7 +140,7 @@ const getCommentStats = () => {
 
 // 分页处理
 const handlePageChange = (pageNum) => {
-  console.log("页码变更为:", pageNum);
+  // console.log("页码变更为:", pageNum);
   status.pageNum = pageNum;
   getCommentList();
 };
@@ -164,7 +164,7 @@ const commentDetail = ref(null);
 const commentDetailVisible = ref(false);
 
 const viewCommentDetail = async (id) => {
-  console.log("查看评论详情:", id);
+  // console.log("查看评论详情:", id);
   getCommentDetailAPI(id).then(async res => {
     if (res.code === 200) {
       let detail = res.data;
