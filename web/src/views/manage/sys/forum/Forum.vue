@@ -53,7 +53,7 @@ const getPostList = () => {
     keyword: status.keyword,
     topic: status.topic
   };
-  console.log("获取帖子列表参数:", params);
+  // console.log("获取帖子列表参数:", params);
   
   getForumPostsAPI(params).then(res => {
     if (res.code === 200) {
@@ -95,7 +95,7 @@ const postDetail = ref(null);
 const postDetailVisible = ref(false);
 
 const viewPostDetail = (id) => {
-  console.log("查看帖子详情:", id);
+  // console.log("查看帖子详情:", id);
   getPostDetailAPI(id).then(res => {
     if (res.code === 200) {
       postDetail.value = res.data;
