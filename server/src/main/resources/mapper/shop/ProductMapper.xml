@@ -22,12 +22,36 @@
         stock,is_available,created_at,updated_at
     </sql>
 
+    <update id="updateProduct">
+        UPDATE product
+        SET
+            name = #{name},
+            image_url = #{imageUrl},
+            price_money = #{priceMoney},
+            mixed_price_money = #{mixedPriceMoney},
+            mixed_price_points = #{mixedPricePoints},
+            stock = #{stock},
+            is_available = #{isAvailable},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+
     <!--  后台管理  -->
     <select id="selectProductPage" resultType="com.gumeng.domain.shop.Product">
         SELECT id, name, image_url AS imageUrl, price_money AS priceMoney, mixed_price_money AS mixedPriceMoney,
                mixed_price_points AS mixedPricePoints, stock, is_available AS isAvailable, created_at AS createdAt, updated_at AS updatedAt
         FROM product
     </select>
+
+    <!--  添加商品  -->
+    <insert id="addProduct">
+        INSERT INTO product (
+            name, image_url, price_money, mixed_price_money, mixed_price_points, stock, is_available, created_at, updated_at
+        ) VALUES (
+                     #{name}, #{imageUrl}, #{priceMoney}, #{mixedPriceMoney}, #{mixedPricePoints}, #{stock}, #{isAvailable}, NOW(), NOW()
+                 )
+    </insert>
 
     <!--  文创商城  -->
     <select id="selectGoodsVOPage" resultType="com.gumeng.entity.vo.shop.GoodsVO">
