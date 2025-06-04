@@ -114,7 +114,7 @@ public class ToModelController {
     }
 
     //模型状态查询并保存
-    @GetMapping("/task")
+    @GetMapping("/save")
     public HttpResponse taskText(@RequestParam("id") String taskId) {
         return aiModelService.taskText(taskId);
     }
