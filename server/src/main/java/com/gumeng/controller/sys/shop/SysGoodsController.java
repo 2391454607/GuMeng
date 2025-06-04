@@ -22,7 +22,7 @@ public class SysGoodsController {
     private ProductService productService;
 
     //获取商品列表
-    @GetMapping("/getList")
+    @GetMapping("/getProductList")
     public HttpResponse getList(@RequestParam(defaultValue = "1") Integer current,
                                 @RequestParam(defaultValue = "10") Integer size) {
         Page<Product> page = productService.pageProduct(new Page<>(current, size));
@@ -44,7 +44,7 @@ public class SysGoodsController {
     }
 
     //删除商品
-    @PostMapping("/delete")
+    @PostMapping("/deleteProduct")
     public HttpResponse delete(@RequestParam Long id) {
         boolean result = productService.removeById(id);
         return result ? HttpResponse.success("删除成功") : HttpResponse.error("删除失败");
