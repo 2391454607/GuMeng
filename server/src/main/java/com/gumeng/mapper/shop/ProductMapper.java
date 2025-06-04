@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.domain.shop.Product;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.gumeng.entity.DTO.shop.AddProductDTO;
+import com.gumeng.entity.DTO.shop.UpdateProductDTO;
 import com.gumeng.entity.vo.shop.GoodsVO;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -19,6 +21,10 @@ public interface ProductMapper extends BaseMapper<Product> {
     Page<GoodsVO> selectGoodsVOPage(Page<?> page);
 
     Page<Product> selectProductPage(Page<Product> page);
+
+    boolean addProduct(AddProductDTO addProductDTO);
+
+    boolean updateProduct(UpdateProductDTO updateProductDTO);
 }
 
 
