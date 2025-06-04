@@ -21,4 +21,22 @@
         id,name,image_url,price_money,mixed_price_money,mixed_price_points,
         stock,is_available,created_at,updated_at
     </sql>
+
+    <!--  后台管理  -->
+    <select id="selectProductPage" resultType="com.gumeng.domain.shop.Product">
+        SELECT id, name, image_url AS imageUrl, price_money AS priceMoney, mixed_price_money AS mixedPriceMoney,
+               mixed_price_points AS mixedPricePoints, stock, is_available AS isAvailable, created_at AS createdAt, updated_at AS updatedAt
+        FROM product
+    </select>
+
+    <!--  文创商城  -->
+    <select id="selectGoodsVOPage" resultType="com.gumeng.entity.vo.shop.GoodsVO">
+        SELECT id, name, image_url AS imageUrl, price_money AS priceMoney, mixed_price_money AS mixedPriceMoney,
+        mixed_price_points AS mixedPricePoints, stock, is_available AS isAvailable, created_at AS createdAt, updated_at AS updatedAt
+        FROM product
+        <where>
+            is_available = 0
+        </where>
+    </select>
+
 </mapper>

@@ -1,7 +1,11 @@
 package com.gumeng.mapper.shop;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.gumeng.domain.shop.Product;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.gumeng.entity.vo.shop.GoodsVO;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
 * @author Chine
@@ -9,8 +13,12 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2025-04-26 23:23:52
 * @Entity com.gumeng.domain.shop.Product
 */
+@Mapper
 public interface ProductMapper extends BaseMapper<Product> {
 
+    Page<GoodsVO> selectGoodsVOPage(Page<?> page);
+
+    Page<Product> selectProductPage(Page<Product> page);
 }
 
 
