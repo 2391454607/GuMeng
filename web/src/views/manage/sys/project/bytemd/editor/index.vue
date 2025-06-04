@@ -476,7 +476,7 @@ const fixPreviewImages = () => {
         <div class="form-title">项目信息</div>
       </div>
       
-      <div class="form-item">
+      <div class="form-item form-item-fixed">
         <label class="form-label">项目名称</label>
         <input 
           v-model="localName" 
@@ -486,7 +486,7 @@ const fixPreviewImages = () => {
         >
       </div>
       
-      <div class="form-item">
+      <div class="form-item form-item-fixed">
         <label class="form-label">保护级别</label>
         <select v-model="localLevelId" class="form-select">
           <option value="" disabled>请选择保护级别</option>
@@ -496,7 +496,7 @@ const fixPreviewImages = () => {
         </select>
       </div>
       
-      <div class="form-item">
+      <div class="form-item form-item-fixed">
         <label class="form-label">项目类别</label>
         <select v-model="localCategoryId" class="form-select">
           <option value="" disabled>请选择项目类别</option>
@@ -565,7 +565,7 @@ const fixPreviewImages = () => {
           返回
         </button>
         <button @click="handleSave" class="editor-button publish-button">
-          保存项目
+          发布项目
         </button>
       </div>
     </div>
@@ -601,60 +601,65 @@ const fixPreviewImages = () => {
   flex: 1;
   height: 100%;
   overflow-y: auto;
-  padding: 16px;
+  padding: 4px;
   display: flex;
   flex-direction: column;
+  background-color: #fafbfc;
+  position: relative;
+  padding-bottom: 0px; /* 为底部按钮留出空间 */
 }
 
 .form-header {
-  margin-bottom: 20px;
-  border-bottom: 1px solid #D6C6AF;
-  padding-bottom: 10px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #eaeaea;
+  padding-bottom: 8px;
 }
 
 .form-title {
-  font-size: 18px;
-  font-weight: bold;
-  color: #000000;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
   font-family: "STKaiti", "楷体", serif;
 }
 
 .form-item {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .form-label {
   display: block;
-  font-size: 14px;
-  color: #000000;
-  margin-bottom: 8px;
-  font-weight: 500;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 4px;
+  font-weight: 400;
   font-family: "STKaiti", "楷体", serif;
 }
 
 .form-input, .form-select {
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid #165dff;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
   border-radius: 4px;
-  background-color: #FFFFFF;
-  color: #000000;
+  background-color: #fff;
+  color: #333;
   font-family: "STKaiti", "楷体", serif;
-  font-size: 14px;
+  font-size: 13px;
+  transition: all 0.2s ease;
 }
 
 .form-select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23582F0E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23777' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 8px center;
-  background-size: 16px;
-  padding-right: 30px;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 28px;
 }
 
 .form-input:focus, .form-select:focus {
   outline: none;
   border-color: #165dff;
+  box-shadow: 0 0 0 2px rgba(22, 93, 255, 0.1);
 }
 
 /* 图片上传相关样式 */
@@ -668,10 +673,10 @@ const fixPreviewImages = () => {
   width: 100%;
   max-width: 160px;
   height: 90px;
-  border: 1px solid #D6C6AF;
+  border: 1px solid #eaeaea;
   border-radius: 4px;
   overflow: hidden;
-  background-color: #f0f0f0;
+  background-color: #f7f7f7;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -693,14 +698,14 @@ const fixPreviewImages = () => {
 }
 
 .file-input-label {
-  padding: 8px 12px;
-  background-color: #FFFFFF;
+  padding: 7px 12px;
+  background-color: #fff;
   color: #165dff;
   border: 1px solid #165dff;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  transition: all 0.3s;
+  transition: all 0.2s;
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
@@ -708,24 +713,24 @@ const fixPreviewImages = () => {
 }
 
 .file-input-label:hover {
-  background-color: #FFFFFF;
-  border-color: #8C1F28;
+  background-color: rgba(22, 93, 255, 0.05);
 }
 
 .file-input-label.disabled {
-  background-color: #FFFFFF;
-  color: #999;
+  background-color: #f7f7f7;
+  color: #aaa;
   cursor: not-allowed;
-  border-color: #ccc;
+  border-color: #ddd;
 }
 
 .selected-filename {
-  font-size: 14px;
-  color: #000000;
+  font-size: 13px;
+  color: #666;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-top: 4px;
 }
 
 .video-upload-controls {
@@ -736,11 +741,17 @@ const fixPreviewImages = () => {
 
 /* 按钮样式 */
 .form-actions {
-  margin-top: auto;
-  padding-top: 20px;
-  border-top: 1px solid #D6C6AF;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 10px 12px;
+  border-top: 1px solid #eaeaea;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 12px;
+  background-color: #fafbfc;
+  z-index: 10; /* 确保按钮在最上层 */
 }
 
 .editor-button {
@@ -749,39 +760,38 @@ const fixPreviewImages = () => {
   cursor: pointer;
   font-family: "STKaiti", "楷体", serif;
   font-size: 14px;
-  transition: all 0.3s;
+  transition: all 0.2s;
   white-space: nowrap;
 }
 
 .back-button {
-  background-color: #ffffff;
-  color: #165dff;
-  border: 1px solid #165dff;
+  background-color: #fff;
+  color: #666;
+  border: 1px solid #ddd;
 }
 
 .back-button:hover {
-  border-color: #165dff;
-  background-color: #FFFFFF;
+  border-color: #bbb;
+  color: #333;
+  background-color: #f7f7f7;
 }
 
 .publish-button {
   background-color: #165dff;
-  color: #FFFDF7;
-  border: 1px solid #8C1F28;
-  font-weight: bold;
+  color: #fff;
+  border: 1px solid #165dff;
 }
 
 .publish-button:hover {
-  background-color: #165dff;
-  border-color: #165dff;
+  background-color: #0e4cbf;
 }
 
 /* 添加上传进度条样式 */
 .upload-progress-container {
   width: 100%;
-  height: 16px;
-  background-color: #f0f0f0;
-  border-radius: 8px;
+  height: 6px;
+  background-color: #eaeaea;
+  border-radius: 3px;
   overflow: hidden;
   margin-top: 10px;
   position: relative;
@@ -789,8 +799,8 @@ const fixPreviewImages = () => {
 
 .upload-progress-bar {
   height: 100%;
-  background-color: #8C1F28;
-  border-radius: 8px;
+  background-color: #165dff;
+  border-radius: 3px;
   transition: width 0.3s;
 }
 
@@ -800,9 +810,9 @@ const fixPreviewImages = () => {
   left: 50%;
   transform: translate(-50%, -50%);
   color: #fff;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
 }
 
 /* ByteMD编辑器样式 */
@@ -819,17 +829,34 @@ const fixPreviewImages = () => {
 
 /* 增强编辑器样式 */
 .bytemd-toolbar {
-  background-color: #ffffff;
-  border-bottom: 1px solid #D6C6AF;
-  padding: 8px;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #eaeaea;
+  padding: 4px 6px;
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  justify-content: flex-start;
+  gap: 1px;
+}
+
+.bytemd-toolbar::-webkit-scrollbar {
+  height: 3px;
+}
+
+.bytemd-toolbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
 }
 
 .bytemd-toolbar-icon {
   transition: all 0.2s;
-  border-radius: 4px;
-  width: 34px;
-  height: 34px;
-  margin: 0 1px;
+  border-radius: 3px;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bytemd-toolbar-icon:hover {
@@ -906,5 +933,30 @@ const fixPreviewImages = () => {
     border-right: none;
     border-bottom: 1px solid #D6C6AF;
   }
+}
+
+/* 表单项特定样式 */
+.form-item-fixed {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-item-fixed .form-input,
+.form-item-fixed .form-select {
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 确保输入框文字不会溢出 */
+input.form-input, select.form-select {
+  width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style> 
