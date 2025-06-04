@@ -1231,7 +1231,7 @@ const handleTopicChange = (value) => {
   <div class="create-post-page">
     <div class="create-post-container">
       <div class="main-content">
-        <a-spin :loading="loading" size="large">
+        <a-spin :loading="loading" :size="40">
           <template #icon><icon-loading /></template>
           <a-form
             ref="postFormRef"
