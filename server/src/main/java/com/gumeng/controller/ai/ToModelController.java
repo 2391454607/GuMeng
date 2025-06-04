@@ -5,6 +5,8 @@ import com.gumeng.config.Al.Tripo3d;
 import com.gumeng.domain.ModelInfo;
 import com.gumeng.entity.DTO.ToModels.ImageToModelRequest;
 import com.gumeng.entity.DTO.ToModels.TextToModelRequest;
+import com.gumeng.entity.bo.ModelBo;
+import com.gumeng.entity.bo.TaskBo;
 import com.gumeng.service.coze.AiModelService;
 import com.gumeng.service.coze.ModelInfoService;
 import jakarta.annotation.Resource;
@@ -212,6 +214,12 @@ public class ToModelController {
             return responseEntity.getBody();
         }
         return null;
+    }
+
+    //模型状态查询并保存
+    @GetMapping("/polling")
+    public ModelBo<TaskBo> taskPolling(@RequestParam("id") String taskId) {
+        return aiModelService.taskPolling(taskId);
     }
 
     //模型状态查询并保存
