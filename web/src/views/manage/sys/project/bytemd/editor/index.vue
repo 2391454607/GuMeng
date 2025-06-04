@@ -205,6 +205,163 @@ const handleVideoChange = async (event) => {
   }
 };
 
+// 增强fixPreviewImages函数
+const fixPreviewImages = () => {
+  // 查找预览区域
+  const previewElement = document.querySelector('.bytemd-preview');
+  if (!previewElement) return;
+  
+  // 找到所有图片
+  const images = previewElement.querySelectorAll('img');
+  if (images.length === 0) return;
+  
+  // 收集出现的图片URL路径
+  const possibleImageUrls = [];
+  
+  // 查找编辑器中所有的图片URL
+  const editorElement = document.querySelector('.CodeMirror');
+  if (!editorElement || !editorElement.CodeMirror) return;
+  
+  const editorValue = editorElement.CodeMirror.getValue() || '';
+  
+  // 使用更宽松的正则表达式匹配所有可能的图片URL模式
+  const markdownImageRegex = /!\[.*?\]\((.*?)\)/g;
+  const htmlImageRegex = /<img.*?src=["'](.*?)["']/g;
+  const rawUrlRegex = /(https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|gif|webp|svg))/gi;
+  
+  let match;
+  
+  // 匹配Markdown格式图片
+  while ((match = markdownImageRegex.exec(editorValue)) !== null) {
+    if (match[1] && match[1].startsWith('http')) {
+      possibleImageUrls.push(match[1]);
+    }
+  }
+  
+  // 匹配HTML格式图片
+  while ((match = htmlImageRegex.exec(editorValue)) !== null) {
+    if (match[1] && match[1].startsWith('http')) {
+      possibleImageUrls.push(match[1]);
+    }
+  }
+  
+  // 匹配原始URL
+  while ((match = rawUrlRegex.exec(editorValue)) !== null) {
+    if (match[0]) {
+      possibleImageUrls.push(match[0]);
+    }
+  }
+  
+  // 从最近上传的图片列表中添加URL
+  if (recentUploadedImages.length > 0) {
+    possibleImageUrls.push(...recentUploadedImages);
+  }
+  
+  console.log('找到图片URL数量:', possibleImageUrls.length, possibleImageUrls);
+  
+  // 处理每个图片
+  images.forEach((img, index) => {
+    // 检查图片是否正常显示
+    const src = img.getAttribute('src');
+    if (!src || src === 'undefined' || src.includes('undefined') || src.startsWith('http://localhost')) {
+      
+      // 尝试使用alt文本作为线索查找正确URL
+      const alt = img.getAttribute('alt') || '';
+      
+      // 尝试找到匹配的图片URL
+      let replacementUrl = null;
+      
+      // 1. 尝试通过alt文本匹配
+      replacementUrl = possibleImageUrls.find(url => 
+        url && url.includes(alt.replace('.jpg', '').replace('.png', '').replace('.gif', ''))
+      );
+      
+      // 2. 没找到匹配，使用索引匹配
+      if (!replacementUrl && index < possibleImageUrls.length) {
+        replacementUrl = possibleImageUrls[index];
+      }
+      
+      // 3. 没找到，使用第一个可用URL
+      if (!replacementUrl && possibleImageUrls.length > 0) {
+        replacementUrl = possibleImageUrls[0];
+      }
+      
+      // 替换URL
+      if (replacementUrl) {
+        img.src = replacementUrl;
+        console.log('替换图片URL:', replacementUrl);
+        
+        // 图片可见
+        applyImageStyle(img);
+      } else {
+        // 应用应急样式
+        applyPlaceholderStyle(img, alt);
+      }
+    } else {
+      // 图片正常显示
+      applyImageStyle(img);
+    }
+    
+    // 添加错误处理
+    if (!img._hasErrorHandler) {
+      img._hasErrorHandler = true;
+      img.onerror = function() {
+        console.error('图片加载失败:', this.src);
+        
+        // 尝试使用替代URL
+        if (possibleImageUrls.length > 0) {
+          let replacementUrl;
+          
+          // 优先使用相同索引的URL
+          if (index < possibleImageUrls.length) {
+            replacementUrl = possibleImageUrls[index];
+          } else {
+            replacementUrl = possibleImageUrls[0];
+          }
+          
+          if (replacementUrl && replacementUrl !== this.src) {
+            console.log('错误重试替换图片URL:', replacementUrl);
+            this.src = replacementUrl;
+            return;
+          }
+        }
+        
+        // 应用错误样式
+        applyErrorStyle(this, this.alt || '未知图片');
+      };
+    }
+  });
+  
+  // 如果预览区没有图片但有URL，尝试手动创建图片元素
+  if (images.length === 0 && possibleImageUrls.length > 0) {
+    console.log('尝试手动添加图片到预览区');
+    createPreviewImages(previewElement, possibleImageUrls);
+  }
+};
+
+// 添加手动创建预览图片的函数
+const createPreviewImages = (container, urls) => {
+  if (!container || !urls.length) return;
+  
+  urls.forEach(url => {
+    const imgWrapper = document.createElement('div');
+    imgWrapper.className = 'manually-added-img-wrapper';
+    
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = '上传的图片';
+    applyImageStyle(img);
+    
+    imgWrapper.appendChild(img);
+    container.appendChild(imgWrapper);
+    
+    console.log('手动添加图片到预览区:', url);
+  });
+};
+
+// 存储最近上传的图片URL
+const recentUploadedImages = [];
+
 // 编辑器图片上传处理函数
 const handleUploadImages = async (files) => {
   try {
@@ -246,6 +403,18 @@ const handleUploadImages = async (files) => {
             // 将URL添加到结果数组 - 这些URL将直接被ByteMD使用
             urls.push(imageUrl);
             console.log('图片上传成功，URL:', imageUrl);
+            
+            // 添加到最近上传的图片列表中
+            recentUploadedImages.push(imageUrl);
+            // 只保留最近10个URL，防止列表过长
+            if (recentUploadedImages.length > 10) {
+              recentUploadedImages.shift();
+            }
+            
+            // 立即尝试修复预览区图片
+            setTimeout(() => {
+              fixPreviewImages();
+            }, 100);
           }
         } else {
           Message.warning(`图片 ${file.name} 上传失败`);
@@ -304,7 +473,7 @@ onMounted(() => {
   // 添加定时器，每隔一段时间检查预览区图片
   const intervalId = setInterval(() => {
     fixPreviewImages();
-  }, 3000);
+  }, 1000); // 减少间隔时间，更频繁检查
   
   // 组件销毁时清除定时器
   onUnmounted(() => {
@@ -316,149 +485,66 @@ onMounted(() => {
       clearInterval(intervalId);
     }
   });
+  
+  // 初始化后立即触发一次图片修复
+  setTimeout(() => {
+    fixPreviewImages();
+  }, 300);
 });
 
-// 增强fixPreviewImages函数
-const fixPreviewImages = () => {
-  // 查找预览区域
-  const previewElement = document.querySelector('.bytemd-preview');
-  if (!previewElement) return;
+// 应用图片样式函数
+const applyImageStyle = (img) => {
+  img.style.display = 'block';
+  img.style.maxWidth = '80%';
+  img.style.height = 'auto'; 
+  img.style.margin = '10px auto';
+  img.style.border = '1px solid #E4D9C3';
+  img.style.borderRadius = '4px';
+  img.style.visibility = 'visible';
+  img.style.opacity = '1';
+};
+
+// 应用占位符样式函数
+const applyPlaceholderStyle = (img, alt) => {
+  img.style.border = '1px dashed #ff6b6b';
+  img.style.padding = '10px';
+  img.style.height = '120px';
+  img.style.width = '120px';
+  img.style.display = 'block';
+  img.style.margin = '10px auto';
+  img.style.backgroundColor = '#fff7e9';
+  img.style.position = 'relative';
   
-  // 找到所有图片
-  const images = previewElement.querySelectorAll('img');
-  if (images.length === 0) return;
-  
-  // 收集出现的图片URL路径
-  const possibleImageUrls = [];
-  
-  // 查找编辑器中所有的图片URL
-  const editorValue = document.querySelector('.CodeMirror').CodeMirror?.getValue() || '';
-  const matches = editorValue.match(/!\[.*?\]\((.*?)\)/g) || [];
-  
-  if (matches.length > 0) {
-    matches.forEach(match => {
-      const urlMatch = match.match(/!\[.*?\]\((.*?)\)/);
-      if (urlMatch && urlMatch[1] && urlMatch[1].startsWith('http')) {
-        possibleImageUrls.push(urlMatch[1]);
-      }
-    });
+  // 显示替代文本
+  if (!img.nextSibling || !img.nextSibling.classList?.contains('img-placeholder-text')) {
+    const placeholder = document.createElement('div');
+    placeholder.textContent = `图片 [${alt || '未命名'}] 正在加载中...`;
+    placeholder.className = 'img-placeholder-text';
+    placeholder.style.textAlign = 'center';
+    placeholder.style.fontSize = '12px';
+    placeholder.style.color = '#8C1F28';
+    placeholder.style.padding = '5px';
+    img.parentNode.insertBefore(placeholder, img.nextSibling);
   }
+};
+
+// 应用错误样式函数
+const applyErrorStyle = (img, alt) => {
+  img.style.border = '1px dashed #ff6b6b';
+  img.style.padding = '10px';
+  img.alt = alt || '图片加载失败';
   
-  // 处理每个图片
-  images.forEach((img, index) => {
-    // 检查图片是否正常显示
-    const src = img.getAttribute('src');
-    if (!src || src === 'undefined' || src.includes('undefined') || src.startsWith('http://localhost')) {
-      
-      // 尝试使用alt文本作为线索查找正确URL
-      const alt = img.getAttribute('alt') || '';
-      
-      // 尝试找到匹配的图片URL
-      let replacementUrl = null;
-      
-      // 1. 尝试通过alt文本匹配
-      replacementUrl = possibleImageUrls.find(url => 
-        url && url.includes(alt.replace('.jpg', '').replace('.png', '').replace('.gif', ''))
-      );
-      
-      // 2. 没找到匹配，使用索引匹配
-      if (!replacementUrl && index < possibleImageUrls.length) {
-        replacementUrl = possibleImageUrls[index];
-      }
-      
-      // 3. 没找到，使用第一个可用URL
-      if (!replacementUrl && possibleImageUrls.length > 0) {
-        replacementUrl = possibleImageUrls[0];
-      }
-      
-      // 替换URL
-      if (replacementUrl) {
-        img.src = replacementUrl;
-        
-        // 图片可见
-        img.style.display = 'block';
-        img.style.maxWidth = '80%'; // 调整为更小的尺寸
-        img.style.height = 'auto';
-        img.style.margin = '10px auto';
-        img.style.border = '1px solid #E4D9C3';
-        img.style.borderRadius = '4px';
-        img.style.visibility = 'visible';
-        img.style.opacity = '1';
-      } else {
-        // 应用应急样式
-        img.style.border = '1px dashed #ff6b6b';
-        img.style.padding = '10px';
-        img.style.height = '120px';
-        img.style.width = '120px';
-        img.style.display = 'block';
-        img.style.margin = '10px auto';
-        img.style.backgroundColor = '#fff7e9';
-        img.style.position = 'relative';
-        
-        // 显示替代文本
-        if (!img.nextSibling || !img.nextSibling.classList?.contains('img-placeholder-text')) {
-          const placeholder = document.createElement('div');
-          placeholder.textContent = `图片 [${alt || '未命名'}] 正在加载中...`;
-          placeholder.className = 'img-placeholder-text';
-          placeholder.style.textAlign = 'center';
-          placeholder.style.fontSize = '12px';
-          placeholder.style.color = '#8C1F28';
-          placeholder.style.padding = '5px';
-          img.parentNode.insertBefore(placeholder, img.nextSibling);
-        }
-      }
-    } else {
-      // 图片正常显示
-      img.style.display = 'block';
-      img.style.maxWidth = '80%'; // 调整为更小的尺寸
-      img.style.height = 'auto';
-      img.style.margin = '10px auto';
-      img.style.border = '1px solid #E4D9C3';
-      img.style.borderRadius = '4px';
-      img.style.visibility = 'visible';
-      img.style.opacity = '1';
-    }
-    
-    // 添加错误处理
-    if (!img._hasErrorHandler) {
-      img._hasErrorHandler = true;
-      img.onerror = function() {
-        // 尝试使用替代URL
-        if (possibleImageUrls.length > 0) {
-          let replacementUrl;
-          
-          // 优先使用相同索引的URL
-          if (index < possibleImageUrls.length) {
-            replacementUrl = possibleImageUrls[index];
-          } else {
-            replacementUrl = possibleImageUrls[0];
-          }
-          
-          if (replacementUrl && replacementUrl !== this.src) {
-            this.src = replacementUrl;
-            return;
-          }
-        }
-        
-        // 应用错误样式
-        this.style.border = '1px dashed #ff6b6b';
-        this.style.padding = '10px';
-        this.alt = this.alt || '图片加载失败';
-        
-        // 显示错误信息
-        if (!this.nextSibling || !this.nextSibling.classList?.contains('img-error-text')) {
-          const errorText = document.createElement('div');
-          errorText.textContent = `图片加载失败: ${this.alt || '未知图片'}`;
-          errorText.className = 'img-error-text';
-          errorText.style.textAlign = 'center';
-          errorText.style.fontSize = '12px';
-          errorText.style.color = '#ff6b6b';
-          errorText.style.padding = '5px';
-          this.parentNode.insertBefore(errorText, this.nextSibling);
-        }
-      };
-    }
-  });
+  // 显示错误信息
+  if (!img.nextSibling || !img.nextSibling.classList?.contains('img-error-text')) {
+    const errorText = document.createElement('div');
+    errorText.textContent = `图片加载失败: ${alt || '未知图片'}`;
+    errorText.className = 'img-error-text';
+    errorText.style.textAlign = 'center';
+    errorText.style.fontSize = '12px';
+    errorText.style.color = '#ff6b6b';
+    errorText.style.padding = '5px';
+    img.parentNode.insertBefore(errorText, img.nextSibling);
+  }
 };
 </script>
 
