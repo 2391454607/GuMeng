@@ -307,13 +307,13 @@ const fixPreviewImages = () => {
   flex: 0.3;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 40px;
   justify-content: flex-end;
 }
 
 .editor-title-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 8px 12px;
   font-size: 20px; /* 增大字体 */
   border: 1px solid #D6C6AF;
   border-radius: 4px;
@@ -376,7 +376,7 @@ const fixPreviewImages = () => {
   background-color: #FFFDF7;
   color: #582F0E;
   border: 1px solid #D6C6AF;
-  padding: 22px 16px;
+  padding: 20px 14px;
   font-size: 20px;
 }
 
@@ -579,7 +579,7 @@ const fixPreviewImages = () => {
   .editor-topic-select {
     font-size: 14px;
     padding: 8px 10px;
-    padding-right: 28px;
+    padding-right: 20px;
     flex: 1;
   }
   
