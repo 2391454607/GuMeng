@@ -18,5 +18,6 @@ public class Tripo3d {
     private String generationUrl;
     private String balanceUrl;
     private String polling;
+    private String uploadSts;
     private String stsUrl;
 }

@@ -150,4 +150,5 @@ tripo3d:
     generation-url: https://api.tripo3d.ai/v2/openapi/task
     balance-url: https://api.tripo3d.ai/v2/openapi/user/balance
     polling: https://api.tripo3d.ai/v2/openapi/task/:task_id
+    upload-sts: https://api.tripo3d.ai/v2/openapi/upload/sts
     STS-url: https://api.tripo3d.ai/v2/openapi/upload/sts/token
