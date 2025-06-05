@@ -200,25 +200,54 @@ const viewDetail = (id) => {
 
 .title-content {
   text-align: center;
-  padding: 20px;
+  padding: 10px;  /* 从20px减小到10px */
   z-index: 2;
   width: 100%;
 }
 
 .title-content h1 {
-  font-size: clamp(2em, 4vw, 2.8em);  /* 响应式字体大小 */
+  font-size: clamp(2em, 4vw, 2.8em);
   color: #8C1F28;
-  margin-bottom: 15px;
+  margin-bottom: 8px;
   font-weight: bold;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
   font-family: "STKaiti", "楷体", serif;
+  position: relative;
+  display: inline-block;
+  animation: titleFadeIn 1.2s ease-out forwards;
 }
 
 .title-content p {
-  font-size: clamp(1em, 2vw, 1.2em);  /* 响应式字体大小 */
+  font-size: clamp(1em, 2vw, 1.2em);
   color: #594433;
   font-family: "STFangsong", "仿宋", serif;
   letter-spacing: 2px;
+  margin-top: 0;
+  animation: subtitleFadeIn 1.5s ease-out forwards;
+  position: relative;
+}
+
+/* 添加动画关键帧 */
+@keyframes titleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtitleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 

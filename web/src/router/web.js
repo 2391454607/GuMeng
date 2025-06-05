@@ -78,13 +78,12 @@ const webRouters = [
     {
         path: "/shop",
         name: "shop",
-        //component: () => import("@/views/web/pages/shop/Shop.vue")
-        component: () => import("@/views/error/Error404.vue"),
-        children: {
-            path: "/commodity",
-            name: "Commodity",
-            component: () => import("@/views/error/Error404.vue")
-        }
+        component: () => import("@/views/web/pages/shop/Shop.vue"),
+    },
+    {
+        path: "/shop/commodity",
+        name: "Commodity",
+        component: () => import("@/views/error/Error404.vue")
     },
     {
         path: '/aides',
