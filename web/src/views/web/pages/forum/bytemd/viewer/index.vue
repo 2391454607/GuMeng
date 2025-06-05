@@ -72,7 +72,7 @@ const fixImages = () => {
       }, 300);
     };
     
-    console.log(`预览图片 ${index+1}:`, img.src);
+    // console.log(`预览图片 ${index+1}:`, img.src);
   });
 };
 

@@ -53,15 +53,12 @@ const setupMutationObserver = () => {
     observer.value.disconnect();
   }
 
-  // 创建新的观察器，监控内容变化，确保图片URL修复生效
   observer.value = new MutationObserver((mutations) => {
     let needFix = false;
     
-    // 检查是否有新图片元素添加
     mutations.forEach(mutation => {
       if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
         mutation.addedNodes.forEach(node => {
-          // 对添加的DOM节点进行检查
           if (node.nodeName === 'IMG') {
             needFix = true;
           } else if (node.querySelectorAll) {
@@ -73,7 +70,6 @@ const setupMutationObserver = () => {
     });
     
     if (needFix) {
-      console.log('检测到DOM变动，尝试修复图片...');
       fixImages();
     }
   });
@@ -89,7 +85,6 @@ const extractQiniuUrls = (content) => {
     if (typeof projectDetail.value.images === 'string') {
       const imageArray = projectDetail.value.images.split(',');
       if (imageArray.length > 0) {
-        console.log('从images字段获取的图片URL:', imageArray);
         return imageArray;
       }
     }
@@ -100,12 +95,9 @@ const extractQiniuUrls = (content) => {
   const qiniuDomainPattern = /https?:\/\/[^)\s"'<>]+?(?:clouddn\.com|hn-bkt\.clouddn\.com)[^)\s"'<>]*?\.(?:png|jpg|jpeg|gif|webp)/gi;
   let qiniuLinks = content.match(qiniuDomainPattern) || [];
   
-  console.log('从内容中提取的七牛云链接:', qiniuLinks);
-
   if (qiniuLinks.length === 0) {
     const genericImagePattern = /https?:\/\/[^)\s"'<>]+\.(?:png|jpg|jpeg|gif|webp)/gi;
     qiniuLinks = content.match(genericImagePattern) || [];
-    console.log('从内容中提取的一般图片链接:', qiniuLinks);
   }
   
   return qiniuLinks;
@@ -113,23 +105,16 @@ const extractQiniuUrls = (content) => {
 
 // 修复图片显示的函数
 const fixImages = () => {
-  // 获取内容区域的所有图片
   const viewer = document.querySelector('.information-detail-container .markdown-body');
   if (!viewer) return;
 
   const images = viewer.querySelectorAll('img');
-  console.log(`找到非遗百科图片数量: ${images.length}`);
 
   if (qiniuUrls.value.length === 0) {
     qiniuUrls.value = extractQiniuUrls(projectDetail.value.content || '');
   }
 
-  if (qiniuUrls.value.length > 0) {
-    console.log('可用的七牛云图片URL:', qiniuUrls.value);
-  } else {
-    console.warn('未找到可用的七牛云图片URL!');
-    return;
-  }
+  if (qiniuUrls.value.length === 0) return;
 
   images.forEach((img, index) => {
     const src = img.getAttribute('src');
@@ -150,9 +135,7 @@ const fixImages = () => {
       }
       
       if (newSrc) {
-        console.log(`修复图片URL: 从 ${src} 到 ${newSrc}`);
         img.src = newSrc;
-
         img.style.maxWidth = '100%';
         img.style.height = 'auto';
         img.style.margin = '10px auto';
@@ -164,13 +147,9 @@ const fixImages = () => {
       img.setAttribute('data-error-handled', 'true');
       
       img.onerror = function() {
-        console.error(`图片加载失败: ${this.src}`);
-        
-        // 尝试使用备用URL
         if (qiniuUrls.value.length > 0) {
           const fallbackSrc = qiniuUrls.value[0];
           if (this.src !== fallbackSrc) {
-            console.log(`尝试使用备用URL: ${fallbackSrc}`);
             this.src = fallbackSrc;
           }
         }
@@ -204,14 +183,12 @@ const fetchProjectDetail = async (id) => {
 
         setTimeout(fixImages, 800);
         setTimeout(fixImages, 1500);
-        setTimeout(fixImages, 3000);
       });
     } else {
       Message.error(res.msg || '获取项目详情失败');
       router.push('/information');
     }
   } catch (error) {
-    console.error('获取项目详情错误:', error);
     Message.error('获取项目详情失败，请稍后重试');
     router.push('/information');
   } finally {
@@ -278,8 +255,7 @@ const goBack = () => {
                 </div>
               </div>
               
-              <div class="info-section" v-if="projectDetail.content">
-                <h2>详细介绍</h2>
+              <div v-if="projectDetail.content">
                 <div class="content">
                   <Viewer :value="projectDetail.content" :plugins="customPlugins()" />
                 </div>
@@ -429,6 +405,7 @@ const goBack = () => {
   overflow-wrap: break-word;
   padding: 15px;
   border-radius: 8px;
+  margin: 0 auto;
 }
 
 /* 自定义Viewer组件样式 */
@@ -437,10 +414,13 @@ const goBack = () => {
   font-family: "SimSun", "宋体", serif;
   line-height: 1.8;
   color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 :deep(.markdown-body img) {
-  max-width: 100%;
+  max-width: 90%;
   display: block;
   margin: 15px auto;
   border-radius: 6px;
@@ -456,6 +436,7 @@ const goBack = () => {
   margin: 20px 0 10px;
   padding-bottom: 5px;
   border-bottom: none;
+  width: 100%;
 }
 
 :deep(.markdown-body h1, .markdown-body h2) {
@@ -465,12 +446,14 @@ const goBack = () => {
 :deep(.markdown-body p) {
   margin: 16px 0;
   line-height: 1.8;
+  width: 100%;
 }
 
 :deep(.markdown-body ul),
 :deep(.markdown-body ol) {
   padding-left: 20px;
   margin: 16px 0;
+  width: 100%;
 }
 
 .project-video {
