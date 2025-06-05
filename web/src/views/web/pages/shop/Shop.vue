@@ -1,9 +1,10 @@
 <script setup>
 import Footer from "@/views/web/layout/Footer.vue";
 import {onMounted, reactive, ref} from 'vue';
-import {getProjectList} from "@/api/web/IchProject.js";
+import { getGoodsListAPI } from "@/api/web/Shop.js"
 import { IconSearch, IconLoading, IconPlayArrowFill } from '@arco-design/web-vue/es/icon';
 import { useRouter } from 'vue-router';
+import {Message} from "@arco-design/web-vue";
 
 // 初始化路由器
 const router = useRouter();
@@ -18,20 +19,22 @@ const total = ref(0);
 // 分页处理函数
 const handlePageChange = (page) => {
   status.current = page;
-  getProjectList(status).then((res)=>{
-    ichProject.value = res.data.records;
+  getGoodsListAPI(status).then((res)=>{
+    Goods.value = res.data.records;
     total.value = res.data.total;
   })
 }
 
 const loading = ref(true);
-const ichProject = ref({})
+const Goods = ref({})
 
 onMounted(()=>{
-  getProjectList(status).then((res)=>{
-    ichProject.value = res.data.records;
+  getGoodsListAPI(status).then(res=>{
+    console.log(res)
+    Goods.value = res.data.records;
     total.value = res.data.total;
     loading.value = false;
+    console.log(Goods.value)
   })
 })
 
@@ -47,8 +50,8 @@ const handleSearch = () => {
     keyword: searchKeyword.value,
   };
 
-  getProjectList(params).then((res) => {
-    ichProject.value = res.data.records;
+  getGoodsListAPI(params).then((res) => {
+    Goods.value = res.data.records;
     total.value = res.data.total;
     loading.value = false;
   });
@@ -56,7 +59,7 @@ const handleSearch = () => {
 
 // 添加查看详情方法
 const viewDetail = (id) => {
-  router.push(`/information/detail/${id}`);
+  Message.warning("点击了商品，进入详情页")
 }
 
 </script>
@@ -64,7 +67,7 @@ const viewDetail = (id) => {
 
 <template>
   <div>
-    <div class="project-title">
+    <div class="goods-title">
       <div class="title-content">
         <h1>文创商城</h1>
         <p>匠心传承千年瑰宝 · 创意焕发文化新生</p>
@@ -88,42 +91,56 @@ const viewDetail = (id) => {
 
       <a-spin :loading="loading" :size="32" tip="加载中">
         <template #icon><icon-loading /></template>
-        <div class="project-grid">
+        <div class="goods-grid">
           <a-card
-              v-for="project in ichProject"
-              :key="project.id"
-              class="project-card"
+              v-for="goods in Goods"
+              :key="goods.id"
+              class="goods-card"
               :bordered="false"
               hoverable
           >
-            <div class="project-image">
-              <img :src="project.coverImage" :alt="project.name">
-              <div class="project-overlay" @click="viewDetail(project.id)">
+            <div class="goods-image">
+              <img :src="goods.imageUrl" :alt="goods.name">
+              <div class="goods-overlay" @click="viewDetail(goods.id)">
                 <div class="overlay-content">
                   <icon-eye class="overlay-icon" />
                   <span>查看详情</span>
                 </div>
               </div>
-              <div class="video-badge" v-if="project.video">
+              <div class="video-badge" v-if="goods.video">
                 <icon-play-arrow-fill class="video-icon" />
               </div>
             </div>
-            <div class="project-content">
-              <h3>{{ project.name }}</h3>
-              <div class="project-tags">
-                <a-tag>{{ project.levelName }}</a-tag>
-                <a-tag>{{ project.categoryName }}</a-tag>
+            <div class="goods-content">
+              <h3>{{ goods.name }}</h3>
+
+              <div class="price-section">
+                <template v-if="goods.mixedPriceMoney && goods.mixedPricePoints && goods.priceMoney">
+                  <div class="price-section">
+                    <div class="price-container">
+                      <div class="mixed-price">
+                        <span class="price-value">¥ {{ goods.mixedPriceMoney }}元 + {{ goods.mixedPricePoints }}积分</span>
+                      </div>
+                      <div class="original-price">
+                        <span>原价：¥{{ goods.priceMoney }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
               </div>
 
-              <div class="project-card-bottom">
-                <div class="create-time">
-                  {{ new Date(project.createTime).toLocaleDateString() }}
-                </div>
+              <div class="goods-card-bottom">
                 <div>
-                  <a-space class="view-count">
-                    <icon-eye />
-                    {{ project.viewCount }}
+                  <a-space class="stock">
+                    <icon-common />
+                    库存剩余:
+                    {{ goods.stock }}
                   </a-space>
+                </div>
+                <div class="shoppingCart">
+                  <a-button>
+                    加入购物车
+                  </a-button>
                 </div>
               </div>
             </div>
@@ -148,7 +165,7 @@ const viewDetail = (id) => {
 </template>
 
 <style scoped>
-.project-title {
+.goods-title {
   min-height: 200px;
   display: flex;
   align-items: center;
@@ -213,7 +230,7 @@ const viewDetail = (id) => {
 }
 
 .title-content p {
-  font-size: clamp(1em, 2vw, 1.2em);  /* 响应式字体大小 */
+  font-size: clamp(1.5em, 2vw, 1.2em);  /* 响应式字体大小 */
   color: #594433;
   font-family: "STFangsong", "仿宋", serif;
   letter-spacing: 2px;
@@ -268,7 +285,7 @@ const viewDetail = (id) => {
   color: #999;
 }
 
-.project-grid {
+.goods-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 24px;
@@ -277,7 +294,7 @@ const viewDetail = (id) => {
   padding: 0 20px;
 }
 
-.project-card {
+.goods-card {
   border: 1px solid #ffcdd2;
   border-radius: 12px;
   overflow: hidden;
@@ -288,33 +305,33 @@ const viewDetail = (id) => {
   flex-direction: column;
 }
 
-.project-content {
+.goods-content {
   padding: 20px;
   flex: 1;  /* 让内容区域占据剩余空间 */
   display: flex;
   flex-direction: column;
 }
 
-.project-content p {
+.goods-content p {
   flex: 1;  /* 让描述文字占据剩余空间 */
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
 }
 
-.project-card:hover {
+.goods-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 12px rgba(211, 47, 47, 0.15);
   border-color: #d32f2f;
 }
 
-.project-image {
+.goods-image {
   height: 200px;
   overflow: hidden;
   position: relative;
 }
 
-.project-overlay {
+.goods-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -329,7 +346,7 @@ const viewDetail = (id) => {
   cursor: pointer;
 }
 
-.project-card:hover .project-overlay {
+.goods-card:hover .goods-overlay {
   opacity: 1;
 }
 
@@ -342,7 +359,7 @@ const viewDetail = (id) => {
   transition: all 0.3s ease;
 }
 
-.project-card:hover .overlay-content {
+.goods-card:hover .overlay-content {
   transform: translateY(0);
 }
 
@@ -351,53 +368,59 @@ const viewDetail = (id) => {
   margin-bottom: 8px;
 }
 
-.project-image img {
+.goods-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.project-content {
+.goods-content {
   padding: 15px;
 }
 
-.project-content h3 {
+.goods-content h3 {
   margin: 0 0 10px 0;
   font-size: 18px;
-  color: #b71c1c;
 }
 
-.project-content p {
+.goods-content p {
   color: #666;
   margin: 0 0 10px 0;
   font-size: 14px;
 }
 
-.project-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+/*加入购物车样式*/
+.shoppingCart :deep(.arco-btn) {
+  background: linear-gradient(45deg, #C2101C, #FF4D4F);
+  border: none;
+  color: white;
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
 }
 
-.project-tags :deep(.ant-tag) {
-  border-color: #d32f2f;
-  color: #d32f2f;
-  background: #fff;
+.shoppingCart :deep(.arco-btn:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(194, 16, 28, 0.3);
 }
 
-.project-card-bottom{
+.goods-card-bottom{
   margin-top: 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.view-count {
-  color: #d32f2f;
-}
-
-.create-time {
-  color: #888;
+.stock {
+  color: #666;
+  font-size: 14px;
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .footer {
@@ -451,34 +474,43 @@ const viewDetail = (id) => {
 
 :deep(.arco-spin-icon) {
   color: #C2101C;
-  font-size: 24px;
 }
 
 /* 加载提示文字样式 */
 :deep(.arco-spin-tip) {
   color: #C2101C;
-  font-size: 14px;
   margin-top: 8px;
 }
 
-/* 添加视频标识样式 */
-.video-badge {
-  position: absolute;
-  bottom: 8px;
-  right: 8px;
-  background-color: rgba(211, 47, 47, 0.85);
-  padding: 4px;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2;
+
+.price-section {
+  margin: 5px 0;
+  border-radius: 10px;
 }
 
-.video-icon {
-  color: white;
-  font-size: 18px;
+.price-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mixed-price {
+  flex: 1;
+}
+
+.price-value {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(45deg, #C2101C, #FF4D4F);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 4px rgba(194, 16, 28, 0.1);
+}
+
+.original-price {
+  color: #999;
+  font-size: 14px;
+  text-decoration: line-through;
+  margin-left: 15px;
 }
 </style>
