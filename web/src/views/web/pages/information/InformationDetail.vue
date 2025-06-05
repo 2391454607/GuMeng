@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, nextTick, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getProjectDetail } from '@/api/web/IchProject.js';
 import { Message } from '@arco-design/web-vue';
@@ -26,6 +26,8 @@ const route = useRoute();
 const router = useRouter();
 const loading = ref(true);
 const projectDetail = ref({});
+const observer = ref(null);
+const qiniuUrls = ref([]);
 
 onMounted(() => {
   const id = route.params.id;
@@ -37,6 +39,145 @@ onMounted(() => {
   
   fetchProjectDetail(id);
 });
+
+onBeforeUnmount(() => {
+  if (observer.value) {
+    observer.value.disconnect();
+    observer.value = null;
+  }
+});
+
+// 创建监视DOM变化的观察器
+const setupMutationObserver = () => {
+  if (observer.value) {
+    observer.value.disconnect();
+  }
+
+  // 创建新的观察器，监控内容变化，确保图片URL修复生效
+  observer.value = new MutationObserver((mutations) => {
+    let needFix = false;
+    
+    // 检查是否有新图片元素添加
+    mutations.forEach(mutation => {
+      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+        mutation.addedNodes.forEach(node => {
+          // 对添加的DOM节点进行检查
+          if (node.nodeName === 'IMG') {
+            needFix = true;
+          } else if (node.querySelectorAll) {
+            const images = node.querySelectorAll('img');
+            if (images.length > 0) needFix = true;
+          }
+        });
+      }
+    });
+    
+    if (needFix) {
+      console.log('检测到DOM变动，尝试修复图片...');
+      fixImages();
+    }
+  });
+  
+  // 开始观察整个document，监视子节点变化
+  const config = { childList: true, subtree: true };
+  observer.value.observe(document.body, config);
+};
+
+// 从内容中提取所有可能的七牛云图片URL
+const extractQiniuUrls = (content) => {
+  if (projectDetail.value && projectDetail.value.images) {
+    if (typeof projectDetail.value.images === 'string') {
+      const imageArray = projectDetail.value.images.split(',');
+      if (imageArray.length > 0) {
+        console.log('从images字段获取的图片URL:', imageArray);
+        return imageArray;
+      }
+    }
+  }
+  
+  if (!content) return [];
+
+  const qiniuDomainPattern = /https?:\/\/[^)\s"'<>]+?(?:clouddn\.com|hn-bkt\.clouddn\.com)[^)\s"'<>]*?\.(?:png|jpg|jpeg|gif|webp)/gi;
+  let qiniuLinks = content.match(qiniuDomainPattern) || [];
+  
+  console.log('从内容中提取的七牛云链接:', qiniuLinks);
+
+  if (qiniuLinks.length === 0) {
+    const genericImagePattern = /https?:\/\/[^)\s"'<>]+\.(?:png|jpg|jpeg|gif|webp)/gi;
+    qiniuLinks = content.match(genericImagePattern) || [];
+    console.log('从内容中提取的一般图片链接:', qiniuLinks);
+  }
+  
+  return qiniuLinks;
+};
+
+// 修复图片显示的函数
+const fixImages = () => {
+  // 获取内容区域的所有图片
+  const viewer = document.querySelector('.information-detail-container .markdown-body');
+  if (!viewer) return;
+
+  const images = viewer.querySelectorAll('img');
+  console.log(`找到非遗百科图片数量: ${images.length}`);
+
+  if (qiniuUrls.value.length === 0) {
+    qiniuUrls.value = extractQiniuUrls(projectDetail.value.content || '');
+  }
+
+  if (qiniuUrls.value.length > 0) {
+    console.log('可用的七牛云图片URL:', qiniuUrls.value);
+  } else {
+    console.warn('未找到可用的七牛云图片URL!');
+    return;
+  }
+
+  images.forEach((img, index) => {
+    const src = img.getAttribute('src');
+
+    const isInvalidUrl = !src || 
+                         src === 'undefined' || 
+                         src.includes('localhost') || 
+                         src.includes('undefined') ||
+                         src.includes('/information/detail/');
+    
+    if (isInvalidUrl) {
+      let newSrc = null;
+      
+      if (index < qiniuUrls.value.length) {
+        newSrc = qiniuUrls.value[index];
+      } else if (qiniuUrls.value.length > 0) {
+        newSrc = qiniuUrls.value[0];
+      }
+      
+      if (newSrc) {
+        console.log(`修复图片URL: 从 ${src} 到 ${newSrc}`);
+        img.src = newSrc;
+
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.margin = '10px auto';
+        img.style.display = 'block';
+      }
+    }
+
+    if (!img.hasAttribute('data-error-handled')) {
+      img.setAttribute('data-error-handled', 'true');
+      
+      img.onerror = function() {
+        console.error(`图片加载失败: ${this.src}`);
+        
+        // 尝试使用备用URL
+        if (qiniuUrls.value.length > 0) {
+          const fallbackSrc = qiniuUrls.value[0];
+          if (this.src !== fallbackSrc) {
+            console.log(`尝试使用备用URL: ${fallbackSrc}`);
+            this.src = fallbackSrc;
+          }
+        }
+      };
+    }
+  });
+};
 
 const fetchProjectDetail = async (id) => {
   try {
@@ -52,6 +193,19 @@ const fetchProjectDetail = async (id) => {
       if (content) {
         projectDetail.value.content = content;
       }
+
+      qiniuUrls.value = extractQiniuUrls(projectDetail.value.content || '');
+
+      nextTick(() => {
+        setTimeout(() => {
+          setupMutationObserver();
+          fixImages(); 
+        }, 300);
+
+        setTimeout(fixImages, 800);
+        setTimeout(fixImages, 1500);
+        setTimeout(fixImages, 3000);
+      });
     } else {
       Message.error(res.msg || '获取项目详情失败');
       router.push('/information');
@@ -63,6 +217,18 @@ const fetchProjectDetail = async (id) => {
   } finally {
     loading.value = false;
   }
+};
+
+const customPlugins = () => {
+  return plugins.concat([
+    {
+      viewerEffect({ markdownBody }) {
+        nextTick(() => {
+          fixImages();
+        });
+      }
+    }
+  ]);
 };
 
 const goBack = () => {
@@ -98,8 +264,6 @@ const goBack = () => {
         
         <div class="detail-content">
           <div class="detail-main">
-            <!-- 移除了封面图片部分 -->
-            
             <div class="detail-info">
               
               <div class="info-section" v-if="projectDetail.video">
@@ -109,7 +273,6 @@ const goBack = () => {
                     :src="projectDetail.video" 
                     controls 
                     class="video-player"
-                    :poster="projectDetail.coverImage"
                     preload="metadata"
                   ></video>
                 </div>
@@ -118,7 +281,7 @@ const goBack = () => {
               <div class="info-section" v-if="projectDetail.content">
                 <h2>详细介绍</h2>
                 <div class="content">
-                  <Viewer :value="projectDetail.content" :plugins="plugins" />
+                  <Viewer :value="projectDetail.content" :plugins="customPlugins()" />
                 </div>
               </div>
               

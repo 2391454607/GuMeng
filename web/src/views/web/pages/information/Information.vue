@@ -21,7 +21,7 @@ const total = ref(0);
 const handlePageChange = (page) => {
   status.current = page;
   getProjectList(status).then((res)=>{
-    ichProject.value = res.data.records;
+    processProjectData(res.data.records);
     total.value = res.data.total;
   })
 }
@@ -29,9 +29,30 @@ const handlePageChange = (page) => {
 const loading = ref(true);
 const ichProject = ref({})
 
+// 处理项目数据，取封面图片
+const processProjectData = (records) => {
+  if (!records || records.length === 0) return;
+  
+  records.forEach(project => {
+
+    if (project.images && project.images.includes(',')) {
+      // 使用第一张图片作为封面
+      project.coverImage = project.images.split(',')[0].trim();
+    } else if (project.images) {
+
+      project.coverImage = project.images;
+    } else {
+      // 没有图片，设置默认图片
+      project.coverImage = '/image/default-cover.png';
+    }
+  });
+  
+  ichProject.value = records;
+}
+
 onMounted(()=>{
   getProjectList(status).then((res)=>{
-    ichProject.value = res.data.records;
+    processProjectData(res.data.records);
     total.value = res.data.total;
     loading.value = false;
   })
@@ -53,11 +74,12 @@ const handleSearch = () => {
   };
 
   getProjectList(params).then((res) => {
-    ichProject.value = res.data.records;
+    processProjectData(res.data.records);
     total.value = res.data.total;
     loading.value = false;
   });
 }
+
 // 添加选中处理方法
 const handleCategorySelect = (categoryName, item) => {
   selectedCategories.value[categoryName] = item;
@@ -134,7 +156,11 @@ const viewDetail = (id) => {
             hoverable
           >
             <div class="project-image">
-              <img :src="project.coverImage" :alt="project.name">
+              <img 
+                :src="project.coverImage" 
+                :alt="project.name"
+                @error="(e) => e.target.src = '/image/default-cover.png'"
+              >
               <div class="project-overlay" @click="viewDetail(project.id)">
                 <div class="overlay-content">
                   <icon-eye class="overlay-icon" />

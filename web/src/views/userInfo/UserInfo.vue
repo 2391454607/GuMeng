@@ -521,7 +521,7 @@ const handleLogout = () => {
 }
 
 .content-list .menu-item:hover {
-  background-color: rgba(194, 16, 28, 0.1); /* 使用主题色的淡化版本 */
+  background-color: rgba(194, 16, 28, 0.1);
   color: #C2101C; /* 使用主题色 */
 }
 

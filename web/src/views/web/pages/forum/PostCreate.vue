@@ -1204,7 +1204,6 @@ const processContentForPreview = (content) => {
   }
 };
 
-// 修改updateWordCount函数为更安全的版本
 const updateWordCount = () => {
   setTimeout(() => {
     const statusElement = document.querySelector('.bytemd-status-left');

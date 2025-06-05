@@ -687,7 +687,6 @@ const fixPreviewImages = () => {
   scrollbar-width: none !important;
 }
 
-/* IE 和 Edge 旧版本 */
 .bytemd-preview,
 .CodeMirror-vscrollbar,
 .CodeMirror-hscrollbar,

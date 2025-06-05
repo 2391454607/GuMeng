@@ -2,8 +2,7 @@
 import { Editor } from 'bytemd';
 import { ref, watch, defineEmits, onMounted, computed, nextTick, onUnmounted } from 'vue';
 import { Message } from '@arco-design/web-vue';
-import { uploadImageAPI } from '@/api/forum'; // 引入图片上传API
-import { uploadVideoAPI } from '@/api/manage/IchProject'; // 引入视频上传API
+import { uploadImageAPI, uploadVideoAPI, batchUploadImagesAPI } from '@/api/manage/IchProject';
 
 const props = defineProps({
   value: String,//内容控件的值
@@ -25,16 +24,14 @@ const props = defineProps({
   categoryId: [String, Number], // 项目类别ID
   levelOptions: Array, // 保护级别选项
   categoryOptions: Array, // 项目类别选项
-  coverImage: String, // 当前封面图片URL
   video: String, // 当前视频URL
+  images: String, // 图片JSON数组
 });
 
 // 创建本地副本用于实现双向绑定效果
 const localName = ref(props.name || '');
 const localLevelId = ref(props.levelId || '');
 const localCategoryId = ref(props.categoryId || '');
-const imageFile = ref(null);
-const imagePreview = ref(props.coverImage || ''); // 添加图片预览URL
 const videoFile = ref(null);
 const videoUrl = ref(props.video || '');
 const uploading = ref(false);
@@ -53,7 +50,6 @@ watch(() => props.categoryId, (newVal) => {
   localCategoryId.value = newVal;
 });
 
-
 watch(() => props.video, (newVal) => {
   videoUrl.value = newVal;
 });
@@ -71,47 +67,16 @@ watch(localCategoryId, (newVal) => {
   emit('categoryChange', newVal);
 });
 
-// 从内容中提取第一张图片URL作为封面
-const extractCoverImageFromContent = (content) => {
-  if (!content) return null;
-  
-  // 尝试匹配Markdown图片语法
-  const markdownImageRegex = /!\[.*?\]\((.*?)\)/;
-  const markdownMatch = content.match(markdownImageRegex);
-  
-  if (markdownMatch && markdownMatch[1]) {
-    return markdownMatch[1];
-  }
-  
-  // 尝试匹配HTML图片标签
-  const htmlImageRegex = /<img.*?src=["'](.*?)["']/;
-  const htmlMatch = content.match(htmlImageRegex);
-  
-  if (htmlMatch && htmlMatch[1]) {
-    return htmlMatch[1];
-  }
-  
-  return null;
-};
-
-// 更新封面图预览
-const updateCoverPreview = (url) => {
-  if (url) {
-    imagePreview.value = url;
-    console.log('从内容中更新封面图预览:', url);
-  }
-};
-
 const emit = defineEmits([
   "change", 
   "nameChange", 
   "levelChange", 
   "categoryChange",
-  "fileChange", 
   "videoChange",
   "back", 
   "save",
-  "cleanupVideo"
+  "cleanupVideo",
+  "fileChange"
 ]);
 
 // 添加返回和保存按钮的点击处理函数
@@ -386,59 +351,59 @@ const handleUploadImages = async (files) => {
     });
     
     if (!validFiles.length) return [];
-    
-    const urls = [];
-    
-    // 逐个上传文件
-    for (const file of validFiles) {
-      // 创建FormData对象
-      const formData = new FormData();
-      formData.append('file', file);
+
+    try {
+      // 显示上传中提示
+      const loadingMsg = Message.loading({
+        content: '正在上传图片...',
+        duration: 0
+      });
       
-      try {
-        // 上传到服务器
-        const res = await uploadImageAPI(formData);
+      // 使用批量上传API
+      const res = await batchUploadImagesAPI(validFiles);
+      
+      // 关闭加载提示
+      loadingMsg.close();
+      
+      if (res.code === 200 && res.data && Array.isArray(res.data)) {
+        const imageUrls = res.data;
+        console.log('批量上传图片成功，URL列表:', imageUrls);
         
-        if (res.code === 200 && res.data) {
-          // 保证URL是绝对URL
-          let imageUrl = res.data;
-          
-          if (imageUrl && typeof imageUrl === 'string') {
-            // 将URL添加到结果数组 - 这些URL将直接被ByteMD使用
-            urls.push(imageUrl);
-            console.log('图片上传成功，URL:', imageUrl);
-            
-            // 添加到最近上传的图片列表中
-            recentUploadedImages.push(imageUrl);
-            // 只保留最近10个URL，防止列表过长
-            if (recentUploadedImages.length > 10) {
-              recentUploadedImages.shift();
-            }
-            
-            // 第一个上传的图片将其设置为封面图
-            if (urls.length === 1 && (!imageFile.value || !imagePreview.value)) {
-              updateCoverPreview(imageUrl);
-              emit('fileChange', imageUrl);
-              console.log('将第一张上传的图片设置为封面图:', imageUrl);
-            }
-            
-            // 立即尝试修复预览区图片
-            setTimeout(() => {
-              fixPreviewImages();
-            }, 100);
+
+        imageUrls.forEach(url => {
+          if (url && typeof url === 'string') {
+            recentUploadedImages.push(url);
           }
-        } else {
-          Message.warning(`图片 ${file.name} 上传失败`);
-          console.error('图片上传失败，响应:', res);
+        });
+        
+
+        if (recentUploadedImages.length > 20) {
+          recentUploadedImages.splice(0, recentUploadedImages.length - 20);
         }
-      } catch (error) {
-        console.error('上传单张图片失败:', error);
-        Message.error(`图片 ${file.name} 上传失败`);
+        
+
+        if (imageUrls.length > 0) {
+          emit('fileChange', imageUrls);
+          console.log('通过fileChange事件发送图片URL列表:', imageUrls);
+        }
+        
+        // 尝试修复预览区图片
+        setTimeout(() => {
+          fixPreviewImages();
+        }, 100);
+        
+        // 返回URL数组供编辑器使用
+        return imageUrls.filter(url => url && url !== 'undefined');
+      } else {
+        Message.warning('图片批量上传失败');
+        console.error('批量上传失败，响应:', res);
+        return [];
       }
+    } catch (error) {
+      console.error('批量上传图片失败:', error);
+      Message.error('批量上传图片失败: ' + (error.message || '未知错误'));
+      return [];
     }
-    
-    // 返回URL数组，不包含undefined
-    return urls.filter(url => url && url !== 'undefined');
   } catch (error) {
     console.error('图片上传处理错误:', error);
     Message.error('图片上传过程中发生错误');
@@ -463,39 +428,6 @@ watch(() => props, newValue => {
   deep: true
 });
 
-// 监听编辑器值的变化并提取第一张图片作为封面
-const handleEditorContentChange = (value) => {
-  // 如果内容为空，直接返回
-  if (!value) return;
-  
-  // 从内容中提取第一张图片URL
-  const imageUrl = extractCoverImageFromContent(value);
-  
-  // 更新预览并向父组件发送文件变更事件
-  if (imageUrl && imageUrl !== 'undefined') {
-    // 更新预览并发送事件
-    if (imageUrl !== imagePreview.value) {
-      updateCoverPreview(imageUrl);
-      
-      // 处理可能的相对URL
-      let finalImageUrl = imageUrl;
-      if (finalImageUrl.startsWith('./') || finalImageUrl.startsWith('../')) {
-        finalImageUrl = window.location.origin + '/' + finalImageUrl.replace(/^\.\//, '');
-      }
-
-      emit('fileChange', finalImageUrl);
-    }
-  } 
-
-  else if (recentUploadedImages.length > 0) {
-    const firstUploadedImage = recentUploadedImages[0];
-    if (firstUploadedImage !== imagePreview.value) {
-      updateCoverPreview(firstUploadedImage);
-      emit('fileChange', firstUploadedImage);
-    }
-  }
-};
-
 //监听编辑器值的变化
 onMounted(() => {
   const editor = new Editor({
@@ -508,9 +440,6 @@ onMounted(() => {
   editor.$on("change", e => {
     emit("change", e.detail.value);
     
-    // 处理内容变化时的封面图片提取
-    handleEditorContentChange(e.detail.value);
-
     nextTick(() => {
       fixPreviewImages();
     });
@@ -592,6 +521,20 @@ const applyErrorStyle = (img, alt) => {
     errorText.style.padding = '5px';
     img.parentNode.insertBefore(errorText, img.nextSibling);
   }
+};
+
+// 处理图片上传
+const getFile = (imageUrls) => {
+  if (!imageUrls) return;
+  
+  if (Array.isArray(imageUrls)) {
+
+    newProject.images = JSON.stringify(imageUrls);
+  } else if (typeof imageUrls === 'string') {
+
+    newProject.images = JSON.stringify([imageUrls]);
+  }
+  console.log('已设置项目图片数据:', newProject.images);
 };
 </script>
 

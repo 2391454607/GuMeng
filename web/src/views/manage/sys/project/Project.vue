@@ -1,6 +1,6 @@
 <script setup>
 import {onMounted, reactive, ref} from "vue";
-import {addProjectAPI, deleteFileAPI, deleteProjectAPI, getIchProjectAPI, updateProjectAPI} from "@/api/manage/IchProject.js";
+import {addProjectAPI, deleteFileAPI, deleteProjectAPI, getIchProjectAPI, updateProjectAPI, uploadImageAPI, uploadVideoAPI, batchUploadImagesAPI, batchDeleteFilesAPI} from "@/api/manage/IchProject.js";
 import {Message} from "@arco-design/web-vue";
 import { Editor, Viewer } from './bytemd';
 // 导入ByteMD插件
@@ -82,8 +82,8 @@ const ProjectAddClick = async () => {
   newProject.name = '';
   newProject.levelId = '';
   newProject.categoryId = '';
-  newProject.coverImage = null;
   newProject.video = null;
+  newProject.images = [];
   imgFile.value = null;
 };
 
@@ -91,24 +91,12 @@ const newProject = reactive({
   name: "",
   levelId: "",
   categoryId: "",
-  coverImage: null,
   video: null,
+  images: []
 });
 const imgFile = ref(null);
 // 编辑器内容
 const editorValue = ref('');
-
-// 获取封面图
-const getFile = (file) => {
-
-  if (typeof file === 'string') {
-    newProject.coverImage = file;
-    console.log('从内容中提取封面图URL:', file);
-  } else {
-
-    imgFile.value = file;
-  }
-};
 
 // 处理临时上传的视频
 const tempUploadedVideo = ref(null);
@@ -163,11 +151,6 @@ const addOk = async () => {
     return;
   }
 
-  if (!newProject.coverImage && !editorValue.value.includes('![') && !editorValue.value.includes('<img')) {
-    Message.warning('请在编辑器中插入至少一张图片作为封面图');
-    return;
-  }
-
   const formData = new FormData();
 
   formData.append('projectInfo', JSON.stringify({
@@ -175,8 +158,8 @@ const addOk = async () => {
     levelId: newProject.levelId,
     categoryId: newProject.categoryId,
     content: editorValue.value,
-    coverImage: newProject.coverImage, // 将提取的封面图URL直接传递给后端
-    video: newProject.video
+    video: newProject.video,
+    images: Array.isArray(newProject.images) ? newProject.images.join(',') : newProject.images
   }));
 
   try {
@@ -203,7 +186,7 @@ const viewProjectData = reactive({
   name: "",
   levelName: "",
   categoryName: "",
-  coverImage: "",
+  images: "",
   video: "",
   content: "",
   viewCount: 0,
@@ -216,7 +199,7 @@ const viewProjectClick = (record) => {
   viewProjectData.name = record.name;
   viewProjectData.levelName = record.levelName;
   viewProjectData.categoryName = record.categoryName;
-  viewProjectData.coverImage = record.coverImage;
+  viewProjectData.images = record.images;
   viewProjectData.video = record.video || '';
   viewProjectData.viewCount = record.viewCount;
   viewProjectData.createTime = record.createTime;
@@ -248,23 +231,13 @@ const updateProjectData = reactive({
   levelId: "",
   categoryName: "",
   categoryId: "",
-  coverImage: "",
   video: "",
+  images: [],
   content: ""
 });
 
 // 更新编辑器内容
 const updateEditorValue = ref('');
-
-// 处理更新表单的文件上传
-const getUpdateFile = (file) => {
-  if (typeof file === 'string') {
-    updateProjectData.coverImage = file;
-    console.log('更新编辑器中提取封面图URL:', file);
-  } else {
-    updateImgFile.value = file;
-  }
-};
 
 // 处理更新表单的视频上传
 const getUpdateVideo = (videoUrl) => {
@@ -280,8 +253,15 @@ const updateProjectClick = async (record) => {
   // 根据名称找到对应的ID
   updateProjectData.levelId = levelOptions.find(option => option.label === record.levelName)?.value || '';
   updateProjectData.categoryId = categoryOptions.find(option => option.label === record.categoryName)?.value || '';
-  updateProjectData.coverImage = record.coverImage;
   updateProjectData.video = record.video || '';
+  
+  // 处理images字段
+  if (record.images) {
+    // 字符串转换为数组
+    updateProjectData.images = record.images.split(',');
+  } else {
+    updateProjectData.images = [];
+  }
   
   // 保存原始视频URL
   originalVideoUrl.value = record.video || '';
@@ -319,17 +299,23 @@ const updateOk = async () => {
   }
 
   const formData = new FormData();
-  // 不再上传封面图片文件，而是直接使用URL
   
-  formData.append('projectInfo', JSON.stringify({
+  // 使用临时对象，方便调试
+  const updateData = {
     id: updateProjectData.id,
     name: updateProjectData.name,
     levelId: updateProjectData.levelId,
     categoryId: updateProjectData.categoryId,
     content: updateEditorValue.value,
-    coverImage: updateProjectData.coverImage, // 将提取的封面图URL直接传递给后端
-    video: updateProjectData.video
-  }));
+    video: updateProjectData.video,
+    // 如果images是数组，将其转换为逗号分隔的字符串
+    images: Array.isArray(updateProjectData.images) ? updateProjectData.images.join(',') : updateProjectData.images
+  };
+  
+  console.log('准备更新的项目数据:', updateData);
+  console.log('更新图片数据类型:', typeof updateProjectData.images, '内容:', updateProjectData.images);
+  
+  formData.append('projectInfo', JSON.stringify(updateData));
 
   try {
     const res = await updateProjectAPI(formData);
@@ -395,6 +381,40 @@ const closeUpdateDialog = async () => {
   // 清理可能的临时视频
   if (updateProjectData.video && updateProjectData.video !== originalVideoUrl.value) {
     await handleCleanupVideo(updateProjectData.video);
+  }
+};
+
+// 处理图片上传
+const getFile = (imageUrls) => {
+  console.log('收到图片上传数据:', imageUrls);
+  if (imageUrls) {
+    if (!Array.isArray(newProject.images)) {
+      newProject.images = [];
+    }
+    
+    if (Array.isArray(imageUrls)) {
+      newProject.images = [...newProject.images, ...imageUrls];
+    } else if (typeof imageUrls === 'string') {
+      newProject.images.push(imageUrls);
+    }
+    console.log('累积后的项目图片数据(原始数组):', newProject.images);
+  }
+};
+
+// 处理编辑时的图片上传
+const getUpdateFile = (imageUrls) => {
+  console.log('收到编辑时的图片上传数据:', imageUrls);
+  if (imageUrls) {
+    if (!Array.isArray(updateProjectData.images)) {
+      updateProjectData.images = [];
+    }
+    
+    if (Array.isArray(imageUrls)) {
+      updateProjectData.images = [...updateProjectData.images, ...imageUrls];
+    } else if (typeof imageUrls === 'string') {
+      updateProjectData.images.push(imageUrls);
+    }
+    console.log('累积后的编辑项目图片数据(原始数组):', updateProjectData.images);
   }
 };
 
@@ -583,7 +603,7 @@ const closeUpdateDialog = async () => {
           :categoryId="updateProjectData.categoryId"
           :levelOptions="levelOptions"
           :categoryOptions="categoryOptions"
-          :coverImage="updateProjectData.coverImage"
+          :images="updateProjectData.images"
           :video="updateProjectData.video"
           @nameChange="val => updateProjectData.name = val"
           @levelChange="val => updateProjectData.levelId = val"
