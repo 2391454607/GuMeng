@@ -603,7 +603,7 @@ const getUpdateFile = (imageUrls) => {
           :categoryId="updateProjectData.categoryId"
           :levelOptions="levelOptions"
           :categoryOptions="categoryOptions"
-          :images="updateProjectData.images"
+          :images="Array.isArray(updateProjectData.images) ? updateProjectData.images.join(',') : updateProjectData.images"
           :video="updateProjectData.video"
           @nameChange="val => updateProjectData.name = val"
           @levelChange="val => updateProjectData.levelId = val"
