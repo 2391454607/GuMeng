@@ -82,7 +82,7 @@ const ProjectAddClick = async () => {
   newProject.name = '';
   newProject.levelId = '';
   newProject.categoryId = '';
-  newProject.file = null;
+  newProject.coverImage = null;
   newProject.video = null;
   imgFile.value = null;
 };
@@ -91,19 +91,28 @@ const newProject = reactive({
   name: "",
   levelId: "",
   categoryId: "",
-  file: null,
+  coverImage: null,
   video: null,
 });
 const imgFile = ref(null);
 // 编辑器内容
 const editorValue = ref('');
 
+// 获取封面图
 const getFile = (file) => {
-  imgFile.value = file;
+
+  if (typeof file === 'string') {
+    newProject.coverImage = file;
+    console.log('从内容中提取封面图URL:', file);
+  } else {
+
+    imgFile.value = file;
+  }
 };
 
 // 处理临时上传的视频
-const tempUploadedVideo = ref(null); // 存储临时上传的视频URL
+const tempUploadedVideo = ref(null);
+const originalVideoUrl = ref(null);
 
 // 处理视频清理请求
 const handleCleanupVideo = async (videoUrl) => {
@@ -153,19 +162,20 @@ const addOk = async () => {
     Message.warning('请选择项目类别');
     return;
   }
-  
-  if (!imgFile.value) {
-    Message.warning('请上传封面图片');
+
+  if (!newProject.coverImage && !editorValue.value.includes('![') && !editorValue.value.includes('<img')) {
+    Message.warning('请在编辑器中插入至少一张图片作为封面图');
     return;
   }
 
   const formData = new FormData();
-  formData.append('file', imgFile.value);
+
   formData.append('projectInfo', JSON.stringify({
     name: newProject.name,
     levelId: newProject.levelId,
     categoryId: newProject.categoryId,
     content: editorValue.value,
+    coverImage: newProject.coverImage, // 将提取的封面图URL直接传递给后端
     video: newProject.video
   }));
 
@@ -234,31 +244,30 @@ const updateProject = ref(false);
 const updateProjectData = reactive({
   id: "",
   name: "",
-  levelId: "",
   levelName: "",
-  categoryId: "",
+  levelId: "",
   categoryName: "",
+  categoryId: "",
   coverImage: "",
   video: "",
-  content: "",
-  file: null
+  content: ""
 });
 
 // 更新编辑器内容
 const updateEditorValue = ref('');
 
-// 文件处理函数
+// 处理更新表单的文件上传
 const getUpdateFile = (file) => {
-  updateProjectData.file = file;
+  if (typeof file === 'string') {
+    updateProjectData.coverImage = file;
+    console.log('更新编辑器中提取封面图URL:', file);
+  } else {
+    updateImgFile.value = file;
+  }
 };
 
-// 定义临时更新视频URL
-const tempUpdateVideo = ref(null);
-
-// 视频处理函数
+// 处理更新表单的视频上传
 const getUpdateVideo = (videoUrl) => {
-  // 记录临时视频，以便在取消时清理
-  tempUpdateVideo.value = videoUrl;
   updateProjectData.video = videoUrl;
 };
 
@@ -273,6 +282,9 @@ const updateProjectClick = async (record) => {
   updateProjectData.categoryId = categoryOptions.find(option => option.label === record.categoryName)?.value || '';
   updateProjectData.coverImage = record.coverImage;
   updateProjectData.video = record.video || '';
+  
+  // 保存原始视频URL
+  originalVideoUrl.value = record.video || '';
   
   // 优先使用数据库中的content
   updateProjectData.content = record.content || '';
@@ -307,16 +319,15 @@ const updateOk = async () => {
   }
 
   const formData = new FormData();
-  if (updateProjectData.file) {
-    formData.append('file', updateProjectData.file);
-  }
-
+  // 不再上传封面图片文件，而是直接使用URL
+  
   formData.append('projectInfo', JSON.stringify({
     id: updateProjectData.id,
     name: updateProjectData.name,
     levelId: updateProjectData.levelId,
     categoryId: updateProjectData.categoryId,
     content: updateEditorValue.value,
+    coverImage: updateProjectData.coverImage, // 将提取的封面图URL直接传递给后端
     video: updateProjectData.video
   }));
 
@@ -380,13 +391,11 @@ const closeAddDialog = async () => {
 };
 
 const closeUpdateDialog = async () => {
-  // 清理临时上传的视频
-  if (tempUpdateVideo.value && tempUpdateVideo.value !== updateProjectData.video) {
-    await handleCleanupVideo(tempUpdateVideo.value);
-    tempUpdateVideo.value = null;
-    updateProjectData.video = null;
-  }
   updateProject.value = false;
+  // 清理可能的临时视频
+  if (updateProjectData.video && updateProjectData.video !== originalVideoUrl.value) {
+    await handleCleanupVideo(updateProjectData.video);
+  }
 };
 
 </script>

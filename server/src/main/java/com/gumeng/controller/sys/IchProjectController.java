@@ -65,7 +65,7 @@ public class IchProjectController {
 
     //新增非遗项目信息和图片文件
     @PostMapping("/addProject")
-    public HttpResponse addIchProject(@RequestParam("file") MultipartFile file,
+    public HttpResponse addIchProject(@RequestParam(value = "file", required = false) MultipartFile file,
                                       @RequestParam("projectInfo") String projectInfo,
                                       @RequestParam(value = "videoFile", required = false) MultipartFile videoFile) {
         try {
@@ -73,8 +73,8 @@ public class IchProjectController {
             ObjectMapper mapper = new ObjectMapper();
             IchProject ichProject = mapper.readValue(projectInfo, IchProject.class);
 
-            // 处理封面图片上传
-            if (!file.isEmpty()) {
+            // 处理封面图片 上传
+            if (file != null && !file.isEmpty()) {
                 // 验证文件类型是否为图片
                 String contentType = file.getContentType();
                 if (contentType == null || !contentType.startsWith("image/")) {
@@ -135,7 +135,7 @@ public class IchProjectController {
             // 保存项目信息
             boolean result = ichProjectService.save(ichProject);
             if (result) {
-                return HttpResponse.success("项目信息保存成功");
+                return HttpResponse.success(ichProject.getId());
             }
             return HttpResponse.error("项目信息保存失败");
 
@@ -189,7 +189,7 @@ public class IchProjectController {
                 } else {
                     return HttpResponse.error("封面图片上传失败");
                 }
-            } else {
+            } else if (ichProject.getCoverImage() == null || ichProject.getCoverImage().isEmpty()) {
                 ichProject.setCoverImage(oldProject.getCoverImage());
             }
             
@@ -223,7 +223,7 @@ public class IchProjectController {
                 } else {
                     return HttpResponse.error("视频上传失败");
                 }
-            } else {
+            } else if (ichProject.getVideo() == null || ichProject.getVideo().isEmpty()) {
                 ichProject.setVideo(oldProject.getVideo());
             }
 

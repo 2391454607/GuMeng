@@ -71,6 +71,36 @@ watch(localCategoryId, (newVal) => {
   emit('categoryChange', newVal);
 });
 
+// 从内容中提取第一张图片URL作为封面
+const extractCoverImageFromContent = (content) => {
+  if (!content) return null;
+  
+  // 尝试匹配Markdown图片语法
+  const markdownImageRegex = /!\[.*?\]\((.*?)\)/;
+  const markdownMatch = content.match(markdownImageRegex);
+  
+  if (markdownMatch && markdownMatch[1]) {
+    return markdownMatch[1];
+  }
+  
+  // 尝试匹配HTML图片标签
+  const htmlImageRegex = /<img.*?src=["'](.*?)["']/;
+  const htmlMatch = content.match(htmlImageRegex);
+  
+  if (htmlMatch && htmlMatch[1]) {
+    return htmlMatch[1];
+  }
+  
+  return null;
+};
+
+// 更新封面图预览
+const updateCoverPreview = (url) => {
+  if (url) {
+    imagePreview.value = url;
+    console.log('从内容中更新封面图预览:', url);
+  }
+};
 
 const emit = defineEmits([
   "change", 
@@ -99,37 +129,6 @@ const handleBack = () => {
 
 const handleSave = () => {
   emit('save');
-};
-
-// 处理图片选择
-const handleFileChange = (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  // 验证文件类型和大小
-  const isImage = file.type.startsWith('image/');
-  const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB限制
-  
-  if (!isImage) {
-    Message.warning(`文件 ${file.name} 不是有效的图片格式`);
-    return;
-  }
-  
-  if (!isValidSize) {
-    Message.warning(`文件 ${file.name} 超过10MB大小限制`);
-    return;
-  }
-  
-  imageFile.value = file;
-  
-  // 创建本地预览
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    imagePreview.value = e.target.result;
-  };
-  reader.readAsDataURL(file);
-  
-  emit('fileChange', imageFile.value);
 };
 
 // 处理视频选择
@@ -257,7 +256,12 @@ const fixPreviewImages = () => {
     possibleImageUrls.push(...recentUploadedImages);
   }
   
-  console.log('找到图片URL数量:', possibleImageUrls.length, possibleImageUrls);
+  // 使用缓存机制减少日志输出
+  const urlsHash = possibleImageUrls.length + '-' + (possibleImageUrls[0] || '');
+  if (!fixPreviewImages.lastHash || fixPreviewImages.lastHash !== urlsHash) {
+    fixPreviewImages.lastHash = urlsHash;
+    console.log('找到图片URL数量:', possibleImageUrls.length);
+  }
   
   // 处理每个图片
   images.forEach((img, index) => {
@@ -288,11 +292,12 @@ const fixPreviewImages = () => {
       
       // 替换URL
       if (replacementUrl) {
-        img.src = replacementUrl;
-        console.log('替换图片URL:', replacementUrl);
-        
-        // 图片可见
-        applyImageStyle(img);
+        if (img.src !== replacementUrl) {
+          img.src = replacementUrl;
+          
+          // 图片可见
+          applyImageStyle(img);
+        }
       } else {
         // 应用应急样式
         applyPlaceholderStyle(img, alt);
@@ -320,7 +325,6 @@ const fixPreviewImages = () => {
           }
           
           if (replacementUrl && replacementUrl !== this.src) {
-            console.log('错误重试替换图片URL:', replacementUrl);
             this.src = replacementUrl;
             return;
           }
@@ -333,8 +337,8 @@ const fixPreviewImages = () => {
   });
   
   // 如果预览区没有图片但有URL，尝试手动创建图片元素
-  if (images.length === 0 && possibleImageUrls.length > 0) {
-    console.log('尝试手动添加图片到预览区');
+  if (images.length === 0 && possibleImageUrls.length > 0 && !fixPreviewImages.hasCreated) {
+    fixPreviewImages.hasCreated = true;
     createPreviewImages(previewElement, possibleImageUrls);
   }
 };
@@ -411,6 +415,13 @@ const handleUploadImages = async (files) => {
               recentUploadedImages.shift();
             }
             
+            // 第一个上传的图片将其设置为封面图
+            if (urls.length === 1 && (!imageFile.value || !imagePreview.value)) {
+              updateCoverPreview(imageUrl);
+              emit('fileChange', imageUrl);
+              console.log('将第一张上传的图片设置为封面图:', imageUrl);
+            }
+            
             // 立即尝试修复预览区图片
             setTimeout(() => {
               fixPreviewImages();
@@ -452,6 +463,39 @@ watch(() => props, newValue => {
   deep: true
 });
 
+// 监听编辑器值的变化并提取第一张图片作为封面
+const handleEditorContentChange = (value) => {
+  // 如果内容为空，直接返回
+  if (!value) return;
+  
+  // 从内容中提取第一张图片URL
+  const imageUrl = extractCoverImageFromContent(value);
+  
+  // 更新预览并向父组件发送文件变更事件
+  if (imageUrl && imageUrl !== 'undefined') {
+    // 更新预览并发送事件
+    if (imageUrl !== imagePreview.value) {
+      updateCoverPreview(imageUrl);
+      
+      // 处理可能的相对URL
+      let finalImageUrl = imageUrl;
+      if (finalImageUrl.startsWith('./') || finalImageUrl.startsWith('../')) {
+        finalImageUrl = window.location.origin + '/' + finalImageUrl.replace(/^\.\//, '');
+      }
+
+      emit('fileChange', finalImageUrl);
+    }
+  } 
+
+  else if (recentUploadedImages.length > 0) {
+    const firstUploadedImage = recentUploadedImages[0];
+    if (firstUploadedImage !== imagePreview.value) {
+      updateCoverPreview(firstUploadedImage);
+      emit('fileChange', firstUploadedImage);
+    }
+  }
+};
+
 //监听编辑器值的变化
 onMounted(() => {
   const editor = new Editor({
@@ -463,6 +507,9 @@ onMounted(() => {
   });
   editor.$on("change", e => {
     emit("change", e.detail.value);
+    
+    // 处理内容变化时的封面图片提取
+    handleEditorContentChange(e.detail.value);
 
     nextTick(() => {
       fixPreviewImages();
@@ -590,26 +637,6 @@ const applyErrorStyle = (img, alt) => {
             {{ option.label }}
           </option>
         </select>
-      </div>
-      
-      <div class="form-item">
-        <label class="form-label">封面图片</label>
-        <div class="image-uploader">
-          <div v-if="imagePreview" class="current-image">
-            <img :src="imagePreview" class="preview-image" alt="当前封面图片">
-          </div>
-          <input 
-            type="file" 
-            accept="image/*" 
-            class="file-input" 
-            id="cover-image"
-            @change="handleFileChange"
-          >
-          <label for="cover-image" class="file-input-label">
-            选择图片
-          </label>
-          <span class="selected-filename">{{ imageFile ? imageFile.name : '未选择文件' }}</span>
-        </div>
       </div>
       
       <div class="form-item">
@@ -749,13 +776,13 @@ const applyErrorStyle = (img, alt) => {
 }
 
 /* 图片上传相关样式 */
-.image-uploader, .video-uploader {
+.video-uploader {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.current-image, .current-video {
+.current-video {
   width: 100%;
   max-width: 160px;
   height: 90px;
@@ -768,7 +795,7 @@ const applyErrorStyle = (img, alt) => {
   justify-content: center;
 }
 
-.preview-image, .preview-video {
+.preview-video {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1044,5 +1071,9 @@ input.form-input, select.form-select {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 视频上传控件样式 */
+.video-upload-controls {
 }
 </style> 

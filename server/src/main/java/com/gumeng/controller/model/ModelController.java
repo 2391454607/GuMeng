@@ -1,5 +1,6 @@
 package com.gumeng.controller.model;
 
+import com.gumeng.annotation.LogOperation;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.service.web.ModelService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ public class ModelController {
     private ModelService modelService;
 
 
+    @LogOperation(module = "虚拟展厅",operation = "获取3D模型列表")
     @GetMapping("/getModelList")
     public HttpResponse getModelList(){
         Object ModelList = modelService.getModelList();

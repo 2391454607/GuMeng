@@ -6,6 +6,21 @@ import { Message } from '@arco-design/web-vue';
 import { IconArrowLeft, IconCalendar, IconEye, IconLoading } from '@arco-design/web-vue/es/icon';
 import Footer from "@/views/web/layout/Footer.vue";
 import BaikeAssistant from "@/components/BaikeAssistant.vue";
+// 导入ByteMD的Viewer组件
+import { Viewer } from '@/views/manage/sys/project/bytemd';
+// 导入ByteMD插件
+import gfm from '@bytemd/plugin-gfm';
+import highlight from '@bytemd/plugin-highlight';
+import gemoji from '@bytemd/plugin-gemoji';
+// 导入ByteMD样式
+import 'bytemd/dist/index.css';
+
+// ByteMD插件
+const plugins = [
+  gfm(),
+  highlight(),
+  gemoji()
+];
 
 const route = useRoute();
 const router = useRouter();
@@ -102,7 +117,9 @@ const goBack = () => {
               
               <div class="info-section" v-if="projectDetail.content">
                 <h2>详细介绍</h2>
-                <div class="content" v-html="projectDetail.content"></div>
+                <div class="content">
+                  <Viewer :value="projectDetail.content" :plugins="plugins" />
+                </div>
               </div>
               
               <div class="info-section" v-if="projectDetail.inheritors && projectDetail.inheritors.length > 0">
@@ -244,29 +261,22 @@ const goBack = () => {
   font-family: "STKaiti", "楷体", serif;
 }
 
-
 .content {
   max-width: 100%;
   overflow-wrap: break-word;
+  padding: 15px;
+  border-radius: 8px;
 }
 
-/* 扩展内容显示样式 */
-.content :deep(h1),
-.content :deep(h2),
-.content :deep(h3),
-.content :deep(h4) {
-  color: #8C1F28;
-  font-family: "STKaiti", "楷体", serif;
-  margin: 20px 0 10px;
-  padding-bottom: 5px;
+/* 自定义Viewer组件样式 */
+:deep(.markdown-body) {
+  background-color: transparent;
+  font-family: "SimSun", "宋体", serif;
+  line-height: 1.8;
+  color: #333;
 }
 
-.content :deep(h1),
-.content :deep(h2) {
-  border-bottom: 1px solid #E4D9C3;
-}
-
-.content :deep(img) {
+:deep(.markdown-body img) {
   max-width: 100%;
   display: block;
   margin: 15px auto;
@@ -274,13 +284,28 @@ const goBack = () => {
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.content :deep(p) {
+:deep(.markdown-body h1),
+:deep(.markdown-body h2),
+:deep(.markdown-body h3),
+:deep(.markdown-body h4) {
+  color: #8C1F28;
+  font-family: "STKaiti", "楷体", serif;
+  margin: 20px 0 10px;
+  padding-bottom: 5px;
+  border-bottom: none;
+}
+
+:deep(.markdown-body h1, .markdown-body h2) {
+  border-bottom: none;
+}
+
+:deep(.markdown-body p) {
   margin: 16px 0;
   line-height: 1.8;
 }
 
-.content :deep(ul),
-.content :deep(ol) {
+:deep(.markdown-body ul),
+:deep(.markdown-body ol) {
   padding-left: 20px;
   margin: 16px 0;
 }
