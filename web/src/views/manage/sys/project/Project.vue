@@ -308,7 +308,7 @@ const updateOk = async () => {
     categoryId: updateProjectData.categoryId,
     content: updateEditorValue.value,
     video: updateProjectData.video,
-    // 如果images是数组，将其转换为逗号分隔的字符串
+
     images: Array.isArray(updateProjectData.images) ? updateProjectData.images.join(',') : updateProjectData.images
   };
   

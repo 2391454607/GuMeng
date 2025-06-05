@@ -117,7 +117,7 @@ const handleVideoChange = async (event) => {
   
   videoFile.value = file;
   
-  // 如果已有上传的视频URL，先记录用于清理
+
   const oldVideoUrl = videoUrl.value;
   
   // 创建本地预览
@@ -301,7 +301,7 @@ const fixPreviewImages = () => {
     }
   });
   
-  // 如果预览区没有图片但有URL，尝试手动创建图片元素
+
   if (images.length === 0 && possibleImageUrls.length > 0 && !fixPreviewImages.hasCreated) {
     fixPreviewImages.hasCreated = true;
     createPreviewImages(previewElement, possibleImageUrls);

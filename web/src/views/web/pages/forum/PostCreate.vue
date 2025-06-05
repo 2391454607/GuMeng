@@ -294,7 +294,7 @@ const fetchPostDetail = async () => {
         });
       }
       
-      // 如果内容是HTML格式，提取HTML中的图片
+      // 提取HTML中的图片
       if (contentIsHTML) {
         const imgTagRegex = /<img[^>]+src\s*=\s*["']([^"']+)["'][^>]*>/g;
         const imgMatches = [...(post.content || '').matchAll(imgTagRegex)];
@@ -823,7 +823,7 @@ const submitForm = async () => {
     let htmlContent;
     
     if (contentIsHTML) {
-      // 如果内容已经是HTML格式，移除注释标记后直接使用
+
       htmlContent = postForm.content.replace(/<!--\s*注意：此内容为HTML格式，保存后将会保留当前视觉效果\s*-->\n?/g, '');
       console.log('内容已经是HTML格式，跳过转换');
     } else {

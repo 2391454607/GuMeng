@@ -282,7 +282,7 @@ const scrollToBottom = () => {
 
 // 开始拖动
 const startDrag = (e) => {
-  // 如果点击的是输入框、发送按钮或聊天内容，不启动拖拽
+  // 点击的是输入框、发送按钮或聊天内容，不启动拖拽
   if (e.target.closest('.chat-input') || 
       e.target.closest('.chat-send-btn') || 
       e.target.closest('.chat-messages') || 

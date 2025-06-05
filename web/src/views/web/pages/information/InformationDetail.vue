@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, nextTick, onBeforeUnmount } from 'vue';
+import { ref, onMounted, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getProjectDetail } from '@/api/web/IchProject.js';
 import { Message } from '@arco-design/web-vue';
@@ -26,7 +26,6 @@ const route = useRoute();
 const router = useRouter();
 const loading = ref(true);
 const projectDetail = ref({});
-const observer = ref(null);
 const qiniuUrls = ref([]);
 
 onMounted(() => {
@@ -40,47 +39,9 @@ onMounted(() => {
   fetchProjectDetail(id);
 });
 
-onBeforeUnmount(() => {
-  if (observer.value) {
-    observer.value.disconnect();
-    observer.value = null;
-  }
-});
-
-// 创建监视DOM变化的观察器
-const setupMutationObserver = () => {
-  if (observer.value) {
-    observer.value.disconnect();
-  }
-
-  observer.value = new MutationObserver((mutations) => {
-    let needFix = false;
-    
-    mutations.forEach(mutation => {
-      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-        mutation.addedNodes.forEach(node => {
-          if (node.nodeName === 'IMG') {
-            needFix = true;
-          } else if (node.querySelectorAll) {
-            const images = node.querySelectorAll('img');
-            if (images.length > 0) needFix = true;
-          }
-        });
-      }
-    });
-    
-    if (needFix) {
-      fixImages();
-    }
-  });
-  
-  // 开始观察整个document，监视子节点变化
-  const config = { childList: true, subtree: true };
-  observer.value.observe(document.body, config);
-};
-
 // 从内容中提取所有可能的七牛云图片URL
 const extractQiniuUrls = (content) => {
+  // 优先使用项目的images字段
   if (projectDetail.value && projectDetail.value.images) {
     if (typeof projectDetail.value.images === 'string') {
       const imageArray = projectDetail.value.images.split(',');
@@ -92,9 +53,11 @@ const extractQiniuUrls = (content) => {
   
   if (!content) return [];
 
+  // 匹配七牛云域名图片
   const qiniuDomainPattern = /https?:\/\/[^)\s"'<>]+?(?:clouddn\.com|hn-bkt\.clouddn\.com)[^)\s"'<>]*?\.(?:png|jpg|jpeg|gif|webp)/gi;
   let qiniuLinks = content.match(qiniuDomainPattern) || [];
   
+  // 如果没找到七牛云图片，尝试匹配其他图片
   if (qiniuLinks.length === 0) {
     const genericImagePattern = /https?:\/\/[^)\s"'<>]+\.(?:png|jpg|jpeg|gif|webp)/gi;
     qiniuLinks = content.match(genericImagePattern) || [];
@@ -109,6 +72,7 @@ const fixImages = () => {
   if (!viewer) return;
 
   const images = viewer.querySelectorAll('img');
+  if (!images.length) return;
 
   if (qiniuUrls.value.length === 0) {
     qiniuUrls.value = extractQiniuUrls(projectDetail.value.content || '');
@@ -118,7 +82,6 @@ const fixImages = () => {
 
   images.forEach((img, index) => {
     const src = img.getAttribute('src');
-
     const isInvalidUrl = !src || 
                          src === 'undefined' || 
                          src.includes('localhost') || 
@@ -126,13 +89,9 @@ const fixImages = () => {
                          src.includes('/information/detail/');
     
     if (isInvalidUrl) {
-      let newSrc = null;
-      
-      if (index < qiniuUrls.value.length) {
-        newSrc = qiniuUrls.value[index];
-      } else if (qiniuUrls.value.length > 0) {
-        newSrc = qiniuUrls.value[0];
-      }
+      const newSrc = index < qiniuUrls.value.length ? 
+        qiniuUrls.value[index] : 
+        qiniuUrls.value[0];
       
       if (newSrc) {
         img.src = newSrc;
@@ -141,19 +100,6 @@ const fixImages = () => {
         img.style.margin = '10px auto';
         img.style.display = 'block';
       }
-    }
-
-    if (!img.hasAttribute('data-error-handled')) {
-      img.setAttribute('data-error-handled', 'true');
-      
-      img.onerror = function() {
-        if (qiniuUrls.value.length > 0) {
-          const fallbackSrc = qiniuUrls.value[0];
-          if (this.src !== fallbackSrc) {
-            this.src = fallbackSrc;
-          }
-        }
-      };
     }
   });
 };
@@ -176,13 +122,7 @@ const fetchProjectDetail = async (id) => {
       qiniuUrls.value = extractQiniuUrls(projectDetail.value.content || '');
 
       nextTick(() => {
-        setTimeout(() => {
-          setupMutationObserver();
-          fixImages(); 
-        }, 300);
-
-        setTimeout(fixImages, 800);
-        setTimeout(fixImages, 1500);
+        setTimeout(fixImages, 300);
       });
     } else {
       Message.error(res.msg || '获取项目详情失败');
