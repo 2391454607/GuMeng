@@ -33,10 +33,9 @@ public class IchProjectListVO {
     private String levelName;
 
     /**
-     * 封面
+     * 图片JSON数组
      */
-    private String coverImage;
-
+    private String images;
 
     /**
      * 视频URL

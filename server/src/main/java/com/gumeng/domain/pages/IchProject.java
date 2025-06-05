@@ -41,10 +41,10 @@ public class IchProject implements Serializable {
     private Integer levelId;
 
     /**
-     * 封面
+     * 图片JSON数组
      */
-    @TableField(value = "cover_image")
-    private String coverImage;
+    @TableField(value = "images")
+    private String images;
 
     /**
      * 详细内容描述
@@ -96,7 +96,7 @@ public class IchProject implements Serializable {
             && (this.getName() == null ? other.getName() == null : this.getName().equals(other.getName()))
             && (this.getCategoryId() == null ? other.getCategoryId() == null : this.getCategoryId().equals(other.getCategoryId()))
             && (this.getLevelId() == null ? other.getLevelId() == null : this.getLevelId().equals(other.getLevelId()))
-            && (this.getCoverImage() == null ? other.getCoverImage() == null : this.getCoverImage().equals(other.getCoverImage()))
+            && (this.getImages() == null ? other.getImages() == null : this.getImages().equals(other.getImages()))
             && (this.getContent() == null ? other.getContent() == null : this.getContent().equals(other.getContent()))
             && (this.getVideo() == null ? other.getVideo() == null : this.getVideo().equals(other.getVideo()))
             && (this.getViewCount() == null ? other.getViewCount() == null : this.getViewCount().equals(other.getViewCount()))
@@ -112,7 +112,7 @@ public class IchProject implements Serializable {
         result = prime * result + ((getName() == null) ? 0 : getName().hashCode());
         result = prime * result + ((getCategoryId() == null) ? 0 : getCategoryId().hashCode());
         result = prime * result + ((getLevelId() == null) ? 0 : getLevelId().hashCode());
-        result = prime * result + ((getCoverImage() == null) ? 0 : getCoverImage().hashCode());
+        result = prime * result + ((getImages() == null) ? 0 : getImages().hashCode());
         result = prime * result + ((getContent() == null) ? 0 : getContent().hashCode());
         result = prime * result + ((getVideo() == null) ? 0 : getVideo().hashCode());
         result = prime * result + ((getViewCount() == null) ? 0 : getViewCount().hashCode());
@@ -131,7 +131,7 @@ public class IchProject implements Serializable {
         sb.append(", name=").append(name);
         sb.append(", categoryId=").append(categoryId);
         sb.append(", levelId=").append(levelId);
-        sb.append(", coverImage=").append(coverImage);
+        sb.append(", images=").append(images);
         sb.append(", content=").append(content);
         sb.append(", video=").append(video);
         sb.append(", viewCount=").append(viewCount);

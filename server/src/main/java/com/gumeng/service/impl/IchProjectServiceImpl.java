@@ -47,6 +47,17 @@ public class IchProjectServiceImpl extends ServiceImpl<IchProjectMapper, IchProj
         IchProjectDetailVO detailVO = new IchProjectDetailVO();
         BeanUtils.copyProperties(project, detailVO);
         
+        // 处理封面图片：优先使用images字段，如果有多张图片，使用第一张作为封面
+        if (project.getImages() != null && !project.getImages().isEmpty()) {
+            detailVO.setImages(project.getImages());
+            if (project.getImages().contains(",")) {
+                String firstImage = project.getImages().split(",")[0].trim();
+                detailVO.setCoverImage(firstImage);
+            } else {
+                detailVO.setCoverImage(project.getImages());
+            }
+        }
+        
         // 4. 获取分类名称和级别名称
         try {
             // 使用Mapper获取分类和级别名称

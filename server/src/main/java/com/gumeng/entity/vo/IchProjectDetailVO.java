@@ -50,10 +50,14 @@ public class IchProjectDetailVO {
     private String regionName;
 
     /**
-     * 封面
+     * 图片JSON数组
+     */
+    private String images;
+
+    /**
+     * 封面图片URL
      */
     private String coverImage;
-
 
     /**
      * 视频URL
