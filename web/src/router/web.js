@@ -91,10 +91,29 @@ const webRouters = [
         component: () => import("@/views/web/pages/interaction/Aides.vue")
     },
     {
-        path: '/games',
-        name: 'Games',
-        component: () => import('@/views/web/pages/games/Games.vue'),
-        meta: { requiresAuth: false }
+        path: '/games/space',
+        name: 'GameSpace',
+        component: () => import('@/views/web/pages/games/GameSpace.vue')
+    },
+    {
+        path: '/games/puzzle',
+        name: 'Puzzle',
+        component: () => import('@/views/web/pages/games/Puzzle.vue')
+    },
+    {
+        path: '/games/quiz',
+        name: 'Quiz',
+        component: () => import('@/views/web/pages/games/Quiz.vue')
+    },
+    {
+        path: '/games/matching',
+        name: 'Matching',
+        component: () => import('@/views/web/pages/games/Matching.vue')
+    },
+    {
+        path: '/games/map',
+        name: 'MapChallenge',
+        component: () => import('@/views/web/pages/games/MapChallenge.vue')
     }
 ];
 

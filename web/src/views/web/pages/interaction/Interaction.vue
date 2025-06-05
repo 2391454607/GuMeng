@@ -8,12 +8,17 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 const handleClick = (type) => {
-  Message.success(`即将体验${type}`);
-  if (type === '故梦阑珊非遗守护精灵'){
-    router.push({ name: 'Aides' })
-  }
   if (type === '非遗小游戏') {
-    router.push({ name: 'Games' });
+    router.push('/games/space');
+    return;
+  }
+  if (type === '故梦阑珊非遗守护精灵') {
+    router.push({ name: 'Aides' });
+    return;
+  }
+  if (type === '非遗虚拟人') {
+    router.push({ name: 'VirtualHuman' });
+    return;
   }
 };
 </script>
