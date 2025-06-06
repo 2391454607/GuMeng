@@ -180,18 +180,91 @@ public class SysGoodsController {
         }
     }
 
-    //修改商品
+    //修改商品信息
     @PostMapping("/updateProduct")
-    public HttpResponse updateProduct(@RequestBody UpdateProductDTO updateProductDTO) {
-        boolean result = productService.updateById(updateProductDTO);
-        return result ? HttpResponse.success("修改成功") : HttpResponse.error("修改失败");
+    public HttpResponse updateProduct(@RequestBody UpdateProductDTO updateProductDTO,
+                                    @RequestParam(required = false) Long timestamp) {
+        if (updateProductDTO == null) {
+            return HttpResponse.error("商品信息不能为空");
+        }
+
+        // 如果提供了新的图片（timestamp不为空），处理图片相关逻辑
+        List<String> oldImages = null;
+        List<String> uploadedFiles = null;
+        if (timestamp != null) {
+            // 获取并移除上传的新图片信息
+            uploadedFiles = UPLOADED_FILES.remove(timestamp);
+            if (uploadedFiles == null) {
+                return HttpResponse.error("图片信息已过期，请重新上传");
+            }
+
+            // 获取商品旧图片信息
+            Product oldProduct = productService.getById(updateProductDTO.getId());
+            if (oldProduct != null && oldProduct.getImageUrl() != null) {
+                oldImages = List.of(oldProduct.getImageUrl().split(","));
+            }
+        } else if (updateProductDTO.getImageUrl() == null || updateProductDTO.getImageUrl().trim().isEmpty()) {
+            // 如果没有上传新图片，且imageUrl为null或空字符串，获取原商品信息并保持原有图片URL
+            Product oldProduct = productService.getById(updateProductDTO.getId());
+            if (oldProduct != null && oldProduct.getImageUrl() != null) {
+                updateProductDTO.setImageUrl(oldProduct.getImageUrl());
+            }
+        }
+
+        try {
+            // 更新商品信息
+            boolean result = productService.updateById(updateProductDTO);
+            if (!result) {
+                // 更新失败时，如果有新上传的图片，删除这些图片
+                if (uploadedFiles != null) {
+                    deleteUploadedFiles(uploadedFiles);
+                }
+                return HttpResponse.error("修改失败");
+            }
+
+            // 更新成功后，如果上传了新图片，才删除旧图片
+            if (timestamp != null && oldImages != null && !oldImages.isEmpty()) {
+                deleteUploadedFiles(oldImages);
+            }
+            
+            return HttpResponse.success("修改成功");
+            
+        } catch (Exception e) {
+            // 发生异常时，如果有新上传的图片，删除这些图片
+            if (uploadedFiles != null) {
+                deleteUploadedFiles(uploadedFiles);
+            }
+            return HttpResponse.error("修改失败：" + e.getMessage());
+        }
     }
 
     //删除商品
     @PostMapping("/deleteProduct")
     public HttpResponse deleteProduct(@RequestParam Long id) {
+        // 获取商品信息
+        Product product = productService.getById(id);
+        if (product == null) {
+            return HttpResponse.error("商品不存在");
+        }
+
+        // 获取商品图片URL列表
+        List<String> imageUrls = null;
+        if (product.getImageUrl() != null && !product.getImageUrl().isEmpty()) {
+            imageUrls = List.of(product.getImageUrl().split(","));
+        }
+
+        // 删除商品
         boolean result = productService.removeById(id);
-        return result ? HttpResponse.success("删除成功") : HttpResponse.error("删除失败");
+        if (!result) {
+            return HttpResponse.error("删除失败");
+        }
+
+        // 删除成功后，删除相关的图片
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            deleteUploadedFiles(imageUrls);
+        }
+
+        return HttpResponse.success("删除成功");
     }
 
 }
