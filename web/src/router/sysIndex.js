@@ -21,16 +21,20 @@ const sysRouters = [
         name: "Policy",
         component: () => import("@/views/manage/sys/policy/Policy.vue")
     },
-
     {
-    path: "forum",
-    name: "sysForum",
-    component: () => import("@/views/manage/sys/forum/Forum.vue")
+        path: "shop",
+        name: "Shop",
+        component: () => import("@/views/manage/sys/shop/Shop.vue")
     },
     {
-    path: "comments",
-    name: "Comments",
-    component: () => import("@/views/manage/sys/forum/Comments.vue")
+        path: "forum",
+        name: "sysForum",
+        component: () => import("@/views/manage/sys/forum/Forum.vue")
+    },
+    {
+        path: "comments",
+        name: "Comments",
+        component: () => import("@/views/manage/sys/forum/Comments.vue")
     },
     {
         path: "project",

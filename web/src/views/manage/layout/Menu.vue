@@ -7,6 +7,7 @@ import {Message} from "@arco-design/web-vue";
 import {
   IconHome,
   IconUser,
+  IconCommon,
   IconDashboard,
   IconFileImage,
   IconBook,
@@ -73,6 +74,7 @@ onMounted(() => {
 const iconMap = {
   home: IconHome,
   user: IconUser,
+  shop: IconCommon,
   dashboard: IconDashboard,
   fileImage: IconFileImage,
   forum: IconBook,

@@ -1,0 +1,26 @@
+import { http } from '@/utils/http.js'
+
+//获取商品列表(管理端)
+export const getGoodsListAPI = ({ current: current, size: size }) => {
+    return http.get("/sys/shop/getProductList", { current: current, size: size })
+}
+
+//上传商品图片
+export const uploadGoodImagesAPI = (files) => {
+    return http.post("/sys/shop/uploadImages", files)
+}
+
+//新增商品
+export const addProductInfoAPI = (data) => {
+    return http.post("/sys/shop/addProductInfo",data)
+}
+
+//修改商品
+export const updateProductAPI = (data) => {
+    return http.post("/sys/shop/updateProduct",data)
+}
+
+//删除商品
+export const deleteProductAPI = (id) => {
+    return http.delete(`/sys/shop/deleteProduct/${id}`)
+}
