@@ -31,7 +31,7 @@ public class AddProductDTO {
     /**
      * 混合支付的金额价格
      */
-    private BigDecimal mixedPriceMoney;
+    private Integer mixedPriceMoney;
 
     /**
      * 混合支付的所需积分
