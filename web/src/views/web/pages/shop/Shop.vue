@@ -100,7 +100,7 @@ const viewDetail = (id) => {
               hoverable
           >
             <div class="goods-image">
-              <img :src="goods.imageUrl" :alt="goods.name">
+              <img :src="goods.imageUrl.split(',')[0].replace(/[\s`]/g, '')" :alt="goods.name">
               <div class="goods-overlay" @click="viewDetail(goods.id)">
                 <div class="overlay-content">
                   <icon-eye class="overlay-icon" />
@@ -121,9 +121,9 @@ const viewDetail = (id) => {
                       <div class="mixed-price">
                         <span class="price-value">¥ {{ goods.mixedPriceMoney }}元 + {{ goods.mixedPricePoints }}积分</span>
                       </div>
-                      <div class="original-price">
-                        <span>原价：¥{{ goods.priceMoney }}</span>
-                      </div>
+                    </div>
+                    <div class="original-price" style="display: block; margin-top: 5px;">
+                      <span style="text-decoration: line-through; color: #999;">原价：¥{{ goods.priceMoney }}</span>
                     </div>
                   </div>
                 </template>
@@ -287,11 +287,11 @@ const viewDetail = (id) => {
 
 .goods-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 24px;
   margin: 20px auto;
-  width: 100vw;
-  padding: 0 20px;
+  max-width: 1350px;
+  padding: 0 40px;
 }
 
 .goods-card {
@@ -509,8 +509,7 @@ const viewDetail = (id) => {
 
 .original-price {
   color: #999;
-  font-size: 14px;
+  font-size: 16px;
   text-decoration: line-through;
-  margin-left: 15px;
 }
 </style>
