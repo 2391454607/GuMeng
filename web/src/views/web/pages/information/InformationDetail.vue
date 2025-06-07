@@ -27,6 +27,7 @@ const router = useRouter();
 const loading = ref(true);
 const projectDetail = ref({});
 const qiniuUrls = ref([]);
+const viewerQiniuUrls = ref([]);
 
 onMounted(() => {
   const id = route.params.id;
@@ -95,9 +96,10 @@ const fixImages = () => {
       
       if (newSrc) {
         img.src = newSrc;
-        img.style.maxWidth = '100%';
+        img.style.maxWidth = '45%';
+        img.style.width = 'auto';
         img.style.height = 'auto';
-        img.style.margin = '10px auto';
+        img.style.margin = '15px auto';
         img.style.display = 'block';
       }
     }
@@ -150,6 +152,46 @@ const customPlugins = () => {
 
 const goBack = () => {
   router.push('/information');
+};
+
+// 修复图片显示函数
+const fixViewerImages = () => {
+  setTimeout(() => {
+    const viewer = document.querySelector('.project-view-container .markdown-body');
+    if (!viewer) return;
+
+    const images = viewer.querySelectorAll('img');
+    if (!images.length) return;
+
+    if (viewerQiniuUrls.value.length === 0) {
+      viewerQiniuUrls.value = extractQiniuUrls(projectDetail.value.content || '');
+    }
+
+    if (viewerQiniuUrls.value.length === 0) return;
+
+    images.forEach((img, index) => {
+      const src = img.getAttribute('src');
+      const isInvalidUrl = !src || 
+                          src === 'undefined' || 
+                          src.includes('localhost') || 
+                          src.includes('undefined');
+      
+      if (isInvalidUrl) {
+        const newSrc = index < viewerQiniuUrls.value.length ? 
+          viewerQiniuUrls.value[index] : 
+          viewerQiniuUrls.value[0];
+        
+        if (newSrc) {
+          img.src = newSrc;
+          img.style.maxWidth = '45%';
+          img.style.width = 'auto';
+          img.style.height = 'auto';
+          img.style.margin = '15px auto';
+          img.style.display = 'block';
+        }
+      }
+    });
+  }, 300);
 };
 </script>
 
@@ -360,7 +402,9 @@ const goBack = () => {
 }
 
 :deep(.markdown-body img) {
-  max-width: 90%;
+  max-width: 45%;
+  width: auto;
+  height: auto;
   display: block;
   margin: 15px auto;
   border-radius: 6px;
