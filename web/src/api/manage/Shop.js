@@ -6,13 +6,21 @@ export const getGoodsListAPI = ({ current: current, size: size }) => {
 }
 
 //上传商品图片
-export const uploadGoodImagesAPI = (files) => {
-    return http.post("/sys/shop/uploadImages", files)
+export const uploadGoodImagesAPI = (formData) => {
+    return http.post("/sys/shop/uploadImages", formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    })
 }
 
 //新增商品
-export const addProductInfoAPI = (data) => {
-    return http.post("/sys/shop/addProductInfo",data)
+export const addProductInfoAPI = (data, timestamp) => {
+    return http.post("/sys/shop/addProductInfo", data, {
+        params: {
+            timestamp: timestamp
+        }
+    })
 }
 
 //修改商品
