@@ -30,5 +30,7 @@ export const updateProductAPI = (data) => {
 
 //删除商品
 export const deleteProductAPI = (id) => {
-    return http.delete(`/sys/shop/deleteProduct/${id}`)
+    return http.post("/sys/shop/deleteProduct", null, {
+        params: { id }
+    })
 }
