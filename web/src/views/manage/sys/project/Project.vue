@@ -1,5 +1,5 @@
 <script setup>
-import {onMounted, reactive, ref} from "vue";
+import {onMounted, reactive, ref, nextTick} from "vue";
 import {addProjectAPI, deleteFileAPI, deleteProjectAPI, getIchProjectAPI, updateProjectAPI, uploadImageAPI, uploadVideoAPI, batchUploadImagesAPI, batchDeleteFilesAPI} from "@/api/manage/IchProject.js";
 import {Message} from "@arco-design/web-vue";
 import { Editor, Viewer } from './bytemd';
@@ -10,6 +10,8 @@ import gemoji from '@bytemd/plugin-gemoji';
 import zhHans from 'bytemd/locales/zh_Hans.json';
 // 导入ByteMD样式
 import 'bytemd/dist/index.css';
+// 导入格式化工具
+import { formatDate } from '@/utils/format.js';
 
 // ByteMD插件配置
 const plugins = [
@@ -17,6 +19,9 @@ const plugins = [
   highlight(),
   gemoji(),
 ]
+
+// 提取七牛云图片URL的数组
+const viewerQiniuUrls = ref([]);
 
 //表格数据
 const ProjectList = ref([])
@@ -26,6 +31,26 @@ const loadData = async () => {
   loading.value = true;
   try {
     const res = await getIchProjectAPI(status);
+    
+    // 处理每条记录的封面图片
+    if (res.data && res.data.records) {
+      res.data.records.forEach(record => {
+        // 处理封面图片
+        if (record.images && record.images.includes(',')) {
+          record.coverImage = record.images.split(',')[0].trim();
+        } else if (record.images) {
+          record.coverImage = record.images;
+        } else {
+          record.coverImage = '/image/default-cover.png';
+        }
+        
+        // 格式化日期
+        if (record.createTime) {
+          record.createTimeFormatted = formatDate(record.createTime, 'yyyy-MM-dd hh:mm:ss');
+        }
+      });
+    }
+    
     ProjectList.value = res.data.records;
     total.value = res.data.total;
   } catch (error) {
@@ -179,6 +204,72 @@ const addOk = async () => {
   }
 };
 
+// 从内容中提取所有可能的七牛云图片URL
+const extractQiniuUrls = (content) => {
+  // 优先使用项目的images字段
+  if (viewProjectData.images) {
+    if (typeof viewProjectData.images === 'string') {
+      const imageArray = viewProjectData.images.split(',');
+      if (imageArray.length > 0) {
+        return imageArray;
+      }
+    }
+  }
+  
+  if (!content) return [];
+
+  // 匹配七牛云域名图片
+  const qiniuDomainPattern = /https?:\/\/[^)\s"'<>]+?(?:clouddn\.com|hn-bkt\.clouddn\.com)[^)\s"'<>]*?\.(?:png|jpg|jpeg|gif|webp)/gi;
+  let qiniuLinks = content.match(qiniuDomainPattern) || [];
+  
+  // 如果没找到七牛云图片，尝试匹配其他图片
+  if (qiniuLinks.length === 0) {
+    const genericImagePattern = /https?:\/\/[^)\s"'<>]+\.(?:png|jpg|jpeg|gif|webp)/gi;
+    qiniuLinks = content.match(genericImagePattern) || [];
+  }
+  
+  return qiniuLinks;
+};
+
+// 修复图片显示函数
+const fixViewerImages = () => {
+  setTimeout(() => {
+    const viewer = document.querySelector('.project-view-container .markdown-body');
+    if (!viewer) return;
+
+    const images = viewer.querySelectorAll('img');
+    if (!images.length) return;
+
+    if (viewerQiniuUrls.value.length === 0) {
+      viewerQiniuUrls.value = extractQiniuUrls(viewProjectData.content || '');
+    }
+
+    if (viewerQiniuUrls.value.length === 0) return;
+
+    images.forEach((img, index) => {
+      const src = img.getAttribute('src');
+      const isInvalidUrl = !src || 
+                          src === 'undefined' || 
+                          src.includes('localhost') || 
+                          src.includes('undefined');
+      
+      if (isInvalidUrl) {
+        const newSrc = index < viewerQiniuUrls.value.length ? 
+          viewerQiniuUrls.value[index] : 
+          viewerQiniuUrls.value[0];
+        
+        if (newSrc) {
+          img.src = newSrc;
+          img.style.maxWidth = '90%';
+          img.style.height = 'auto';
+          img.style.margin = '15px auto';
+          img.style.display = 'block';
+        }
+      }
+    });
+  }, 300);
+};
+
 // 添加查看状态和数据
 const viewProject = ref(false);
 const viewProjectData = reactive({
@@ -190,7 +281,8 @@ const viewProjectData = reactive({
   video: "",
   content: "",
   viewCount: 0,
-  createTime: ""
+  createTime: "",
+  coverImage: ""
 });
 
 // 添加查看方法
@@ -202,8 +294,17 @@ const viewProjectClick = (record) => {
   viewProjectData.images = record.images;
   viewProjectData.video = record.video || '';
   viewProjectData.viewCount = record.viewCount;
-  viewProjectData.createTime = record.createTime;
+  viewProjectData.createTime = formatDate(record.createTime, 'yyyy-MM-dd hh:mm:ss');
   viewProjectData.updateTime = record.updateTime;
+  
+  // 处理封面图片
+  if (record.images && record.images.includes(',')) {
+    viewProjectData.coverImage = record.images.split(',')[0].trim();
+  } else if (record.images) {
+    viewProjectData.coverImage = record.images;
+  } else {
+    viewProjectData.coverImage = '/image/default-cover.png';
+  }
   
   // 优先使用数据库中的content
   viewProjectData.content = record.content || '';
@@ -218,6 +319,14 @@ const viewProjectClick = (record) => {
   }
   
   viewProject.value = true;
+  
+  // 重置图片URL数组
+  viewerQiniuUrls.value = [];
+  
+  // 在DOM更新后修复图片
+  nextTick(() => {
+    fixViewerImages();
+  });
 };
 
 
@@ -452,18 +561,27 @@ const getUpdateFile = (imageUrls) => {
           <a-table-column align="center" data-index="coverImage" title="封面图片">
             <template #cell="{ record }">
               <a-image
+                  v-if="record.coverImage"
                   :src="record.coverImage"
                   :preview="true"
                   :width="100"
                   :height="60"
                   fit="cover"
               />
+              <div v-else style="width: 100px; height: 60px; display: flex; align-items: center; justify-content: center; background-color: #f5f5f5;">
+                无图片
+              </div>
             </template>
           </a-table-column>
           <a-table-column align="center" data-index="name" title="项目名称"></a-table-column>
           <a-table-column align="center" data-index="levelName" title="保护级别"></a-table-column>
           <a-table-column align="center" data-index="categoryName" title="项目类别"></a-table-column>
           <a-table-column align="center" data-index="viewCount" title="浏览量"></a-table-column>
+          <a-table-column align="center" data-index="createTime" title="创建时间">
+            <template #cell="{ record }">
+              {{ record.createTimeFormatted || formatDate(record.createTime, 'yyyy-MM-dd') }}
+            </template>
+          </a-table-column>
           <a-table-column align="center" data-index="optional" title="操作">
             <template #cell="{ record }">
               <div class="option">
@@ -497,7 +615,7 @@ const getUpdateFile = (imageUrls) => {
     </div>
 
     <!-- 查看详情的模态框 -->
-    <a-modal :visible="viewProject" @ok="viewProject = false" @cancel="() => viewProject = false" :footer="false" width="80%" title="查看非遗项目详情">
+    <a-modal :visible="viewProject" @ok="viewProject = false" @cancel="() => viewProject = false" :footer="false" width="700px" :bodyStyle="{maxHeight: '80vh', overflowY: 'auto', padding: '24px'}" title="查看非遗项目详情">
       <div class="project-view-container">
         <div class="project-info-header">
           <h2 class="project-title">{{ viewProjectData.name }}</h2>
@@ -510,7 +628,7 @@ const getUpdateFile = (imageUrls) => {
         </div>
         
         <div class="project-medias">
-          <div class="project-cover">
+          <div class="project-cover" v-if="viewProjectData.coverImage">
             <h3>封面图片</h3>
             <a-image
               :src="viewProjectData.coverImage"
@@ -535,7 +653,17 @@ const getUpdateFile = (imageUrls) => {
         
         <div class="project-content">
           <h3>项目详情</h3>
-          <Viewer v-if="viewProjectData.content" :value="viewProjectData.content" :plugins="plugins" />
+          <Viewer 
+            v-if="viewProjectData.content" 
+            :value="viewProjectData.content" 
+            :plugins="[...plugins, {
+              viewerEffect({ markdownBody }) {
+                nextTick(() => {
+                  fixViewerImages();
+                });
+              }
+            }]" 
+          />
           <div v-else class="no-content">暂无详细内容</div>
         </div>
         
@@ -646,13 +774,15 @@ const getUpdateFile = (imageUrls) => {
 /* 项目详情查看样式 */
 .project-view-container {
   padding: 10px;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .project-info-header {
   margin-bottom: 20px;
-  border-bottom: 1px solid #E4D9C3;
   padding-bottom: 15px;
 }
 
@@ -661,11 +791,13 @@ const getUpdateFile = (imageUrls) => {
   font-family: "STKaiti", "楷体", serif;
   color: #8C1F28;
   margin-bottom: 10px;
+  text-align: center !important;
 }
 
 .project-meta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center !important;
   gap: 15px;
   font-size: 14px;
   color: #582F0E;
@@ -686,6 +818,7 @@ const getUpdateFile = (imageUrls) => {
   gap: 30px;
   margin: 20px 0;
   flex-wrap: wrap;
+  justify-content: center !important;
 }
 
 .project-cover, .project-video {
@@ -704,6 +837,9 @@ const getUpdateFile = (imageUrls) => {
 
 .project-content {
   margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center !important;
 }
 
 .project-content h3 {
@@ -711,8 +847,9 @@ const getUpdateFile = (imageUrls) => {
   color: #8C1F28;
   margin-bottom: 15px;
   font-family: "STKaiti", "楷体", serif;
-  border-bottom: 1px solid #E4D9C3;
   padding-bottom: 8px;
+  width: 100%;
+  text-align: center !important;
 }
 
 /* 确保markdown内容正确显示 */
@@ -721,14 +858,34 @@ const getUpdateFile = (imageUrls) => {
   line-height: 1.8;
   color: #333;
   padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center !important;
+  width: 100% !important;
 }
 
 :deep(.markdown-body img) {
-  max-width: 100%;
-  display: block;
-  margin: 15px auto;
+  max-width: 60% !important;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+  margin: 15px auto !important;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+:deep(.markdown-body p) {
+  margin: 16px 0;
+  line-height: 1.8;
+  width: 100%;
+  text-align: center !important;
+}
+
+:deep(.markdown-body ul),
+:deep(.markdown-body ol) {
+  padding-left: 20px;
+  margin: 16px 0;
+  width: 100%;
 }
 
 :deep(.markdown-body h1),
@@ -739,10 +896,13 @@ const getUpdateFile = (imageUrls) => {
   font-family: "STKaiti", "楷体", serif;
   margin: 20px 0 10px;
   padding-bottom: 5px;
+  border-bottom: none;
+  width: 100%;
+  text-align: center !important;
 }
 
 :deep(.markdown-body h1, .markdown-body h2) {
-  border-bottom: 1px solid #E4D9C3;
+  border-bottom: none;
 }
 
 .no-content {
@@ -753,12 +913,13 @@ const getUpdateFile = (imageUrls) => {
   background-color: #FFFDF7;
   border-radius: 4px;
   border: 1px dashed #D6C6AF;
+  width: 100%;
 }
 
 .project-actions {
   margin-top: 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center !important;
 }
 
 /* 编辑器容器样式 */

@@ -62,6 +62,11 @@ spring:
       name: admin
       password: admin
 
+  servlet:
+    multipart:
+      max-file-size: 1500MB
+      max-request-size: 1500MB
+      enabled: true
 
 mybatis-plus:
   # 对应的 XML 文件位置
