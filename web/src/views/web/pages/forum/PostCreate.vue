@@ -476,9 +476,11 @@ onMounted(() => {
   
   // 添加页面关闭前的提示
   window.addEventListener('beforeunload', handleBeforeUnload);
-  onUnmounted(() => {
-    window.removeEventListener('beforeunload', handleBeforeUnload);
-  });
+});
+
+// 添加单独的onUnmounted钩子
+onUnmounted(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload);
 });
 
 // 添加草稿相关函数
@@ -570,8 +572,8 @@ watch(editorValue, (newVal) => {
   const matches = [...(newVal || '').matchAll(imageRegex)];
   const contentImages = matches.map(match => match[1]);
   
-  console.log('编辑器内容已更新，字数:', contentWordCount.value);
-  console.log('提取到的图片URLs:', contentImages);
+  // console.log('编辑器内容已更新，字数:', contentWordCount.value);
+  // console.log('提取到的图片URLs:', contentImages);
   
   // 将图片添加到表单数据中
   if (contentImages.length > 0) {
@@ -668,7 +670,7 @@ const prepareContentForSubmission = (content) => {
     // 6. 清理多余的空行
     processedContent = processedContent.replace(/\n{3,}/g, '\n\n');
     
-    console.log('处理后的内容：', processedContent);
+    // console.log('处理后的内容：', processedContent);
     return processedContent;
   } catch (error) {
     console.error('处理提交内容出错:', error);
@@ -707,7 +709,7 @@ const submitForm = async () => {
     // 检查内容中是否还有undefined图片URL
     const undefinedCheck = /!\[.*?\]\(undefined\)/.test(postForm.content);
     if (undefinedCheck) {
-      console.warn('内容中仍然存在undefined的图片URL，继续尝试修复...');
+      // console.warn('内容中仍然存在undefined的图片URL，继续尝试修复...');
       
       // 移除所有undefined图片
       postForm.content = postForm.content.replace(/!\[.*?\]\(undefined\)/g, '');
@@ -753,7 +755,7 @@ const submitForm = async () => {
     
     try {
       const checkResult = await checkSensitiveWordsAPI({ text: textToCheck });
-      console.log('敏感词检查结果:', checkResult);
+      // console.log('敏感词检查结果:', checkResult);
       
       if (checkResult.code === 200 && checkResult.data.containsSensitiveWords) {
         const sensitiveWords = checkResult.data.sensitiveWords || [];
@@ -825,7 +827,7 @@ const submitForm = async () => {
     if (contentIsHTML) {
 
       htmlContent = postForm.content.replace(/<!--\s*注意：此内容为HTML格式，保存后将会保留当前视觉效果\s*-->\n?/g, '');
-      console.log('内容已经是HTML格式，跳过转换');
+      // console.log('内容已经是HTML格式，跳过转换');
     } else {
       // 创建与预览区相同的转换选项
       const processorOptions = {
@@ -837,7 +839,7 @@ const submitForm = async () => {
       // 将Markdown转换为HTML格式
       const processor = getProcessor(processorOptions);
       htmlContent = processor.processSync(postForm.content).toString();
-      console.log('转换后的HTML内容长度:', htmlContent.length);
+      // console.log('转换后的HTML内容长度:', htmlContent.length);
     }
     
     const formData = {
@@ -847,7 +849,7 @@ const submitForm = async () => {
       images: serverImageUrls.join(',') // 将去重后的图片URL数组转换为逗号分隔的字符串
     };
     
-    console.log('提交表单数据:', formData);
+    // console.log('提交表单数据:', formData);
     
     let res;
     
@@ -1159,8 +1161,8 @@ const handleEditorChange = (value) => {
   const matches = [...(value || '').matchAll(imageRegex)];
   const contentImages = matches.map(match => match[1]);
   
-  console.log('编辑器内容变更，当前字数:', value.length);
-  console.log('当前内容中的图片:', contentImages);
+  // console.log('编辑器内容变更，当前字数:', value.length);
+  // console.log('当前内容中的图片:', contentImages);
   
   // 手动更新状态栏字数统计
   updateWordCount();
@@ -1258,7 +1260,6 @@ const handleTopicChange = (value) => {
                   @topicChange="handleTopicChange"
                   @back="goBack"
                   @publish="submitForm"
-                  :sanitize="false"
                 />
                 <!-- 添加调试信息显示区 -->
                 <div v-if="previewImages.length > 0" class="debug-image-info" style="display:none;">

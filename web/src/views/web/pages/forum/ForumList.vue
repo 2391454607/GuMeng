@@ -33,10 +33,10 @@ const searchText = ref('');
 const activeTab = ref('all');
 
 // 数据加载
-// 分页，一页分四条
+// 分页，一页分12条
 const loading = ref(true);
 const pageNum = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(12);
 const total = ref(0);
 
 // 数据
@@ -165,7 +165,7 @@ const fetchPosts = async () => {
           commonNum: post.commonNum || 0,
           isLiked: !!post.isLiked,
           authorName: post.username || '匿名用户',
-          authorAvatar: post.avatar || '/avatar/default-avatar.png',
+          authorAvatar: post.avatar || '/image/gumeng.png',
           previewText,
         };
       });
@@ -288,153 +288,148 @@ onMounted(() => {
 
 <template>
   <div>
+    <!-- 顶部图片标题区域 -->
+    <div class="project-title">
+      <div class="title-content">
+        <h1>非遗论坛</h1>
+        <p>传承非遗文化 · 共建交流社区</p>
+      </div>
+    </div>
+
     <div class="forum-container">
-      <!-- 顶部区域 -->
-      <div class="forum-header">
-        <div class="forum-title">
-          <span class="main-title">非遗论坛</span>
-          <span class="sub-title">传承非遗文化，共建交流社区</span>
+      <!-- 搜索和发布区域 -->
+      <div class="search-section">
+        <div class="search-wrapper">
+          <icon-search class="search-icon"/>
+          <input 
+            v-model="searchText"
+            type="text" 
+            placeholder="搜索帖子..." 
+            class="search-input"
+            @keyup.enter="handleSearch"
+          >
         </div>
-        <div class="forum-search-post">
-          <div class="search-box">
-            <a-input
-              v-model="searchText"
-              placeholder="搜索帖子..."
-              allow-clear
-              @press-enter="handleSearch"
-              class="custom-input"
+        <a-button type="primary" @click="createPost" class="post-btn">
+          <icon-plus />
+          发布帖子
+        </a-button>
+      </div>
+
+      <!-- 话题分类区域 -->
+      <div class="categories-section">
+        <div class="category-group">
+          <span class="category-name">话题分类</span>
+          <div class="category-items">
+            <span 
+              class="category-item" 
+              :class="{ 'category-item-active': activeTab === 'all' }"
+              @click="switchTopic('all')"
             >
-              <template #prefix>
-                <icon-search />
-              </template>
-            </a-input>
-            <a-button type="primary" @click="handleSearch" class="search-btn">
-              搜索
-            </a-button>
-          </div>
-          <a-button type="primary" @click="createPost" class="post-btn">
-            <icon-plus />
-            发布帖子
-          </a-button>
-        </div>
-      </div>
-
-      <!-- 顶部话题导航栏 -->
-      <div class="top-topics-bar">
-        <div class="topics-list">
-          <div 
-            class="topic-item" 
-            :class="{ active: activeTab === 'all' }"
-            @click="switchTopic('all')"
-          >
-            全部话题
-          </div>
-          <div 
-            v-for="topic in topics" 
-            :key="topic.id"
-            class="topic-item"
-            :class="{ active: activeTab === topic.id }"
-            @click="switchTopic(topic.id)"
-          >
-            {{ topic.name }}
+              全部话题
+            </span>
+            <span 
+              v-for="topic in topics" 
+              :key="topic.id"
+              class="category-item"
+              :class="{ 'category-item-active': activeTab === topic.id }"
+              @click="switchTopic(topic.id)"
+            >
+              {{ topic.name }}
+            </span>
           </div>
         </div>
       </div>
 
-      <!-- 主体区域 -->
-      <div class="forum-body">
-        <!-- 帖子列表 -->
-        <div class="forum-content">
-          <a-spin :loading="loading" :size="40">
-            <template #icon><icon-loading /></template>
-            <div class="post-container">
-              <!-- 空状态 -->
-              <div v-if="posts.length === 0 && !loading" class="empty-container">
-                <a-empty description="暂无帖子">
-                  <template #extra>
-                    <a-button type="primary" @click="createPost">立即发布</a-button>
-                  </template>
-                </a-empty>
-              </div>
-              
-              <!-- 帖子列表 -->
-              <div v-else-if="!loading" class="post-list">
-                <div v-for="post in posts" :key="post.id" class="post-item" @click="goToDetail(post.id)">
-                  <!-- 帖子内容 -->
-                  <div class="post-info">
-                    <div class="post-author">
-                      <img 
-                        :src="post.authorAvatar || '/avatar/default-avatar.png'" 
-                        alt="头像" 
-                        class="author-avatar"
-                        loading="lazy"
-                      />
-                      <span class="author-name">{{ post.authorName }}</span>
-                      <span class="post-time">{{ formatDate(post.createTime) }}</span>
-                    </div>
-                    <h3 class="post-title">{{ post.title }}</h3>
-                    
-                    <!-- 图文并排布局容器 -->
-                    <div class="post-content-container">
-                      <!-- 帖子图片 - 只显示第一张 -->
-                      <div v-if="post.images && post.images.length > 0" class="post-images single-image">
-                        <div class="post-image-wrapper">
-                          <img 
-                            :src="post.images[0]" 
-                            alt="帖子图片" 
-                            class="post-image"
-                            loading="lazy" 
-                            decoding="async"
-                          />
-                        </div>
-                      </div>
-                      
-                      <!-- 使用纯文本显示预览内容，而不是Markdown渲染 -->
-                      <div class="post-content-markdown">
-                        <div class="preview-text">{{ post.previewText }}</div>
-                      </div>
-                    </div>
-                    
-                    <!-- 帖子底部信息 -->
-                    <div class="post-footer">
-                      <div class="post-stats">
-                        <span class="stat-item topic-badge">
-                          <span class="topic-tag">{{ post.topic }}</span>
-                        </span>
-                        <span class="stat-item">
-                          <icon-eye />
-                          {{ post.viewCount || 0 }}
-                        </span>
-                        <span class="stat-item" @click.stop="handleLikePost(post)" :class="{ 'liked': post.isLiked }">
-                          <icon-heart-fill v-if="post.isLiked" />
-                          <icon-heart v-else />
-                          {{ post.thumbsUpNum || 0 }}
-                        </span>
-                        <span class="stat-item">
-                          <icon-message />
-                          {{ post.commonNum || 0 }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- 分页 -->
-                <div class="pagination-container" v-if="total > 0">
-                  <a-pagination
-                    :current="pageNum"
-                    :total="total"
-                    :page-size="pageSize"
-                    show-total
-                    show-jumper
-                    @change="handlePageChange"
-                  />
+      <!-- 主体内容区域 -->
+      <a-spin :loading="loading" :size="32" tip="加载中">
+        <template #icon><icon-loading /></template>
+        
+        <!-- 空状态显示 -->
+        <div v-if="posts.length === 0 && !loading" class="empty-state">
+          <a-empty description="暂无符合条件的帖子">
+            <template #extra>
+              <a-button type="primary" @click="createPost">立即发布</a-button>
+            </template>
+          </a-empty>
+        </div>
+        
+        <!-- 帖子网格布局 -->
+        <div v-else class="post-grid">
+          <div v-for="post in posts" :key="post.id" class="post-card" @click="goToDetail(post.id)">
+            <!-- 帖子图片区域 -->
+            <div class="post-image" v-if="post.images && post.images.length > 0">
+              <img 
+                :src="post.images[0]" 
+                :alt="post.title"
+                @error="(e) => e.target.src = '/image/gumeng.png'"
+                loading="lazy"
+              >
+              <div class="post-overlay" @click.stop="goToDetail(post.id)">
+                <div class="overlay-content">
+                  <icon-eye class="overlay-icon" />
+                  <span>查看详情</span>
                 </div>
               </div>
             </div>
-          </a-spin>
+            <div class="post-image" v-else>
+              <img 
+                src="/image/gumeng.png" 
+                :alt="post.title"
+                loading="lazy"
+              >
+              <div class="post-overlay" @click.stop="goToDetail(post.id)">
+                <div class="overlay-content">
+                  <icon-eye class="overlay-icon" />
+                  <span>查看详情</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 帖子内容区域 -->
+            <div class="post-content">
+              <h3>{{ post.title }}</h3>
+              
+              <div class="post-tags">
+                <a-tag>{{ post.topic }}</a-tag>
+              </div>
+              
+              <div class="post-card-bottom">
+                <div class="post-stats">
+                  <span class="stat-item">
+                    <icon-eye />
+                    {{ post.viewCount || 0 }}
+                  </span>
+                  <span 
+                    class="stat-item" 
+                    @click.stop="handleLikePost(post)" 
+                    :class="{ 'liked': post.isLiked }"
+                  >
+                    <icon-heart-fill v-if="post.isLiked" />
+                    <icon-heart v-else />
+                    {{ post.thumbsUpNum || 0 }}
+                  </span>
+                  <span class="stat-item">
+                    <icon-message />
+                    {{ post.commonNum || 0 }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+        
+        <!-- 分页器 -->
+        <div v-if="!loading && total > 0" class="pagination-container">
+          <span class="page-indicator">第 {{ pageNum }} 页</span>
+          <a-pagination
+            :total="total"
+            :current="pageNum"
+            :page-size="pageSize"
+            @change="handlePageChange"
+            :hide-on-single-page="false"
+          />
+        </div>
+      </a-spin>
 
       <!-- 调试按钮 -->
       <div class="debug-button" v-if="showDebugInfo" @click="toggleDebugInfo">
@@ -448,467 +443,362 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* 主容器 */
-.forum-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  font-family: "SimSun", "宋体", serif;
-  background-color: #fffbf0;
-  min-height: calc(100vh - 176px);
+/* 顶部图片标题区域 */
+.project-title {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url('/image/forumPost.webp');
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
 }
 
-/* 顶部区域 */
-.forum-header {
-  background-color: #8C1F28;
+.title-content {
+  text-align: center;
+  padding: 10px;
+  z-index: 2;
+  width: 100%;
+}
+
+.title-content h1 {
+  font-size: clamp(2em, 4vw, 2.8em);
+  color: #8C1F28;
+  margin-bottom: 8px;
+  font-weight: bold;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: "STKaiti", "楷体", serif;
+  position: relative;
+  display: inline-block;
+  animation: titleFadeIn 1.2s ease-out forwards;
+}
+
+.title-content p {
+  font-size: clamp(1em, 2vw, 1.2em);
+  color: #594433;
+  font-family: "STFangsong", "仿宋", serif;
+  letter-spacing: 2px;
+  margin-top: 0;
+  animation: subtitleFadeIn 1.5s ease-out forwards;
+  position: relative;
+}
+
+/* 添加动画关键帧 */
+@keyframes titleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtitleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 主容器 */
+.forum-container {
   padding: 20px;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  margin-bottom: 20px;
+  max-width: 1200px;
+  min-height: calc(100vh - 169px);
+  margin: 0 auto;
+  background-color: #FFF7E9;
+  font-family: "SimSun", "宋体", serif;
+}
+
+/* 搜索区域样式 */
+.search-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #F9F3E9;
+  margin-bottom: 20px;
+}
+
+.search-wrapper {
   position: relative;
-}
-
-/* 模拟中国传统纹饰 */
-.forum-header::before {
-  content: none;
-}
-
-.forum-title {
+  width: 100%;
+  max-width: 600px;
   display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 1;
+  align-items: center;
 }
 
-.main-title {
-  font-size: 28px;
-  font-weight: bold;
-  color: #FFFBF0;
-  margin-bottom: 8px;
-  letter-spacing: 3px;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-  font-family: "STKaiti", "楷体", serif;
+.search-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8C1F28;
+  font-size: 20px;
 }
 
-.sub-title {
-  font-size: 14px;
-  color: #F9F3E9;
-  letter-spacing: 1px;
+.search-input {
+  width: 100%;
+  padding: 12px 20px 12px 45px;
+  border: 2px solid #8C1F28;
+  border-radius: 24px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background-color: #fff;
 }
 
-.forum-search-post {
-  display: flex;
-  gap: 16px;
-  position: relative;
-  z-index: 1;
-}
-
-.search-box {
-  display: flex;
-  width: 300px;
-}
-
-.custom-input {
-  background-color: rgba(249, 243, 233, 0.9) !important;
-  border: 1px solid #D6C6AF !important;
-  border-radius: 4px 0 0 4px !important;
-  color: #582F0E !important;
-}
-
-.search-btn {
-  margin-left: -1px;
-  border-radius: 0 4px 4px 0;
-  background-color: #582F0E;
+.search-input:focus {
+  outline: none;
   border-color: #582F0E;
-  color: #F9F3E9;
+  box-shadow: 0 0 8px rgba(140, 31, 40, 0.3);
+}
+
+.search-input::placeholder {
+  color: #999;
 }
 
 .post-btn {
-  background-color: #582F0E;
-  border-color: #582F0E;
+  background-color: #8C1F28;
+  border-color: #8C1F28;
+  height: 40px;
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #F9F3E9;
-  border-radius: 4px;
+  border-radius: 20px;
+  padding: 0 20px;
+  font-size: 16px;
+  transition: all 0.3s ease;
 }
 
-.post-btn:hover, .search-btn:hover {
-  background-color: #7F4F24;
-  border-color: #7F4F24;
-  color: #F9F3E9;
+.post-btn:hover {
+  background-color: #582F0E;
+  border-color: #582F0E;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* 顶部话题导航栏 */
-.top-topics-bar {
-  background-color: #FFF7E9;
-  border-radius: 4px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-  margin-bottom: 20px;
-  border: 1px solid #D6C6AF;
+/* 分类区域样式 */
+.categories-section {
+  margin: 20px 0;
 }
 
-.topics-list {
-  display: flex;
+.category-group {
+  margin-bottom: 15px;
+}
+
+.category-name {
+  font-weight: bold;
+  margin-right: 15px;
+  color: #8C1F28;
+  font-size: 16px;
+}
+
+.category-items {
+  display: inline-flex;
   flex-wrap: wrap;
-  padding: 0;
+  gap: 10px;
+  margin-top: 10px;
 }
 
-.topic-item {
-  padding: 12px 20px;
-  font-size: 14px;
-  color: #582F0E;
+.category-item {
+  padding: 6px 16px;
+  background: #fff;
+  border: 1px solid #8C1F28;
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.3s;
-  border-bottom: 3px solid transparent;
-  font-weight: 500;
-}
-
-.topic-item:hover {
-  background-color: #F9F5EB;
   color: #8C1F28;
+  font-size: 14px;
 }
 
-.topic-item.active {
-  color: #8C1F28;
-  border-bottom-color: #8C1F28;
-  font-weight: bold;
-  background-color: #FFF0E5;
+.category-item-active {
+  background: #8C1F28;
+  color: #fff;
 }
 
-/* 主体区域 */
-.forum-body {
-  min-height: calc(100vh - 270px);
-  backface-visibility: hidden;
-  transform: translateZ(0);
+.category-item:hover {
+  background: #8C1F28;
+  color: #fff;
+  transform: translateY(-2px);
 }
 
-/* 帖子列表 */
-.forum-content {
-  background-color: #fff;
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  border: 1px solid #D6C6AF;
-  min-height: 300px; /* 确保内容区域有足够高度 */
-  position: relative; /* 为绝对定位的加载动画提供参考 */
-}
-
-.post-container {
-  width: 100%;
-}
-
-.empty-container {
-  padding: 40px;
+/* 空状态样式 */
+.empty-state {
   text-align: center;
-}
-
-:deep(.arco-spin) {
+  padding: 50px 0;
   width: 100%;
 }
 
-:deep(.arco-spin.arco-spin-loading) {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(255, 251, 240, 0.5);
-  z-index: 1;
-}
-
-:deep(.arco-spin-icon) {
-  color: #8C1F28;
-  font-size: 32px;
-}
-
-.post-list {
-  padding: 0;
-  contain: content;
-}
-
-.post-item {
-  padding: 20px;
-  border-bottom: 1px solid #E4D9C3;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  position: relative;
-  contain: layout style;
-  will-change: transform;
-}
-
-.post-item:hover {
-  background-color: #FFF7E9;
-}
-
-/* 仿古纸张样式 */
-.post-item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23D6C6AF' fill-opacity='0.06'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z'/%3E%3C/g%3E%3C/svg%3E");
-  opacity: 0.1;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.post-info {
-  flex: 1;
-  position: relative;
-  z-index: 1;
-}
-
-.post-author {
-  display: flex;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.author-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-right: 10px;
-  border: 2px solid #E4D9C3;
-  will-change: transform;
-}
-
-.author-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: #582F0E;
-  margin-right: 10px;
-}
-
-.post-time {
-  font-size: 12px;
-  color: #7F4F24;
-}
-
-.post-title {
-  font-size: 18px;
-  font-weight: bold;
-  color: #582F0E;
-  margin: 0 0 12px;
-  line-height: 1.5;
-  font-family: "STKaiti", "楷体", serif;
-}
-
-/* 添加Markdown内容的样式 */
-/* 图文并排布局容器 */
-.post-content-container {
-  display: flex;
+/* 帖子网格布局 */
+.post-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  margin-bottom: 15px;
-  align-items: flex-start;
-  position: relative;
-  min-height: 120px;
-}
-
-.post-content-markdown {
-  flex: 1;
-  max-height: 60px;
-  overflow: hidden;
-  contain: content;
-  word-break: break-word;
-  min-width: 0;
-}
-
-.post-content-markdown :deep(.markdown-body) {
-  font-size: 14px;
-  color: #6B4F2E;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  line-height: 1.5;
-  background-color: transparent;
-  padding: 0 !important;
-  margin: 0 !important;
-  min-height: 20px;
-  max-width: 100%; 
-  word-break: break-word;
-}
-
-.post-content-markdown :deep(.markdown-body p) {
-  white-space: normal;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.post-content-markdown :deep(.markdown-body h1),
-.post-content-markdown :deep(.markdown-body h2),
-.post-content-markdown :deep(.markdown-body h3),
-.post-content-markdown :deep(.markdown-body h4),
-.post-content-markdown :deep(.markdown-body h5),
-.post-content-markdown :deep(.markdown-body h6) {
-  margin: 0;
-  padding: 0;
-  font-size: 14px;
-  display: inline;
-  border: none;
-  color: #6B4F2E;
-}
-
-.post-content-markdown :deep(.markdown-body img) {
-  display: none !important;
-}
-
-.post-content-markdown :deep(.markdown-body blockquote),
-.post-content-markdown :deep(.markdown-body pre),
-.post-content-markdown :deep(.markdown-body table) {
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-
-.post-content-markdown :deep(.markdown-body code) {
-  background: transparent;
-  padding: 0;
-  margin: 0;
-  border: none;
-}
-
-.post-images {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-/* 单张图片的样式 */
-.post-images.single-image {
-  margin: 0;
-  flex-shrink: 0;
-  width: 180px;
-  height: 120px;
-  position: relative;
-  z-index: 1;
-}
-
-.post-images.single-image .post-image-wrapper {
+  margin: 20px auto;
   width: 100%;
-  height: 120px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: transparent;
 }
 
-.post-images.single-image .post-image {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: cover;
-  border-radius: 4px;
-  will-change: transform;
-}
-
-.post-image-wrapper {
-  width: 120px;
-  height: 120px;
-  border-radius: 4px;
+.post-card {
+  border: 1px solid #E4D9C3;
+  border-radius: 12px;
   overflow: hidden;
-  position: relative;
-  border: none;
+  transition: all 0.3s;
+  background: #fff;
+  height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: transparent;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.post-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: #8C1F28;
 }
 
 .post-image {
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  transition: transform 0.3s;
-  will-change: transform;
+  height: 160px;
+  overflow: hidden;
+  position: relative;
 }
 
-.post-image-more {
+.post-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(33, 33, 33, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 120px;
-  height: 120px;
-  background-color: rgba(88, 47, 14, 0.5);
-  color: #FFF7E9;
-  font-size: 18px;
-  border-radius: 4px;
-  border: none;
+  opacity: 0;
+  transition: all 0.3s ease;
 }
 
-.post-footer {
+.post-card:hover .post-overlay {
+  opacity: 1;
+}
+
+.overlay-content {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+  transform: translateY(20px);
+  transition: all 0.3s ease;
+}
+
+.post-card:hover .overlay-content {
+  transform: translateY(0);
+}
+
+.overlay-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.post-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.post-card:hover .post-image img {
+  transform: scale(1.05);
+}
+
+.post-content {
+  padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.post-content h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: #582F0E;
+  font-weight: bold;
+  line-height: 1.4;
+  font-family: "STKaiti", "楷体", serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  height: 44px;
+}
+
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.post-tags :deep(.arco-tag) {
+  border-color: #8C1F28;
+  color: #8C1F28;
+  background: #FFF7E9;
+}
+
+.post-card-bottom {
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
 .post-stats {
   display: flex;
-  gap: 16px;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  color: #7F4F24;
+  font-size: 12px;
 }
 
 .stat-item {
   display: flex;
   align-items: center;
-  color: #7F4F24;
-  font-size: 14px;
-  cursor: pointer;
+  gap: 4px;
   transition: all 0.2s;
-}
-
-.stat-item:hover {
-  color: #8C1F28;
 }
 
 .stat-item.liked {
   color: #8C1F28;
 }
 
-.stat-item svg {
-  margin-right: 5px;
-}
-
-.topic-badge {
-  cursor: default;
-}
-
-.topic-badge:hover {
-  color: #7F4F24;
-}
-
-.topic-tag {
-  padding: 4px 8px;
-  background-color: #FBF0E9;
+.stat-item:hover {
   color: #8C1F28;
-  font-size: 12px;
-  border-radius: 4px;
-  border: 1px solid #E4D9C3;
 }
 
+/* 分页容器 */
 .pagination-container {
-  padding: 20px;
+  padding: 24px;
   text-align: center;
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.page-indicator {
+  color: #8C1F28;
+  font-weight: bold;
+  font-size: 14px;
+  padding: 5px 10px;
+  background-color: #FFF7E9;
+  border-radius: 4px;
 }
 
 /* 调试按钮 */
@@ -921,113 +811,79 @@ onMounted(() => {
   color: #fff;
   border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s ease;
+  z-index: 100;
 }
 
 .debug-button:hover {
-  background-color: #A52A2A;
+  background-color: #582F0E;
+}
+
+.footer {
+  display: flex;
+  bottom: 0;
 }
 
 /* 响应式设计 */
+@media screen and (max-width: 1200px) {
+  .post-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media screen and (max-width: 992px) {
+  .post-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media screen and (max-width: 768px) {
-  .forum-container {
-    padding: 10px;
+  .project-title {
+    min-height: 150px;
   }
   
-  .forum-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
+  .title-content h1 {
+    font-size: 1.8em;
+  }
+  
+  .title-content p {
+    font-size: 0.9em;
+  }
+  
+  .forum-container {
     padding: 15px;
   }
   
-  .forum-search-post {
-    width: 100%;
+  .search-section {
     flex-direction: column;
+    gap: 15px;
   }
   
-  .search-box {
+  .search-wrapper {
     width: 100%;
-    margin-bottom: 10px;
   }
   
   .post-btn {
     width: 100%;
   }
   
-  .topics-list {
+  .category-items {
     overflow-x: auto;
     flex-wrap: nowrap;
-  }
-  
-  .topic-item {
-    white-space: nowrap;
-    padding: 12px 15px;
-  }
-  
-  /* 移动端图文布局调整为垂直堆叠 */
-  .post-content-container {
-    flex-direction: column;
-    gap: 10px;
-    min-height: auto;
-  }
-  
-  .post-images.single-image {
+    padding-bottom: 10px;
     width: 100%;
-    margin-bottom: 10px;
   }
   
-  .post-images.single-image .post-image-wrapper {
-    height: 160px;
+  .category-item {
+    white-space: nowrap;
   }
   
-  .post-images {
-    flex-wrap: wrap;
+  .post-grid {
+    grid-template-columns: 1fr;
   }
   
-  .post-image-wrapper {
-    width: calc(33.333% - 7px);
-    height: 100px;
-  }
-  
-  .post-image-more {
-    width: calc(33.333% - 7px);
-    height: 100px;
-  }
-  
-  .pagination-container :deep(.arco-pagination-jumper) {
-    display: none;
-  }
-  
-  .post-content-markdown {
-    max-height: none;
-    -webkit-line-clamp: 4;
-  }
-}
-
-.footer{
-  display: flex;
-  bottom: 0;
-}
-
-.preview-text {
-  font-size: 14px;
-  color: #6B4F2E;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  line-height: 1.5;
-  max-height: 60px;
-  word-break: break-word;
-}
-
-/* 移动端样式优化 */
-@media screen and (max-width: 768px) {
-  .preview-text {
-    -webkit-line-clamp: 4;
-    max-height: none;
+  .post-image {
+    height: 180px;
   }
 }
 </style>
