@@ -340,7 +340,6 @@ const fixViewerImages = () => {
   flex-wrap: wrap;
   justify-content: center;
   gap: 15px;
-  margin-bottom: 20px;
   color: #666;
 }
 
@@ -357,7 +356,6 @@ const fixViewerImages = () => {
 
 .detail-content {
   background-color: #FFF7E9;
-  padding: 20px 0;
 }
 
 .detail-main {
@@ -399,6 +397,7 @@ const fixViewerImages = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  font-size: 1.08rem;
 }
 
 :deep(.markdown-body img) {
@@ -428,7 +427,7 @@ const fixViewerImages = () => {
 }
 
 :deep(.markdown-body p) {
-  margin: 16px 0;
+  margin: 1px 0;
   line-height: 1.8;
   width: 100%;
 }

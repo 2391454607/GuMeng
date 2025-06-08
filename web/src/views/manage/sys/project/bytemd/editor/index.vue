@@ -584,16 +584,6 @@ const getFile = (imageUrls) => {
         </select>
       </div>
       
-      <div class="form-item form-item-fixed">
-        <label class="form-label">项目类别</label>
-        <select v-model="localCategoryId" class="form-select">
-          <option value="" disabled>请选择项目类别</option>
-          <option v-for="option in props.categoryOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
-      
       <!-- 添加地区选择下拉框 -->
       <div class="form-item form-item-fixed">
         <label class="form-label">所属地区</label>
@@ -604,6 +594,17 @@ const getFile = (imageUrls) => {
           </option>
         </select>
       </div>
+
+      <div class="form-item form-item-fixed">
+        <label class="form-label">项目类别</label>
+        <select v-model="localCategoryId" class="form-select">
+          <option value="" disabled>请选择项目类别</option>
+          <option v-for="option in props.categoryOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+      
       
       <div class="form-item">
         <label class="form-label">项目视频</label>
