@@ -1,7 +1,7 @@
 <template>
   <div class="matching-container">
     <div class="matching-header">
-      <h1>非遗连线配对</h1>
+      <h1>非遗脉络・经纬溯源局</h1>
       <p>将非遗项目与对应的民族或地区正确配对</p>
     </div>
     <div class="matching-game-box">
@@ -39,6 +39,9 @@
         <a-button type="primary" @click="restartGame">重新挑战</a-button>
       </div>
     </div>
+    <!-- 音效audio标签 -->
+    <audio ref="successAudio" src="/music/连线成功.mp3"></audio>
+    <audio ref="errorAudio" src="/music/操作失误音.mp3"></audio>
   </div>
 </template>
 
@@ -63,6 +66,11 @@ const selectedLeft = ref(null);
 const selectedRight = ref(null);
 const score = ref(0);
 const gameEnd = ref(false);
+// 音效相关
+const successAudio = ref(null);
+const errorAudio = ref(null);
+function playSuccess() { successAudio.value && successAudio.value.play && successAudio.value.play(); }
+function playError() { errorAudio.value && errorAudio.value.play && errorAudio.value.play(); }
 
 // 初始化游戏
 const initGame = () => {
@@ -123,6 +131,7 @@ const checkMatch = () => {
   if (selectedLeft.value && selectedRight.value) {
     if (selectedLeft.value.matchId === selectedRight.value.matchId) {
       // 配对成功
+      playSuccess();
       Message.success('配对成功！');
       score.value++;
 
@@ -142,6 +151,7 @@ const checkMatch = () => {
 
     } else {
       // 配对失败
+      playError();
       Message.error('配对错误！');
       // 错误后延迟清空选中，给用户看错的机会
       setTimeout(() => {

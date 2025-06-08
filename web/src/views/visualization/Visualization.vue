@@ -386,8 +386,8 @@ const initCharts = async () => {
     visualMap: {
       min: 0,
       max: 120,
-      left: 'left',
-      top: 'bottom',
+      left: 'right',
+      top: 'center',
       text: ['高','低'],
       inRange: { color: ['#fceabb', '#f8b500', '#c0392b'] },
       calculable: true
@@ -510,7 +510,7 @@ const closeYunnanMapModal = () => {
       </div>
       <!-- 云南省热度分布地图 -->
       <div class="yunnan-map-block">
-        <div class="chart-title">非遗足迹</div>
+        <div class="chart-title yunnan-map-title">非遗足迹</div>
         <div id="yunnanMapChart" class="yunnan-map-chart"></div>
         <button class="enlarge-btn" @click="enlargeYunnanMap" title="放大">🔍</button>
       </div>
@@ -607,6 +607,10 @@ const closeYunnanMapModal = () => {
   letter-spacing: 2px;
   text-align: center;
   font-family: 'FZKai-Z03', 'KaiTi', 'STKaiti', serif;
+}
+.yunnan-map-title {
+  margin-top: 50px;
+  margin-bottom: 16px;
 }
 .chart {
   width: 400px;
@@ -706,16 +710,16 @@ const closeYunnanMapModal = () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 40px 0;
+  margin: -100px 0 100px 0;
 }
 .yunnan-map-chart {
-  width: 600px;
-  height: 450px;
+  width: 700px;
+  height: 500px;
   margin: 0 auto;
 }
 .modal-map-chart {
-  width: 900px;
-  height: 700px;
+  width: 1000px;
+  height: 750px;
   max-width: 90vw;
   max-height: 80vh;
   background: transparent;

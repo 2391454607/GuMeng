@@ -114,6 +114,11 @@ const webRouters = [
         path: '/games/map',
         name: 'MapChallenge',
         component: () => import('@/views/web/pages/games/MapChallenge.vue')
+    },
+    {
+        path: '/games/DiffGame',
+        name: 'DiffGame',
+        component: () => import('@/views/web/pages/games/DiffGame.vue')
     }
 ];
 

@@ -1,6 +1,6 @@
 <template>
   <div class="map-challenge-container">
-    <h1>非遗地图挑战</h1>
+    <h1>云图探遗・地标寻珍记</h1>
     <p>点击地图上正确的非遗项目分布地</p>
     <div ref="mapBox" class="map-box"></div>
     <div class="game-info">
@@ -12,6 +12,9 @@
         <a-button type="primary" @click="restartGame">重新挑战</a-button>
       </div>
     </div>
+    <!-- 音效audio标签 -->
+    <audio ref="correctAudio" src="/music/答题正确音.mp3"></audio>
+    <audio ref="errorAudio" src="/music/操作失误音.mp3"></audio>
   </div>
 </template>
 
@@ -26,6 +29,12 @@ const currentQuestion = ref(null);
 const questions = ref([]);
 const mapBox = ref(null); // 地图容器的ref引用
 let myChart = null; // echarts实例
+
+// 音效相关
+const correctAudio = ref(null);
+const errorAudio = ref(null);
+function playCorrect() { correctAudio.value && correctAudio.value.play && correctAudio.value.play(); }
+function playError() { errorAudio.value && errorAudio.value.play && errorAudio.value.play(); }
 
 // 示例非遗项目数据 (非完整数据，仅用于演示)
 const ichData = [
@@ -62,10 +71,12 @@ const handleMapClick = (params) => {
   if (params.data && currentQuestion.value) {
     if (currentQuestion.value.adcode === params.data.adcode) {
       score.value++;
+      playCorrect();
       Message.success('回答正确！');
       highlightArea(params.data.adcode, true); // 高亮正确区域
       nextQuestion();
     } else {
+      playError();
       Message.error('回答错误！');
       highlightArea(params.data.adcode, false); // 错误提示高亮（可选）
       // 可以选择是否立即进行下一题或等待用户再次点击
