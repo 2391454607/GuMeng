@@ -1034,8 +1034,8 @@ onBeforeUnmount(() => {
 }
 
 .is-expanded .message-avatar {
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 60px;
 }
 
 .message-avatar img {
