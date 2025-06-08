@@ -40,7 +40,7 @@ onMounted(() => {
   fetchProjectDetail(id);
 });
 
-// 从内容中提取所有可能的七牛云图片URL
+
 const extractQiniuUrls = (content) => {
   // 优先使用项目的images字段
   if (projectDetail.value && projectDetail.value.images) {
@@ -58,7 +58,7 @@ const extractQiniuUrls = (content) => {
   const qiniuDomainPattern = /https?:\/\/[^)\s"'<>]+?(?:clouddn\.com|hn-bkt\.clouddn\.com)[^)\s"'<>]*?\.(?:png|jpg|jpeg|gif|webp)/gi;
   let qiniuLinks = content.match(qiniuDomainPattern) || [];
   
-  // 如果没找到七牛云图片，尝试匹配其他图片
+
   if (qiniuLinks.length === 0) {
     const genericImagePattern = /https?:\/\/[^)\s"'<>]+\.(?:png|jpg|jpeg|gif|webp)/gi;
     qiniuLinks = content.match(genericImagePattern) || [];
