@@ -37,56 +37,26 @@ const getModel = async () => {
   
   try {
     const modelId = route.query.modelId;
-    console.log('模型ID:', modelId);
-    const res = await getModelDetail({modelId: modelId});
-    console.log('接口返回数据:', res);
-    
-    if (res.code === 200 && res.data && Array.isArray(res.data) && res.data.length > 0) {
-      const modelData = res.data[0];
-      console.log('模型数据:', modelData);
-      
-      if (modelData.modelUrl && validateModelUrl(modelData.modelUrl)) {
-        // 直接使用返回的路径
-        const modelUrl = modelData.modelUrl;
-        console.log('模型URL:', modelUrl);
+    const modelUrl = route.query.modelUrl;
+
+    if (modelUrl) {
+      // 如果有直接的模型URL，直接加载
+      if (validateModelUrl(modelUrl)) {
         loadModel(modelUrl);
       } else {
-        // 模拟加载进度
-        let currentProgress = 0;
-        const progressInterval = setInterval(() => {
-          if (currentProgress < 95) {
-            currentProgress += 5;
-            progress.value = currentProgress;
-          } else {
-            clearInterval(progressInterval);
-            setTimeout(() => {
-              loading.value = false;
-              error.value = true;
-              errorMessage.value = '模型加载失败';
-            }, 3000);
-          }
-        }, 100);
+        throw new Error('无效的模型URL');
+      }
+    } else if (modelId) {
+      // 通过ID获取模型
+      const res = await getModelDetail({modelId: modelId});
+      if (res.code === 200 && res.data && Array.isArray(res.data) && res.data.length > 0) {
+        const modelData = res.data[0];
+        if (modelData.modelUrl && validateModelUrl(modelData.modelUrl)) {
+          loadModel(modelData.modelUrl);
+        }
       }
     } else {
-      // 模拟加载进度
-      let currentProgress = 0;
-      const delay = getRandomDelay();
-      const steps = Math.floor(delay / 100); // 计算需要多少步骤达到95%
-      const increment = Math.ceil(95 / steps); // 每步增加的进度
-
-      const progressInterval = setInterval(() => {
-        if (currentProgress < 95) {
-          currentProgress = Math.min(95, currentProgress + increment);
-          progress.value = currentProgress;
-        } else {
-          clearInterval(progressInterval);
-          setTimeout(() => {
-            loading.value = false;
-            error.value = true;
-            errorMessage.value = '未找到模型数据';
-          }, delay - (steps * 100)); // 减去已经用掉的时间
-        }
-      }, 100);
+      throw new Error('缺少模型ID或URL');
     }
   } catch (err) {
     // 模拟加载进度
@@ -104,9 +74,8 @@ const getModel = async () => {
         setTimeout(() => {
           loading.value = false;
           error.value = true;
-          errorMessage.value = '获取模型失败';
-          console.error('获取模型失败:', err);
-        }, delay - (steps * 100));
+          errorMessage.value = '模型加载失败';
+        }, 3000);
       }
     }, 100);
   }
@@ -310,17 +279,29 @@ const handleBack = () => {
 
 // 组件卸载时清理资源
 onUnmounted(() => {
+  // 停止动画循环
+  if (window.requestAnimationFrame) {
+    window.cancelAnimationFrame(render);
+  }
+
   // 移除窗口大小变化监听
   window.removeEventListener('resize', handleResize);
   
+  // 清理渲染器
   if (renderer) {
     renderer.dispose();
+    renderer.forceContextLoss();
+    renderer.domElement.remove();
+    renderer = null;
   }
+
+  // 清理控制器
   if (controls) {
     controls.dispose();
+    controls = null;
   }
   
-  // 添加额外清理
+  // 清理场景中的所有对象
   if (scene) {
     scene.traverse((object) => {
       if (object.geometry) {
@@ -328,12 +309,22 @@ onUnmounted(() => {
       }
       if (object.material) {
         if (Array.isArray(object.material)) {
-          object.material.forEach(material => material.dispose());
+          object.material.forEach(material => {
+            if (material.map) material.map.dispose();
+            material.dispose();
+          });
         } else {
+          if (object.material.map) object.material.map.dispose();
           object.material.dispose();
         }
       }
     });
+    scene = null;
+  }
+
+  // 清理相机
+  if (camera) {
+    camera = null;
   }
 });
 </script>
