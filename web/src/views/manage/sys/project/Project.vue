@@ -615,7 +615,7 @@ const getUpdateFile = (imageUrls) => {
     </div>
 
     <!-- 查看详情的模态框 -->
-    <a-modal :visible="viewProject" @ok="viewProject = false" @cancel="() => viewProject = false" :footer="false" width="80%" title="查看非遗项目详情">
+    <a-modal :visible="viewProject" @ok="viewProject = false" @cancel="() => viewProject = false" :footer="false" width="700px" :bodyStyle="{maxHeight: '80vh', overflowY: 'auto', padding: '24px'}" title="查看非遗项目详情">
       <div class="project-view-container">
         <div class="project-info-header">
           <h2 class="project-title">{{ viewProjectData.name }}</h2>
@@ -774,8 +774,11 @@ const getUpdateFile = (imageUrls) => {
 /* 项目详情查看样式 */
 .project-view-container {
   padding: 10px;
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .project-info-header {
@@ -788,11 +791,13 @@ const getUpdateFile = (imageUrls) => {
   font-family: "STKaiti", "楷体", serif;
   color: #8C1F28;
   margin-bottom: 10px;
+  text-align: center !important;
 }
 
 .project-meta {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center !important;
   gap: 15px;
   font-size: 14px;
   color: #582F0E;
@@ -813,6 +818,7 @@ const getUpdateFile = (imageUrls) => {
   gap: 30px;
   margin: 20px 0;
   flex-wrap: wrap;
+  justify-content: center !important;
 }
 
 .project-cover, .project-video {
@@ -831,6 +837,9 @@ const getUpdateFile = (imageUrls) => {
 
 .project-content {
   margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center !important;
 }
 
 .project-content h3 {
@@ -839,6 +848,8 @@ const getUpdateFile = (imageUrls) => {
   margin-bottom: 15px;
   font-family: "STKaiti", "楷体", serif;
   padding-bottom: 8px;
+  width: 100%;
+  text-align: center !important;
 }
 
 /* 确保markdown内容正确显示 */
@@ -849,13 +860,16 @@ const getUpdateFile = (imageUrls) => {
   padding: 10px 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: center !important;
+  width: 100% !important;
 }
 
 :deep(.markdown-body img) {
-  max-width: 90%;
-  display: block;
-  margin: 15px auto;
+  max-width: 60% !important;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+  margin: 15px auto !important;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
@@ -864,6 +878,7 @@ const getUpdateFile = (imageUrls) => {
   margin: 16px 0;
   line-height: 1.8;
   width: 100%;
+  text-align: center !important;
 }
 
 :deep(.markdown-body ul),
@@ -883,6 +898,7 @@ const getUpdateFile = (imageUrls) => {
   padding-bottom: 5px;
   border-bottom: none;
   width: 100%;
+  text-align: center !important;
 }
 
 :deep(.markdown-body h1, .markdown-body h2) {
@@ -897,12 +913,13 @@ const getUpdateFile = (imageUrls) => {
   background-color: #FFFDF7;
   border-radius: 4px;
   border: 1px dashed #D6C6AF;
+  width: 100%;
 }
 
 .project-actions {
   margin-top: 20px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: center !important;
 }
 
 /* 编辑器容器样式 */

@@ -402,11 +402,11 @@ const fixViewerImages = () => {
 }
 
 :deep(.markdown-body img) {
-  max-width: 45%;
-  width: auto;
-  height: auto;
-  display: block;
-  margin: 15px auto;
+  max-width: 60% !important;
+  width: auto !important;
+  height: auto !important;
+  display: block !important;
+  margin: 15px auto !important;
   border-radius: 6px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
