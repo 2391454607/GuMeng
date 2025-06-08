@@ -31,4 +31,7 @@
         is_disable,disable_cause,model_extra,
         is_delete
     </sql>
+    <select id="getToModelList" resultType="com.gumeng.entity.vo.model.ToModelInfoVO">
+        SELECT * FROM gumeng.model_info
+    </select>
 </mapper>

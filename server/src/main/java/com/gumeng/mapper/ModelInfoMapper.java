@@ -2,6 +2,9 @@ package com.gumeng.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.gumeng.domain.ModelInfo;
+import com.gumeng.entity.vo.model.ToModelInfoVO;
+
+import java.util.List;
 
 /**
  * @author LL318
@@ -11,4 +14,5 @@ import com.gumeng.domain.ModelInfo;
  */
 public interface ModelInfoMapper extends BaseMapper<ModelInfo> {
 
+    List<ToModelInfoVO> getToModelList();
 }

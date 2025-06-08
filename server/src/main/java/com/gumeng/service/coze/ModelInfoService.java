@@ -2,6 +2,9 @@ package com.gumeng.service.coze;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.gumeng.domain.ModelInfo;
+import com.gumeng.entity.vo.model.ToModelInfoVO;
+
+import java.util.List;
 
 /**
  * @author LL318
@@ -10,4 +13,5 @@ import com.gumeng.domain.ModelInfo;
  */
 public interface ModelInfoService extends IService<ModelInfo> {
 
+    List<ToModelInfoVO> getToModelList();
 }
