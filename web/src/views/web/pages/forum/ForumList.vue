@@ -8,24 +8,22 @@ import { getPostListAPI as getPostsAPI, getTopicsAPI, likePostAPI, unlikePostAPI
 import { useUserStore } from '@/stores/userStore.js';
 import { formatDate } from '@/utils/format';
 import Footer from "@/views/web/layout/Footer.vue";
-// 导入Markdown查看器组件
-import { Viewer } from '@/views/web/pages/forum/bytemd';
-// 导入ByteMD插件
-import gfm from '@bytemd/plugin-gfm'
-import highlight from '@bytemd/plugin-highlight'
-import gemoji from '@bytemd/plugin-gemoji'
-// 导入ByteMD样式
-import 'bytemd/dist/index.css'
+// import { Viewer } from '@/views/web/pages/forum/bytemd';
+// import gfm from '@bytemd/plugin-gfm'
+// import highlight from '@bytemd/plugin-highlight'
+// import gemoji from '@bytemd/plugin-gemoji'
+
+// import 'bytemd/dist/index.css'
 
 const router = useRouter();
 const userStore = useUserStore();
 
-// ByteMD插件
-const plugins = [
-  gfm(),
-  highlight(),
-  gemoji(),
-]
+
+// const plugins = [
+//   gfm(),
+//   highlight(),
+//   gemoji(),
+// ]
 
 // 用户登录状态
 const isLogin = computed(() => userStore.isLogin);
@@ -125,11 +123,36 @@ const fetchPosts = async () => {
         // 内容处理 - 优化正则表达式
         let previewText = '';
         if (post.content) {
-          const processedContent = post.content
-            .replace(/!\[.*?\]\((undefined|.*?undefined.*?)\)/g, '') // 合并两个正则
-            .replace(/!\[.*?\]\(.*?\)/g, '[图片]')
-            .replace(/\n{3,}/g, '\n\n');
+          // 首先检查是否是HTML内容
+          const isHtmlContent = post.content.includes('<p>') || 
+                                post.content.includes('<div>') || 
+                                post.content.includes('<h') || 
+                                post.content.includes('<span>');
           
+          let processedContent = post.content;
+          
+          if (isHtmlContent) {
+            // 1. 移除所有HTML标签
+            processedContent = processedContent
+              .replace(/<img.*?>/g, '[图片]') // 替换图片标签为[图片]文本
+              .replace(/<[^>]*>/g, ' ') // 移除其他所有HTML标签
+              .replace(/&nbsp;/g, ' ') // 替换HTML空格
+              .replace(/\s{2,}/g, ' ') // 合并多个空格为一个
+              .trim();
+          } else {
+            // 处理Markdown内容
+            processedContent = processedContent
+              .replace(/!\[.*?\]\((undefined|.*?undefined.*?)\)/g, '') // 移除无效图片
+              .replace(/!\[.*?\]\(.*?\)/g, '[图片]') // 替换图片标记
+              .replace(/\n{3,}/g, '\n\n') // 合并多个换行
+              .replace(/#{1,6}\s+/g, '') // 移除标题标记
+              .replace(/(\*\*|__)(.*?)(\*\*|__)/g, '$2') // 移除加粗标记
+              .replace(/(\*|_)(.*?)(\*|_)/g, '$2') // 移除斜体标记
+              .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // 移除代码标记
+              .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1'); // 将链接替换为纯文本
+          }
+          
+          // 截取预览文本
           previewText = processedContent.length > 150 
             ? processedContent.slice(0, 150) + '...' 
             : processedContent;
@@ -366,15 +389,9 @@ onMounted(() => {
                         </div>
                       </div>
                       
-                      <!-- 使用Viewer组件渲染Markdown内容 -->
+                      <!-- 使用纯文本显示预览内容，而不是Markdown渲染 -->
                       <div class="post-content-markdown">
-                        <Viewer 
-                          :value="post.previewText" 
-                          :plugins="plugins" 
-                          :sanitize="false"
-                          class="preview-markdown"
-                          v-once
-                        />
+                        <div class="preview-text">{{ post.previewText }}</div>
                       </div>
                     </div>
                     
@@ -695,6 +712,8 @@ onMounted(() => {
   gap: 20px;
   margin-bottom: 15px;
   align-items: flex-start;
+  position: relative;
+  min-height: 120px;
 }
 
 .post-content-markdown {
@@ -702,6 +721,8 @@ onMounted(() => {
   max-height: 60px;
   overflow: hidden;
   contain: content;
+  word-break: break-word;
+  min-width: 0;
 }
 
 .post-content-markdown :deep(.markdown-body) {
@@ -717,12 +738,16 @@ onMounted(() => {
   padding: 0 !important;
   margin: 0 !important;
   min-height: 20px;
+  max-width: 100%; 
+  word-break: break-word;
 }
 
 .post-content-markdown :deep(.markdown-body p) {
   white-space: normal;
   margin: 0;
   padding: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .post-content-markdown :deep(.markdown-body h1),
@@ -770,6 +795,8 @@ onMounted(() => {
   flex-shrink: 0;
   width: 180px;
   height: 120px;
+  position: relative;
+  z-index: 1;
 }
 
 .post-images.single-image .post-image-wrapper {
@@ -942,6 +969,7 @@ onMounted(() => {
   .post-content-container {
     flex-direction: column;
     gap: 10px;
+    min-height: auto;
   }
   
   .post-images.single-image {
@@ -970,10 +998,36 @@ onMounted(() => {
   .pagination-container :deep(.arco-pagination-jumper) {
     display: none;
   }
+  
+  .post-content-markdown {
+    max-height: none;
+    -webkit-line-clamp: 4;
+  }
 }
 
 .footer{
   display: flex;
   bottom: 0;
+}
+
+.preview-text {
+  font-size: 14px;
+  color: #6B4F2E;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  line-height: 1.5;
+  max-height: 60px;
+  word-break: break-word;
+}
+
+/* 移动端样式优化 */
+@media screen and (max-width: 768px) {
+  .preview-text {
+    -webkit-line-clamp: 4;
+    max-height: none;
+  }
 }
 </style>

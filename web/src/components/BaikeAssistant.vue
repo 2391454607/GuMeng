@@ -197,8 +197,99 @@ const typeWriterEffect = async (text, messageIndex, speed = 30, isAppend = false
   });
 };
 
+// 上传并识别图片
+const uploadAndRecognizeImage = async () => {
+  if (!imagePreviewUrl.value || isUploadingImage.value) return;
+  
+  // 检查用户是否已登录
+  if (!userStore.isLogin) {
+    Message.warning('请先登录后再使用非遗小助手');
+    toggleChat(); // 关闭聊天窗口
+    router.push('/login'); // 导航到登录页面
+    return;
+  }
+  
+  isUploadingImage.value = true;
+  
+  try {
+    // 先上传图片
+    const uploadResponse = await uploadImage(imageFile.value);
+    if (uploadResponse.code !== 200) {
+      throw new Error(uploadResponse.msg || '图片上传失败');
+    }
+    
+    const imageUrl = uploadResponse.data;
+
+    // 使用用户输入的文字，如果没有则使用默认文字
+    const userMessage = userInput.value.trim() || '请识别这张图片中的非遗内容';
+    
+    chatHistory.value.push({
+      role: 'user',
+      content: userMessage,
+      imageUrl: imageUrl
+    });
+    
+    // 保存更新后的历史
+    saveChatHistory(chatHistory.value);
+    
+    // 清空用户输入
+    userInput.value = '';
+    
+    // 滚动到底部显示最新消息
+    scrollToBottom();
+    
+    // 清除预览
+    clearSelectedImage();
+    
+    // 设置加载状态
+    isLoading.value = true;
+    
+    // 调用识别API
+    const recognizeResponse = await recognizeImage(imageUrl);
+    
+    if (recognizeResponse.code !== 200) {
+      throw new Error(recognizeResponse.msg || '图片识别失败');
+    }
+    
+    // 提取识别结果并添加到聊天历史
+    const recognitionResult = recognizeResponse.data.result;
+    
+    // 将AI回复添加到聊天历史
+    chatHistory.value.push({
+      role: 'assistant',
+      content: recognitionResult
+    });
+    
+    // 保存更新后的历史
+    saveChatHistory(chatHistory.value);
+  } catch (error) {
+    console.error('图片识别错误:', error);
+    Message.error(error.message || '图片识别失败');
+    
+    // 添加错误消息到聊天
+    chatHistory.value.push({
+      role: 'assistant',
+      content: '很抱歉，无法识别该图片。请确保图片清晰且包含非遗相关内容，或稍后再试。'
+    });
+    
+    // 保存更新后的历史
+    saveChatHistory(chatHistory.value);
+  } finally {
+    isUploadingImage.value = false;
+    isLoading.value = false;
+    scrollToBottom();
+  }
+};
+
 // 发送消息
 const sendMessage = async () => {
+  // 如果有图片预览，则调用图片识别方法
+  if (imagePreviewUrl.value) {
+    await uploadAndRecognizeImage();
+    return;
+  }
+  
+  // 如果没有输入且没有图片，则不执行任何操作
   if (!userInput.value.trim() || isLoading.value) return;
   
   // 检查用户是否已登录
@@ -453,85 +544,6 @@ const openCamera = () => {
   input.click();
 };
 
-// 上传并识别图片
-const uploadAndRecognizeImage = async () => {
-  if (!imagePreviewUrl.value || isUploadingImage.value) return;
-  
-  // 检查用户是否已登录
-  if (!userStore.isLogin) {
-    Message.warning('请先登录后再使用非遗小助手');
-    toggleChat(); // 关闭聊天窗口
-    router.push('/login'); // 导航到登录页面
-    return;
-  }
-  
-  isUploadingImage.value = true;
-  
-  try {
-    // 先上传图片
-    const uploadResponse = await uploadImage(imageFile.value);
-    if (uploadResponse.code !== 200) {
-      throw new Error(uploadResponse.msg || '图片上传失败');
-    }
-    
-    const imageUrl = uploadResponse.data;
-    
-    // 添加用户消息（带图片）到聊天历史
-    chatHistory.value.push({
-      role: 'user',
-      content: '请识别这张图片中的非遗内容',
-      imageUrl: imageUrl
-    });
-    
-    // 保存更新后的历史
-    saveChatHistory(chatHistory.value);
-    
-    // 滚动到底部显示最新消息
-    scrollToBottom();
-    
-    // 清除预览
-    clearSelectedImage();
-    
-    // 设置加载状态
-    isLoading.value = true;
-    
-    // 调用识别API
-    const recognizeResponse = await recognizeImage(imageUrl);
-    
-    if (recognizeResponse.code !== 200) {
-      throw new Error(recognizeResponse.msg || '图片识别失败');
-    }
-    
-    // 提取识别结果并添加到聊天历史
-    const recognitionResult = recognizeResponse.data.result;
-    
-    // 将AI回复添加到聊天历史
-    chatHistory.value.push({
-      role: 'assistant',
-      content: recognitionResult
-    });
-    
-    // 保存更新后的历史
-    saveChatHistory(chatHistory.value);
-  } catch (error) {
-    console.error('图片识别错误:', error);
-    Message.error(error.message || '图片识别失败');
-    
-    // 添加错误消息到聊天
-    chatHistory.value.push({
-      role: 'assistant',
-      content: '很抱歉，无法识别该图片。请确保图片清晰且包含非遗相关内容，或稍后再试。'
-    });
-    
-    // 保存更新后的历史
-    saveChatHistory(chatHistory.value);
-  } finally {
-    isUploadingImage.value = false;
-    isLoading.value = false;
-    scrollToBottom();
-  }
-};
-
 // 拖拽上传相关
 const handleDrop = (e) => {
   e.preventDefault();
@@ -711,14 +723,9 @@ onBeforeUnmount(() => {
               </a-button>
             </div>
           </div>
-          <a-button 
-            type="primary" 
-            class="recognize-btn" 
-            @click.stop="uploadAndRecognizeImage" 
-            :loading="isUploadingImage"
-          >
-            识别图片
-          </a-button>
+          <div class="image-preview-hint">
+            可以输入文字与图片一起发送，或直接点击发送按钮
+          </div>
         </div>
         
         <div class="chat-footer">
@@ -738,7 +745,7 @@ onBeforeUnmount(() => {
               class="image-upload-btn"
               size="mini"
               @click.stop="$refs.fileInput.click()"
-              :disabled="isLoading || isUploadingImage"
+              :disabled="isLoading"
             >
               <icon-image />
             </a-button>
@@ -748,7 +755,7 @@ onBeforeUnmount(() => {
               class="camera-btn"
               size="mini"
               @click.stop="openCamera"
-              :disabled="isLoading || isUploadingImage"
+              :disabled="isLoading"
             >
               <icon-camera />
             </a-button>
@@ -757,17 +764,17 @@ onBeforeUnmount(() => {
           <a-input
             v-model="userInput"
             class="chat-input"
-            placeholder="请输入您的问题，或拖拽图片到此处..."
+            :placeholder="imagePreviewUrl ? '输入文字与图片一起发送...' : '请输入您的问题，或拖拽图片到此处...'"
             @keydown="handleKeyDown"
             allow-clear
-            :disabled="isLoading || isUploadingImage"
+            :disabled="isLoading"
           />
           
           <a-button 
             class="chat-send-btn" 
             type="primary" 
             @click.stop="sendMessage" 
-            :disabled="!userInput.trim() || isLoading || isUploadingImage"
+            :disabled="(!userInput.trim() && !imagePreviewUrl) || isLoading"
           >
             <icon-send />
           </a-button>
@@ -1209,15 +1216,11 @@ onBeforeUnmount(() => {
   color: white;
 }
 
-.recognize-btn {
-  background-color: #8C1F28;
-  border-color: #8C1F28;
-  width: 100%;
-}
-
-.recognize-btn:hover {
-  background-color: #751a22;
-  border-color: #751a22;
+.image-preview-hint {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 5px;
 }
 
 /* 用户上传的图片样式 */
