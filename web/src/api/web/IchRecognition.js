@@ -22,7 +22,7 @@ export function uploadImage(file) {
  * @returns {Promise<Object>} 识别结果
  */
 export function recognizeImage(imageUrl) {
-  return http.post('/api/ai/recognize', null, {
+  return http.post('/ai/recognize', null, {
     params: { imageUrl }
   });
 } 
