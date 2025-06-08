@@ -22,6 +22,20 @@ public interface IchProjectMapper extends BaseMapper<IchProject> {
                                        @Param("categoryId") Integer categoryId);
     
     /**
+     * 带地区ID的查询
+     */
+    Page<IchProjectListVO> getIchProject(Page<IchProjectListVO> page, 
+                                       @Param("levelId") Integer levelId,
+                                       @Param("categoryId") Integer categoryId,
+                                       @Param("regionId") Integer regionId);
+    
+    /**
+     * 关键字搜索
+     */
+    Page<IchProjectListVO> searchIchProject(Page<IchProjectListVO> page, 
+                                           @Param("keyword") String keyword);
+    
+    /**
      * 根据分类ID获取分类名称
      */
     String getCategoryNameById(@Param("categoryId") Integer categoryId);
@@ -30,6 +44,11 @@ public interface IchProjectMapper extends BaseMapper<IchProject> {
      * 根据级别ID获取级别名称
      */
     String getLevelNameById(@Param("levelId") Integer levelId);
+    
+    /**
+     * 根据地区ID获取地区名称
+     */
+    String getRegionNameById(@Param("regionId") Integer regionId);
     
     /**
      * 获取相关项目（同类别的其他项目）

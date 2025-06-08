@@ -33,6 +33,16 @@ public class IchProjectListVO {
     private String levelName;
 
     /**
+     * 地区ID
+     */
+    private Integer regionId;
+
+    /**
+     * 地区名称
+     */
+    private String regionName;
+
+    /**
      * 图片JSON数组
      */
     private String images;

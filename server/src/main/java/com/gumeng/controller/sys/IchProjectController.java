@@ -50,8 +50,9 @@ public class IchProjectController {
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) Integer levelId,
-            @RequestParam(required = false) Integer categoryId) {
-        Page<IchProjectListVO> ichProjects = ichProjectService.getIchProject(current, size, levelId, categoryId);
+            @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) Integer regionId) {
+        Page<IchProjectListVO> ichProjects = ichProjectService.getIchProject(current, size, levelId, categoryId, regionId);
         return HttpResponse.success(ichProjects);
     }
 
@@ -117,6 +118,18 @@ public class IchProjectController {
                 System.out.println("最终图片URL: " + ichProject.getImages());
             }
 
+            // 检查并记录视频URL
+            if (ichProject.getVideo() != null && !ichProject.getVideo().isEmpty()) {
+                System.out.println("保存项目视频URL: " + ichProject.getVideo());
+            }
+            
+            // 检查保存地区ID
+            if (ichProject.getRegionId() != null) {
+                System.out.println("保存项目地区ID: " + ichProject.getRegionId());
+            } else {
+                System.out.println("警告: 地区ID为空");
+            }
+
             // 设置创建和更新时间
             ichProject.setCreateTime(LocalDateTime.now());
             ichProject.setUpdateTime(LocalDateTime.now());
@@ -124,8 +137,11 @@ public class IchProjectController {
             // 保存项目信息
             boolean result = ichProjectService.save(ichProject);
             if (result) {
+                System.out.println("项目保存成功，ID: " + ichProject.getId() + ", 视频URL: " + ichProject.getVideo() + ", 地区ID: " + ichProject.getRegionId());
                 return HttpResponse.success(ichProject.getId());
             }
+            
+            System.out.println("项目保存失败");
             return HttpResponse.error("项目信息保存失败");
 
         } catch (IOException e) {
@@ -192,8 +208,20 @@ public class IchProjectController {
                 ichProject.setImages(oldProject.getImages());
             }
 
+            // 视频URL处理和地区ID处理
             if (ichProject.getVideo() == null || ichProject.getVideo().isEmpty()) {
                 ichProject.setVideo(oldProject.getVideo());
+                System.out.println("更新项目：使用旧视频URL: " + ichProject.getVideo());
+            } else {
+                System.out.println("更新项目：使用新视频URL: " + ichProject.getVideo());
+            }
+            
+            // 处理地区ID
+            if (ichProject.getRegionId() == null) {
+                ichProject.setRegionId(oldProject.getRegionId());
+                System.out.println("更新项目：使用旧地区ID: " + ichProject.getRegionId());
+            } else {
+                System.out.println("更新项目：使用新地区ID: " + ichProject.getRegionId());
             }
 
             // 更新时间
@@ -202,8 +230,11 @@ public class IchProjectController {
             // 更新项目信息
             boolean result = ichProjectService.updateById(ichProject);
             if (result) {
+                System.out.println("项目更新成功，ID: " + ichProject.getId() + ", 视频URL: " + ichProject.getVideo() + ", 地区ID: " + ichProject.getRegionId());
                 return HttpResponse.success("项目信息更新成功");
             }
+            
+            System.out.println("项目更新失败");
             return HttpResponse.error("项目信息更新失败");
 
         } catch (IOException e) {

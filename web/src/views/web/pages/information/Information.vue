@@ -1,8 +1,8 @@
 <script setup>
 import Footer from "@/views/web/layout/Footer.vue";
 import {onMounted, reactive, ref} from 'vue';
-import {getProjectList} from "@/api/web/IchProject.js";
-import { IconSearch, IconLoading, IconPlayArrowFill } from '@arco-design/web-vue/es/icon';
+import {getProjectList, getRegionList} from "@/api/web/IchProject.js";
+import { IconSearch, IconLoading, IconPlayArrowFill, IconEmpty } from '@arco-design/web-vue/es/icon';
 import { Message } from "@arco-design/web-vue";
 import { useRouter } from 'vue-router';
 import BaikeAssistant from "@/components/BaikeAssistant.vue"; // 引入非遗小助手
@@ -20,74 +20,148 @@ const total = ref(0);
 // 分页处理函数
 const handlePageChange = (page) => {
   status.current = page;
-  getProjectList(status).then((res)=>{
-    processProjectData(res.data.records);
-    total.value = res.data.total;
-  })
+  // 调用搜索方法，保留当前的搜索条件和筛选条件
+  handleSearch();
 }
 
 const loading = ref(true);
-const ichProject = ref({})
+const ichProject = ref([]) // 初始化为空数组而非空对象
+const isEmptyResult = ref(false); // 添加标记表示搜索结果为空
 
 // 处理项目数据，取封面图片
 const processProjectData = (records) => {
-  if (!records || records.length === 0) return;
+  if (!records || records.length === 0) {
+    isEmptyResult.value = true;
+    ichProject.value = [];
+    return;
+  }
   
+  isEmptyResult.value = false;
   records.forEach(project => {
-
     if (project.images && project.images.includes(',')) {
       // 使用第一张图片作为封面
       project.coverImage = project.images.split(',')[0].trim();
     } else if (project.images) {
-
       project.coverImage = project.images;
     } else {
       // 没有图片，设置默认图片
       project.coverImage = '/image/default-cover.png';
     }
+    
+    // 确保分类、级别、地区等字段有默认值
+    project.categoryName = project.categoryName || '未分类';
+    project.levelName = project.levelName || '未知级别';
+    project.regionName = project.regionName || '未知地区';
   });
   
   ichProject.value = records;
 }
 
 onMounted(()=>{
-  getProjectList(status).then((res)=>{
-    processProjectData(res.data.records);
-    total.value = res.data.total;
-    loading.value = false;
-  })
+  // 获取地区列表
+  fetchRegionData();
+  // 使用统一的搜索处理方法
+  handleSearch();
 })
 
 // 搜索关键词状态
 const searchKeyword = ref('');
+
+// 从后端获取地区数据
+const fetchRegionData = () => {
+  getRegionList().then(res => {
+    if (res.data && Array.isArray(res.data)) {
+      // 动态更新地区选项
+      const regions = ['全部', ...res.data.map(region => region.name)];
+      categories.value[0].items = regions;
+    }
+  }).catch(error => {
+    console.error('获取地区数据失败:', error);
+  });
+};
 
 // 搜索处理方法
 const handleSearch = () => {
   loading.value = true;
   // 将搜索条件添加到查询参数中
   const params = {
-    ...status,
-    keyword: searchKeyword.value,
-    area: selectedCategories.value.地域 === '全部' ? '' : selectedCategories.value.地域,
-    level: selectedCategories.value.级别 === '全部' ? '' : selectedCategories.value.级别,
-    category: selectedCategories.value.类型 === '全部' ? '' : selectedCategories.value.类型
+    current: status.current,
+    size: status.size,
+    keyword: searchKeyword.value
   };
+  
+  // 转换地区、级别和类别为对应的ID
+  if (selectedCategories.value.所在地区 !== '全部') {
+    // 从实际地区数据中查找ID
+    const regionName = selectedCategories.value.所在地区;
+    const regionId = getRegionIdByName(regionName);
+    if (regionId) {
+      params.regionId = regionId;
+    }
+  }
+  
+  if (selectedCategories.value.保护级别 !== '全部') {
+    // 保护级别名称转为ID
+    const levelIndex = categories.value[1].items.findIndex(item => item === selectedCategories.value.保护级别);
+    if (levelIndex > 0) { // 跳过"全部"的索引
+      params.levelId = levelIndex;
+    }
+  }
+  
+  if (selectedCategories.value.非遗类型 !== '全部') {
+    // 类别名称转为ID
+    const categoryIndex = categories.value[2].items.findIndex(item => item === selectedCategories.value.非遗类型);
+    if (categoryIndex > 0) { // 跳过"全部"的索引
+      params.categoryId = categoryIndex;
+    }
+  }
 
   getProjectList(params).then((res) => {
     processProjectData(res.data.records);
-    total.value = res.data.total;
+    total.value = res.data.total || 0;
     loading.value = false;
+  }).catch(error => {
+    Message.error('查询失败：' + error.message);
+    loading.value = false;
+    isEmptyResult.value = true;
+    ichProject.value = [];
   });
-}
+};
+
+// 根据地区名称获取地区ID
+const getRegionIdByName = (name) => {
+  const regionMap = {
+    '昆明': 101,
+    '大理': 102,
+    '丽江': 103,
+    '红河': 104,
+    '楚雄': 105,
+    '迪庆': 106,
+    '德宏': 107,
+    '临沧': 108,
+    '曲靖': 109,
+    '昭通': 110,
+    '玉溪': 111,
+    '保山': 112,
+    '文山': 113,
+    '西双版纳': 114,
+    '怒江': 115,
+    '普洱': 116
+  };
+  
+  return regionMap[name] || null;
+};
 
 // 添加选中处理方法
 const handleCategorySelect = (categoryName, item) => {
   selectedCategories.value[categoryName] = item;
-  // 这里可以添加筛选逻辑
+  // 选择分类后立即执行搜索
+  status.current = 1; // 重置为第1页
+  handleSearch();
 }
 
 const categories = ref([
-  { name: '所在地区', items: ['全部', '四川', '云南', '福建'] },
+  { name: '所在地区', items: ['全部', '昆明', '大理', '丽江', '红河', '楚雄', '迪庆', '德宏', '临沧', '曲靖', '昭通', '玉溪', '保山', '文山', '西双版纳', '怒江', '普洱'] },
   { name: '保护级别', items: ['全部','国家级', '省级', '市级', '县级'] },
   { name: '非遗类型', items: ['全部','民间文学', '传统音乐', '传统舞蹈', '传统戏剧', '曲艺', '传统体育、游艺与杂技', '传统美术', '民俗', '传统技艺', '传统医药'] }
 ]);
@@ -98,6 +172,18 @@ const selectedCategories = ref({
   保护级别: '全部',
   非遗类型: '全部'
 });
+
+// 清空筛选条件
+const clearFilters = () => {
+  selectedCategories.value = {
+    所在地区: '全部',
+    保护级别: '全部',
+    非遗类型: '全部'
+  };
+  searchKeyword.value = '';
+  status.current = 1;
+  handleSearch();
+};
 
 // 添加查看详情方法
 const viewDetail = (id) => {
@@ -147,7 +233,16 @@ const viewDetail = (id) => {
 
       <a-spin :loading="loading" :size="32" tip="加载中">
         <template #icon><icon-loading /></template>
-        <div class="project-grid">
+        <!-- 空状态显示 -->
+        <div v-if="isEmptyResult" class="empty-state">
+          <a-empty description="暂无符合条件的非遗项目">
+            <template #image>
+              <icon-empty />
+            </template>
+          </a-empty>
+        </div>
+        <!-- 项目列表 -->
+        <div v-else class="project-grid">
           <a-card
             v-for="project in ichProject"
             :key="project.id"
@@ -172,10 +267,11 @@ const viewDetail = (id) => {
               </div>
             </div>
             <div class="project-content">
-              <h3>{{ project.name }}</h3>
+              <h3>{{ project.name || '未命名项目' }}</h3>
               <div class="project-tags">
-                <a-tag>{{ project.levelName }}</a-tag>
-                <a-tag>{{ project.categoryName }}</a-tag>
+                <a-tag v-if="project.levelName">{{ project.levelName }}</a-tag>
+                <a-tag v-if="project.categoryName">{{ project.categoryName }}</a-tag>
+                <a-tag v-if="project.regionName" type="primary">{{ project.regionName }}</a-tag>
               </div>
     
               <div class="project-card-bottom">
@@ -195,7 +291,7 @@ const viewDetail = (id) => {
       </a-spin>
 
       <!-- 分页器 -->
-      <div class="pagination-container">
+      <div v-if="!isEmptyResult && total > 0" class="pagination-container">
         <a-pagination
           :total="total"
           :current="status.current"
@@ -294,6 +390,8 @@ const viewDetail = (id) => {
   position: relative;
   width: 100%;
   max-width: 600px;
+  display: flex;
+  align-items: center;
 }
 
 .search-icon {
@@ -365,12 +463,19 @@ const viewDetail = (id) => {
   color: #fff;
 }
 
+/* 空状态样式 */
+.empty-state {
+  text-align: center;
+  padding: 50px 0;
+  width: 100%;
+}
+
 .project-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 24px;
   margin: 20px auto;
-  width: 100vw;
+  width: 100%;
   padding: 0 20px;
 }
 
@@ -480,6 +585,12 @@ const viewDetail = (id) => {
   border-color: #d32f2f;
   color: #d32f2f;
   background: #fff;
+}
+
+.project-tags :deep(.arco-tag-primary) {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border-color: #1976d2;
 }
 
 .project-card-bottom{

@@ -9,6 +9,7 @@
             <result property="name" column="name" jdbcType="VARCHAR"/>
             <result property="categoryId" column="category_id" jdbcType="INTEGER"/>
             <result property="levelId" column="level_id" jdbcType="INTEGER"/>
+            <result property="regionId" column="region_id" jdbcType="INTEGER"/>
             <result property="images" column="images" jdbcType="VARCHAR"/>
             <result property="viewCount" column="view_count" jdbcType="INTEGER"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
@@ -16,7 +17,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,name,category_id,level_id,images,content,video,
+        id,name,category_id,level_id,region_id,images,content,video,
         view_count,create_time,update_time
     </sql>
 
@@ -26,6 +27,8 @@
             p.name,
             c.name AS categoryName,
             l.name AS levelName,
+            p.region_id AS regionId,
+            IFNULL((SELECT r.name FROM ich_region r WHERE r.id = p.region_id), '未知地区') AS regionName,
             p.images AS images,
             p.view_count AS viewCount,
             p.create_time AS createTime,
@@ -41,8 +44,47 @@
             <if test="categoryId != null">
                 AND p.category_id = #{categoryId}
             </if>
+            <if test="regionId != null">
+                AND p.region_id = #{regionId}
+            </if>
         </where>
         ORDER BY p.create_time DESC
+    </select>
+    
+    <!-- 关键词搜索方法 -->
+    <select id="searchIchProject" resultType="com.gumeng.entity.vo.IchProjectListVO">
+        SELECT
+            p.id,
+            p.name,
+            c.name AS categoryName,
+            l.name AS levelName,
+            p.region_id AS regionId,
+            IFNULL((SELECT r.name FROM ich_region r WHERE r.id = p.region_id), '未知地区') AS regionName,
+            p.images AS images,
+            p.view_count AS viewCount,
+            p.create_time AS createTime,
+            p.update_time AS updateTime
+        FROM
+            ich_project p
+        LEFT JOIN ich_category c ON p.category_id = c.id
+        LEFT JOIN ich_level l ON p.level_id = l.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (p.name LIKE CONCAT('%', #{keyword}, '%')
+                OR p.content LIKE CONCAT('%', #{keyword}, '%')
+                OR c.name LIKE CONCAT('%', #{keyword}, '%')
+                OR l.name LIKE CONCAT('%', #{keyword}, '%')
+                OR EXISTS (SELECT 1 FROM ich_region r WHERE r.id = p.region_id AND r.name LIKE CONCAT('%', #{keyword}, '%')))
+            </if>
+        </where>
+        ORDER BY 
+            CASE 
+                WHEN p.name LIKE CONCAT('%', #{keyword}, '%') THEN 1
+                WHEN c.name LIKE CONCAT('%', #{keyword}, '%') THEN 2
+                WHEN l.name LIKE CONCAT('%', #{keyword}, '%') THEN 3
+                ELSE 4
+            END,
+            p.view_count DESC
     </select>
     
     <!-- 根据分类ID获取分类名称 -->
@@ -55,6 +97,11 @@
         SELECT name FROM ich_level WHERE id = #{levelId}
     </select>
     
+    <!-- 根据地区ID获取地区名称 -->
+    <select id="getRegionNameById" resultType="java.lang.String">
+        SELECT name FROM ich_region WHERE id = #{regionId}
+    </select>
+    
     <!-- 获取相关项目（同类别的其他项目） -->
     <select id="getRelatedProjects" resultType="com.gumeng.entity.vo.IchProjectListVO">
         SELECT
@@ -62,6 +109,8 @@
             p.name,
             c.name AS categoryName,
             l.name AS levelName,
+            p.region_id AS regionId,
+            IFNULL((SELECT r.name FROM ich_region r WHERE r.id = p.region_id), '未知地区') AS regionName,
             p.images AS images,
             p.video,
             p.view_count AS viewCount,

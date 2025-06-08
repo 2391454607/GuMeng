@@ -45,6 +45,11 @@ public class IchProjectDetailVO {
     private String levelName;
 
     /**
+     * 地区ID
+     */
+    private Integer regionId;
+
+    /**
      * 地区名称
      */
     private String regionName;

@@ -41,6 +41,12 @@ public class IchProject implements Serializable {
     private Integer levelId;
 
     /**
+     * 所属地区id
+     */
+    @TableField(value = "region_id")
+    private Integer regionId;
+
+    /**
      * 图片JSON数组
      */
     @TableField(value = "images")
@@ -96,6 +102,7 @@ public class IchProject implements Serializable {
             && (this.getName() == null ? other.getName() == null : this.getName().equals(other.getName()))
             && (this.getCategoryId() == null ? other.getCategoryId() == null : this.getCategoryId().equals(other.getCategoryId()))
             && (this.getLevelId() == null ? other.getLevelId() == null : this.getLevelId().equals(other.getLevelId()))
+            && (this.getRegionId() == null ? other.getRegionId() == null : this.getRegionId().equals(other.getRegionId()))
             && (this.getImages() == null ? other.getImages() == null : this.getImages().equals(other.getImages()))
             && (this.getContent() == null ? other.getContent() == null : this.getContent().equals(other.getContent()))
             && (this.getVideo() == null ? other.getVideo() == null : this.getVideo().equals(other.getVideo()))
@@ -112,6 +119,7 @@ public class IchProject implements Serializable {
         result = prime * result + ((getName() == null) ? 0 : getName().hashCode());
         result = prime * result + ((getCategoryId() == null) ? 0 : getCategoryId().hashCode());
         result = prime * result + ((getLevelId() == null) ? 0 : getLevelId().hashCode());
+        result = prime * result + ((getRegionId() == null) ? 0 : getRegionId().hashCode());
         result = prime * result + ((getImages() == null) ? 0 : getImages().hashCode());
         result = prime * result + ((getContent() == null) ? 0 : getContent().hashCode());
         result = prime * result + ((getVideo() == null) ? 0 : getVideo().hashCode());
@@ -131,6 +139,7 @@ public class IchProject implements Serializable {
         sb.append(", name=").append(name);
         sb.append(", categoryId=").append(categoryId);
         sb.append(", levelId=").append(levelId);
+        sb.append(", regionId=").append(regionId);
         sb.append(", images=").append(images);
         sb.append(", content=").append(content);
         sb.append(", video=").append(video);

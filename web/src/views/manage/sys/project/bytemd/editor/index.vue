@@ -22,8 +22,10 @@ const props = defineProps({
   name: String, // 项目名称
   levelId: [String, Number], // 保护级别ID
   categoryId: [String, Number], // 项目类别ID
+  regionId: [String, Number], // 添加所属地区ID
   levelOptions: Array, // 保护级别选项
   categoryOptions: Array, // 项目类别选项
+  regionOptions: Array, // 添加地区选项
   video: String, // 当前视频URL
   images: String, // 图片JSON数组
 });
@@ -32,6 +34,7 @@ const props = defineProps({
 const localName = ref(props.name || '');
 const localLevelId = ref(props.levelId || '');
 const localCategoryId = ref(props.categoryId || '');
+const localRegionId = ref(props.regionId || ''); // 添加地区ID本地副本
 const videoFile = ref(null);
 const videoUrl = ref(props.video || '');
 const uploading = ref(false);
@@ -48,6 +51,10 @@ watch(() => props.levelId, (newVal) => {
 
 watch(() => props.categoryId, (newVal) => {
   localCategoryId.value = newVal;
+});
+
+watch(() => props.regionId, (newVal) => {
+  localRegionId.value = newVal;
 });
 
 watch(() => props.video, (newVal) => {
@@ -67,11 +74,16 @@ watch(localCategoryId, (newVal) => {
   emit('categoryChange', newVal);
 });
 
+watch(localRegionId, (newVal) => {
+  emit('regionChange', newVal);
+});
+
 const emit = defineEmits([
   "change", 
   "nameChange", 
   "levelChange", 
   "categoryChange",
+  "regionChange", // 添加地区变化事件
   "videoChange",
   "back", 
   "save",
@@ -188,7 +200,7 @@ const fixPreviewImages = () => {
   
   const editorValue = editorElement.CodeMirror.getValue() || '';
   
-  // 使用更宽松的正则表达式匹配所有可能的图片URL模式
+  // 使用更宽松的正则表达式匹配所有图片URL模式
   const markdownImageRegex = /!\[.*?\]\((.*?)\)/g;
   const htmlImageRegex = /<img.*?src=["'](.*?)["']/g;
   const rawUrlRegex = /(https?:\/\/[^\s"'<>]+\.(jpg|jpeg|png|gif|webp|svg))/gi;
@@ -577,6 +589,17 @@ const getFile = (imageUrls) => {
         <select v-model="localCategoryId" class="form-select">
           <option value="" disabled>请选择项目类别</option>
           <option v-for="option in props.categoryOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+      
+      <!-- 添加地区选择下拉框 -->
+      <div class="form-item form-item-fixed">
+        <label class="form-label">所属地区</label>
+        <select v-model="localRegionId" class="form-select">
+          <option value="" disabled>请选择所属地区</option>
+          <option v-for="option in props.regionOptions" :key="option.value" :value="option.value">
             {{ option.label }}
           </option>
         </select>

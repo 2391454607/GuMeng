@@ -69,7 +69,8 @@ const status = reactive({
   current: 1,
   size: 10,
   levelId: null,
-  categoryId: null
+  categoryId: null,
+  regionId: null
 })
 const total = ref(0);
 // 分页处理函数
@@ -99,6 +100,26 @@ const categoryOptions = [
   { label: '传统医药', value: '10' }
 ];
 
+// 添加云南省地区选项数据
+const regionOptions = [
+  { label: '昆明市', value: '101' },
+  { label: '大理白族自治州', value: '102' },
+  { label: '丽江市', value: '103' },
+  { label: '红河哈尼族彝族自治州', value: '104' },
+  { label: '楚雄彝族自治州', value: '105' },
+  { label: '迪庆藏族自治州', value: '106' },
+  { label: '德宏傣族景颇族自治州', value: '107' },
+  { label: '临沧市', value: '108' },
+  { label: '曲靖市', value: '109' },
+  { label: '昭通市', value: '110' },
+  { label: '玉溪市', value: '111' },
+  { label: '保山市', value: '112' },
+  { label: '文山壮族苗族自治州', value: '113' },
+  { label: '西双版纳傣族自治州', value: '114' },
+  { label: '怒江傈僳族自治州', value: '115' },
+  { label: '普洱市', value: '116' }
+];
+
 //定义新增的表单数据
 const addProject = ref(false);
 const ProjectAddClick = async () => {
@@ -107,6 +128,7 @@ const ProjectAddClick = async () => {
   newProject.name = '';
   newProject.levelId = '';
   newProject.categoryId = '';
+  newProject.regionId = ''; // 重置地区ID
   newProject.video = null;
   newProject.images = [];
   imgFile.value = null;
@@ -116,6 +138,7 @@ const newProject = reactive({
   name: "",
   levelId: "",
   categoryId: "",
+  regionId: "", // 添加地区ID字段
   video: null,
   images: []
 });
@@ -176,12 +199,18 @@ const addOk = async () => {
     return;
   }
 
+  if (!newProject.regionId) {
+    Message.warning('请选择所属地区');
+    return;
+  }
+
   const formData = new FormData();
 
   formData.append('projectInfo', JSON.stringify({
     name: newProject.name,
     levelId: newProject.levelId,
     categoryId: newProject.categoryId,
+    regionId: newProject.regionId, // 添加地区ID
     content: editorValue.value,
     video: newProject.video,
     images: Array.isArray(newProject.images) ? newProject.images.join(',') : newProject.images
@@ -204,7 +233,7 @@ const addOk = async () => {
   }
 };
 
-// 从内容中提取所有可能的七牛云图片URL
+
 const extractQiniuUrls = (content) => {
   // 优先使用项目的images字段
   if (viewProjectData.images) {
@@ -221,8 +250,7 @@ const extractQiniuUrls = (content) => {
   // 匹配七牛云域名图片
   const qiniuDomainPattern = /https?:\/\/[^)\s"'<>]+?(?:clouddn\.com|hn-bkt\.clouddn\.com)[^)\s"'<>]*?\.(?:png|jpg|jpeg|gif|webp)/gi;
   let qiniuLinks = content.match(qiniuDomainPattern) || [];
-  
-  // 如果没找到七牛云图片，尝试匹配其他图片
+
   if (qiniuLinks.length === 0) {
     const genericImagePattern = /https?:\/\/[^)\s"'<>]+\.(?:png|jpg|jpeg|gif|webp)/gi;
     qiniuLinks = content.match(genericImagePattern) || [];
@@ -277,6 +305,7 @@ const viewProjectData = reactive({
   name: "",
   levelName: "",
   categoryName: "",
+  regionName: "",
   images: "",
   video: "",
   content: "",
@@ -291,6 +320,7 @@ const viewProjectClick = (record) => {
   viewProjectData.name = record.name;
   viewProjectData.levelName = record.levelName;
   viewProjectData.categoryName = record.categoryName;
+  viewProjectData.regionName = record.regionName || '';
   viewProjectData.images = record.images;
   viewProjectData.video = record.video || '';
   viewProjectData.viewCount = record.viewCount;
@@ -340,6 +370,8 @@ const updateProjectData = reactive({
   levelId: "",
   categoryName: "",
   categoryId: "",
+  regionName: "", // 添加地区名称
+  regionId: "", // 添加地区ID
   video: "",
   images: [],
   content: ""
@@ -359,9 +391,12 @@ const updateProjectClick = async (record) => {
   updateProjectData.name = record.name;
   updateProjectData.levelName = record.levelName;
   updateProjectData.categoryName = record.categoryName;
+  updateProjectData.regionName = record.regionName || ''; // 设置地区名称
+
   // 根据名称找到对应的ID
   updateProjectData.levelId = levelOptions.find(option => option.label === record.levelName)?.value || '';
   updateProjectData.categoryId = categoryOptions.find(option => option.label === record.categoryName)?.value || '';
+  updateProjectData.regionId = regionOptions.find(option => option.label === record.regionName)?.value || ''; // 设置地区ID
   updateProjectData.video = record.video || '';
   
   // 处理images字段
@@ -407,6 +442,11 @@ const updateOk = async () => {
     return;
   }
 
+  if (!updateProjectData.regionId) {
+    Message.warning('请选择所属地区');
+    return;
+  }
+
   const formData = new FormData();
   
   // 使用临时对象，方便调试
@@ -415,9 +455,9 @@ const updateOk = async () => {
     name: updateProjectData.name,
     levelId: updateProjectData.levelId,
     categoryId: updateProjectData.categoryId,
+    regionId: updateProjectData.regionId, // 添加地区ID
     content: updateEditorValue.value,
     video: updateProjectData.video,
-
     images: Array.isArray(updateProjectData.images) ? updateProjectData.images.join(',') : updateProjectData.images
   };
   
@@ -487,7 +527,7 @@ const closeAddDialog = async () => {
 
 const closeUpdateDialog = async () => {
   updateProject.value = false;
-  // 清理可能的临时视频
+  // 清理临时视频
   if (updateProjectData.video && updateProjectData.video !== originalVideoUrl.value) {
     await handleCleanupVideo(updateProjectData.video);
   }
@@ -576,6 +616,7 @@ const getUpdateFile = (imageUrls) => {
           <a-table-column align="center" data-index="name" title="项目名称"></a-table-column>
           <a-table-column align="center" data-index="levelName" title="保护级别"></a-table-column>
           <a-table-column align="center" data-index="categoryName" title="项目类别"></a-table-column>
+          <a-table-column align="center" data-index="regionName" title="所属地区"></a-table-column>
           <a-table-column align="center" data-index="viewCount" title="浏览量"></a-table-column>
           <a-table-column align="center" data-index="createTime" title="创建时间">
             <template #cell="{ record }">
@@ -622,6 +663,7 @@ const getUpdateFile = (imageUrls) => {
           <div class="project-meta">
             <span class="meta-item"><strong>保护级别:</strong> {{ viewProjectData.levelName }}</span>
             <span class="meta-item"><strong>项目类别:</strong> {{ viewProjectData.categoryName }}</span>
+            <span class="meta-item"><strong>所属地区:</strong> {{ viewProjectData.regionName }}</span>
             <span class="meta-item"><strong>浏览量:</strong> {{ viewProjectData.viewCount }}</span>
             <span class="meta-item"><strong>创建时间:</strong> {{ viewProjectData.createTime }}</span>
           </div>
@@ -694,11 +736,14 @@ const getUpdateFile = (imageUrls) => {
           :name="newProject.name"
           :levelId="newProject.levelId"
           :categoryId="newProject.categoryId"
+          :regionId="newProject.regionId"
           :levelOptions="levelOptions"
           :categoryOptions="categoryOptions"
+          :regionOptions="regionOptions"
           @nameChange="val => newProject.name = val"
           @levelChange="val => newProject.levelId = val"
           @categoryChange="val => newProject.categoryId = val"
+          @regionChange="val => newProject.regionId = val"
           @fileChange="getFile"
           @videoChange="getVideoFile"
           @cleanupVideo="handleCleanupVideo"
@@ -729,13 +774,16 @@ const getUpdateFile = (imageUrls) => {
           :name="updateProjectData.name"
           :levelId="updateProjectData.levelId"
           :categoryId="updateProjectData.categoryId"
+          :regionId="updateProjectData.regionId"
           :levelOptions="levelOptions"
           :categoryOptions="categoryOptions"
+          :regionOptions="regionOptions"
           :images="Array.isArray(updateProjectData.images) ? updateProjectData.images.join(',') : updateProjectData.images"
           :video="updateProjectData.video"
           @nameChange="val => updateProjectData.name = val"
           @levelChange="val => updateProjectData.levelId = val"
           @categoryChange="val => updateProjectData.categoryId = val"
+          @regionChange="val => updateProjectData.regionId = val"
           @fileChange="getUpdateFile"
           @videoChange="getUpdateVideo"
           @cleanupVideo="handleCleanupVideo"
