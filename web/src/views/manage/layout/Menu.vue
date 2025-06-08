@@ -12,7 +12,9 @@ import {
   IconFileImage,
   IconBook,
   IconMessage,
-  IconCalendarClock
+  IconCalendarClock,
+  IconFolder,
+  IconStorage
 }
   from '@arco-design/web-vue/es/icon';
 
@@ -79,7 +81,9 @@ const iconMap = {
   fileImage: IconFileImage,
   forum: IconBook,
   comments: IconMessage,
-  log:IconCalendarClock
+  log: IconCalendarClock,
+  policy: IconStorage,
+  project: IconFolder
 };
 </script>
 
