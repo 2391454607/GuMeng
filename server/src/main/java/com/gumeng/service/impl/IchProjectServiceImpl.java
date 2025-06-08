@@ -27,8 +27,59 @@ public class IchProjectServiceImpl extends ServiceImpl<IchProjectMapper, IchProj
 
     @Override
     public Page<IchProjectListVO> getIchProject(Integer current, Integer size, Integer levelId, Integer categoryId) {
+        return getIchProject(current, size, levelId, categoryId, null);
+    }
+    
+    @Override
+    public Page<IchProjectListVO> getIchProject(Integer current, Integer size, Integer levelId, Integer categoryId, Integer regionId) {
         Page<IchProjectListVO> page = new Page<>(current, size);
-        return ichProjectMapper.getIchProject(page, levelId, categoryId);
+        try {
+            Page<IchProjectListVO> result = ichProjectMapper.getIchProject(page, levelId, categoryId, regionId);
+            // 处理可能为null的字段
+            if (result != null && result.getRecords() != null) {
+                result.getRecords().forEach(project -> {
+                    if (project.getCategoryName() == null) {
+                        project.setCategoryName("未分类");
+                    }
+                    if (project.getLevelName() == null) {
+                        project.setLevelName("未知级别");
+                    }
+                    if (project.getRegionName() == null) {
+                        project.setRegionName("未知地区");
+                    }
+                });
+            }
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Page<>(); // 返回空结果页
+        }
+    }
+    
+    @Override
+    public Page<IchProjectListVO> searchIchProject(Integer current, Integer size, String keyword) {
+        Page<IchProjectListVO> page = new Page<>(current, size);
+        try {
+            Page<IchProjectListVO> result = ichProjectMapper.searchIchProject(page, keyword);
+            // 处理可能为null的字段
+            if (result != null && result.getRecords() != null) {
+                result.getRecords().forEach(project -> {
+                    if (project.getCategoryName() == null) {
+                        project.setCategoryName("未分类");
+                    }
+                    if (project.getLevelName() == null) {
+                        project.setLevelName("未知级别");
+                    }
+                    if (project.getRegionName() == null) {
+                        project.setRegionName("未知地区");
+                    }
+                });
+            }
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Page<>();
+        }
     }
     
     @Override
@@ -63,6 +114,11 @@ public class IchProjectServiceImpl extends ServiceImpl<IchProjectMapper, IchProj
             // 使用Mapper获取分类和级别名称
             detailVO.setCategoryName(ichProjectMapper.getCategoryNameById(project.getCategoryId()));
             detailVO.setLevelName(ichProjectMapper.getLevelNameById(project.getLevelId()));
+            
+            // 获取地区名称
+            if (project.getRegionId() != null) {
+                detailVO.setRegionName(ichProjectMapper.getRegionNameById(project.getRegionId()));
+            }
             
             // 5. 获取相关项目（同类别的其他项目，限制5个）
             List<IchProjectListVO> relatedProjects = ichProjectMapper.getRelatedProjects(project.getId(), project.getCategoryId(), 5);
