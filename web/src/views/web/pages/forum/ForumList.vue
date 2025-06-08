@@ -79,20 +79,26 @@ const debounce = (fn, delay = 300) => {
 // 处理搜索
 const handleSearch = debounce(() => {
   pageNum.value = 1;
-  fetchPosts();
+  // 添加延迟，先设置loading状态，然后再请求数据
+  loading.value = true;
+  setTimeout(() => {
+    fetchPosts();
+  }, 300);
 }, 300);
 
 // 切换话题
 const switchTopic = debounce((topicId) => {
   activeTab.value = topicId;
   pageNum.value = 1;
-  fetchPosts();
+  // 添加延迟，先设置loading状态，然后再请求数据
+  loading.value = true;
+  setTimeout(() => {
+    fetchPosts();
+  }, 300);
 }, 200);
 
 // 获取帖子列表
 const fetchPosts = async () => {
-  loading.value = true;
-  
   try {
     const params = {
       page: pageNum.value,
@@ -199,7 +205,11 @@ const fetchTopics = async () => {
 // 处理分页变化
 const handlePageChange = debounce((page) => {
   pageNum.value = page;
-  fetchPosts();
+  // 添加延迟，先设置loading状态，然后再请求数据
+  loading.value = true;
+  setTimeout(() => {
+    fetchPosts();
+  }, 300);
   window.scrollTo({
     top: 0,
     behavior: 'smooth'
@@ -304,7 +314,7 @@ onMounted(() => {
           <input 
             v-model="searchText"
             type="text" 
-            placeholder="搜索帖子..." 
+            placeholder="搜索您感兴趣的话题..." 
             class="search-input"
             @keyup.enter="handleSearch"
           >
@@ -340,96 +350,98 @@ onMounted(() => {
         </div>
       </div>
 
-      <!-- 主体内容区域 -->
-      <a-spin :loading="loading" :size="32" tip="加载中">
-        <template #icon><icon-loading /></template>
-        
-        <!-- 空状态显示 -->
-        <div v-if="posts.length === 0 && !loading" class="empty-state">
-          <a-empty description="暂无符合条件的帖子">
-            <template #extra>
-              <a-button type="primary" @click="createPost">立即发布</a-button>
-            </template>
-          </a-empty>
-        </div>
-        
-        <!-- 帖子网格布局 -->
-        <div v-else class="post-grid">
-          <div v-for="post in posts" :key="post.id" class="post-card" @click="goToDetail(post.id)">
-            <!-- 帖子图片区域 -->
-            <div class="post-image" v-if="post.images && post.images.length > 0">
-              <img 
-                :src="post.images[0]" 
-                :alt="post.title"
-                @error="(e) => e.target.src = '/image/gumeng.png'"
-                loading="lazy"
-              >
-              <div class="post-overlay" @click.stop="goToDetail(post.id)">
-                <div class="overlay-content">
-                  <icon-eye class="overlay-icon" />
-                  <span>查看详情</span>
+      <!-- 内容包装器，固定高度防止闪烁 -->
+      <div class="content-wrapper">
+        <a-spin :loading="loading" :size="32" tip="加载中">
+          <template #icon><icon-loading /></template>
+          
+          <!-- 空状态显示 -->
+          <div v-if="posts.length === 0 && !loading" class="empty-state">
+            <a-empty description="暂无符合条件的帖子">
+              <template #extra>
+                <a-button type="primary" @click="createPost">立即发布</a-button>
+              </template>
+            </a-empty>
+          </div>
+          
+          <!-- 帖子网格布局 -->
+          <div v-else class="post-grid">
+            <div v-for="post in posts" :key="post.id" class="post-card" @click="goToDetail(post.id)">
+              <!-- 帖子图片区域 -->
+              <div class="post-image" v-if="post.images && post.images.length > 0">
+                <img 
+                  :src="post.images[0]" 
+                  :alt="post.title"
+                  @error="(e) => e.target.src = '/image/gumeng.png'"
+                  loading="lazy"
+                >
+                <div class="post-overlay" @click.stop="goToDetail(post.id)">
+                  <div class="overlay-content">
+                    <icon-eye class="overlay-icon" />
+                    <span>查看详情</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div class="post-image" v-else>
-              <img 
-                src="/image/gumeng.png" 
-                :alt="post.title"
-                loading="lazy"
-              >
-              <div class="post-overlay" @click.stop="goToDetail(post.id)">
-                <div class="overlay-content">
-                  <icon-eye class="overlay-icon" />
-                  <span>查看详情</span>
+              <div class="post-image" v-else>
+                <img 
+                  src="/image/gumeng.png" 
+                  :alt="post.title"
+                  loading="lazy"
+                >
+                <div class="post-overlay" @click.stop="goToDetail(post.id)">
+                  <div class="overlay-content">
+                    <icon-eye class="overlay-icon" />
+                    <span>查看详情</span>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <!-- 帖子内容区域 -->
-            <div class="post-content">
-              <h3>{{ post.title }}</h3>
               
-              <div class="post-tags">
-                <a-tag>{{ post.topic }}</a-tag>
-              </div>
-              
-              <div class="post-card-bottom">
-                <div class="post-stats">
-                  <span class="stat-item">
-                    <icon-eye />
-                    {{ post.viewCount || 0 }}
-                  </span>
-                  <span 
-                    class="stat-item" 
-                    @click.stop="handleLikePost(post)" 
-                    :class="{ 'liked': post.isLiked }"
-                  >
-                    <icon-heart-fill v-if="post.isLiked" />
-                    <icon-heart v-else />
-                    {{ post.thumbsUpNum || 0 }}
-                  </span>
-                  <span class="stat-item">
-                    <icon-message />
-                    {{ post.commonNum || 0 }}
-                  </span>
+              <!-- 帖子内容区域 -->
+              <div class="post-content">
+                <h3>{{ post.title }}</h3>
+                
+                <div class="post-tags">
+                  <a-tag>{{ post.topic }}</a-tag>
+                </div>
+                
+                <div class="post-card-bottom">
+                  <div class="post-stats">
+                    <span class="stat-item">
+                      <icon-eye />
+                      {{ post.viewCount || 0 }}
+                    </span>
+                    <span 
+                      class="stat-item" 
+                      @click.stop="handleLikePost(post)" 
+                      :class="{ 'liked': post.isLiked }"
+                    >
+                      <icon-heart-fill v-if="post.isLiked" />
+                      <icon-heart v-else />
+                      {{ post.thumbsUpNum || 0 }}
+                    </span>
+                    <span class="stat-item">
+                      <icon-message />
+                      {{ post.commonNum || 0 }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        <!-- 分页器 -->
-        <div v-if="!loading && total > 0" class="pagination-container">
-          <span class="page-indicator">第 {{ pageNum }} 页</span>
-          <a-pagination
-            :total="total"
-            :current="pageNum"
-            :page-size="pageSize"
-            @change="handlePageChange"
-            :hide-on-single-page="false"
-          />
-        </div>
-      </a-spin>
+        </a-spin>
+      </div>
+      
+      <!-- 分页器 -->
+      <div v-if="!loading && total > 0" class="pagination-container">
+        <span class="page-indicator">第 {{ pageNum }} 页</span>
+        <a-pagination
+          :total="total"
+          :current="pageNum"
+          :page-size="pageSize"
+          @change="handlePageChange"
+          :hide-on-single-page="false"
+        />
+      </div>
 
       <!-- 调试按钮 -->
       <div class="debug-button" v-if="showDebugInfo" @click="toggleDebugInfo">
@@ -516,6 +528,12 @@ onMounted(() => {
   margin: 0 auto;
   background-color: #FFF7E9;
   font-family: "SimSun", "宋体", serif;
+}
+
+/* 添加内容包装器，固定高度，防止闪烁 */
+.content-wrapper {
+  min-height: 500px;
+  position: relative;
 }
 
 /* 搜索区域样式 */
@@ -633,6 +651,29 @@ onMounted(() => {
   text-align: center;
   padding: 50px 0;
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+:deep(.arco-empty) {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+:deep(.arco-empty-image) {
+  margin-bottom: 16px;
+  color: #8C1F28;
+}
+
+:deep(.arco-empty-description) {
+  color: #8C1F28;
+  font-size: 16px;
+  margin-bottom: 16px;
 }
 
 /* 帖子网格布局 */
@@ -822,6 +863,37 @@ onMounted(() => {
 .footer {
   display: flex;
   bottom: 0;
+}
+
+/* 加载动画样式 */
+:deep(.arco-spin) {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+:deep(.arco-spin-loading) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 247, 233, 0.8);
+  padding: 20px;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+:deep(.arco-spin-icon) {
+  color: #8C1F28;
+  font-size: 24px;
+}
+
+:deep(.arco-spin-tip) {
+  color: #8C1F28;
+  font-size: 14px;
+  margin-top: 8px;
 }
 
 /* 响应式设计 */
