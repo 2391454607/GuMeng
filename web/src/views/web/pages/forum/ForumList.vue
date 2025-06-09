@@ -540,7 +540,6 @@ onMounted(() => {
   max-width: 1200px;
   min-height: calc(100vh - 169px);
   margin: 0 auto;
-  background-color: #FFF7E9;
   font-family: "SimSun", "宋体", serif;
 }
 
