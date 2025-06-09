@@ -12,7 +12,6 @@ const CHAT_HISTORY_KEY = 'baike_assistant_chat_history';
 const MAX_HISTORY_LENGTH = 20; // 最大历史记录数量
 
 const props = defineProps({
-  // 传入属性，如果需要的话
 });
 
 // 获取用户store
@@ -220,7 +219,7 @@ const uploadAndRecognizeImage = async () => {
     
     const imageUrl = uploadResponse.data;
 
-    // 使用用户输入的文字，如果没有则使用默认文字
+    // 使用用户输入的文字，没有则使用默认文字
     const userMessage = userInput.value.trim() || '请识别这张图片中的非遗内容';
     
     chatHistory.value.push({
@@ -283,13 +282,13 @@ const uploadAndRecognizeImage = async () => {
 
 // 发送消息
 const sendMessage = async () => {
-  // 如果有图片预览，则调用图片识别方法
+  // 有图片预览，则调用图片识别方法
   if (imagePreviewUrl.value) {
     await uploadAndRecognizeImage();
     return;
   }
   
-  // 如果没有输入且没有图片，则不执行任何操作
+  // 没有输入且没有图片，则不执行任何操作
   if (!userInput.value.trim() || isLoading.value) return;
   
   // 检查用户是否已登录
@@ -343,7 +342,7 @@ const sendMessage = async () => {
       if (response && response.code === 200) {
         // 处理流式响应
         if (response.data && typeof response.data === 'object') {
-          // 如果是流式响应对象
+          // 流式响应对象
           if (response.data.choices && Array.isArray(response.data.choices)) {
             // 从流式响应中提取完整文本
             const fullContent = response.data.choices.reduce((text, choice) => {
@@ -360,7 +359,7 @@ const sendMessage = async () => {
             await handleStreamResponse(response.data, newMessageIndex);
           }
         } else if (typeof response.data === 'string') {
-          // 如果不是流式响应，但返回了文本，使用打字机效果显示
+          // 不是流式响应，但返回了文本，使用打字机效果显示
           await typeWriterEffect(response.data || '抱歉，我没能理解您的问题。', newMessageIndex, 20);
         }
         
@@ -691,7 +690,7 @@ onBeforeUnmount(() => {
                 />
               </div>
               <div class="message-content">
-                <!-- 如果消息包含图片 -->
+                <!-- 消息包含图片 -->
                 <div v-if="msg.imageUrl" class="message-image">
                   <img :src="msg.imageUrl" alt="图片" class="uploaded-image" />
                   <div class="image-caption">{{ msg.content }}</div>
