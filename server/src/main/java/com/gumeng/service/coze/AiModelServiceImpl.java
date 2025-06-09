@@ -76,56 +76,81 @@ public class AiModelServiceImpl implements AiModelService {
         if (modelInfo == null) {
             return HttpResponse.error("模型id不存在，请重试");
         }
-        modelInfo.setValue(modelInfo.getValue());
+
+        // 获取最新的任务状态
+        ModelBo<TaskBo> modelBo = taskPolling(taskId);
+        TaskStatus taskStatus = TaskStatus.fromValue(modelBo.getData().getStatus());
+
+        // 如果状态是 SUCCESS，更新模型信息
+        if (taskStatus == TaskStatus.SUCCESS) {
+            UpdateWrapper<ModelInfo> updateWrapper = new UpdateWrapper<>();
+            updateWrapper.eq("task_id", taskId);
+            modelInfo.setStatus(taskStatus.getValue());
+
+            try {
+                // 处理渲染图
+                String renderedImage = modelBo.getData().getOutput().getRendered_image().trim();
+                if (renderedImage != null && !renderedImage.isEmpty()) {
+                    byte[] renderBytes = HttpUtil.downloadBytes(renderedImage);
+                    if (renderBytes != null && renderBytes.length > 0) {
+                        // 使用taskId作为文件名前缀，确保唯一性
+                        String originalFileName = getFileNameFromUrl(renderedImage);
+                        String fileExt = originalFileName.substring(originalFileName.lastIndexOf("."));
+                        String renderFileName = "render_" + taskId + fileExt;
+                        String renderQiniuUrl = qiniuUtils.uploadModelImage(renderBytes, renderFileName);
+                        modelInfo.setRenderUrl(renderQiniuUrl);
+                    }
+                }
+
+                // 处理 pbr 模型
+                String pbrModel = modelBo.getData().getOutput().getPbr_model().trim();
+                if (pbrModel != null && !pbrModel.isEmpty()) {
+                    byte[] pbrModelBytes = HttpUtil.downloadBytes(pbrModel);
+                    if (pbrModelBytes != null && pbrModelBytes.length > 0) {
+                        // 使用taskId作为文件名前缀，确保唯一性
+                        String originalFileName = getFileNameFromUrl(pbrModel);
+                        String fileExt = originalFileName.substring(originalFileName.lastIndexOf("."));
+                        String pbrModelFileName = "model_" + taskId + fileExt;
+                        String pbrModelQiniuUrl = qiniuUtils.uploadModelFile(pbrModelBytes, pbrModelFileName);
+                        modelInfo.setPbrModelUrl(pbrModelQiniuUrl);
+                    }
+                }
+
+                modelInfoService.update(modelInfo, updateWrapper);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return HttpResponse.error("更新模型信息失败：" + e.getMessage());
+            }
+
+            AiModelInfoVO result = new AiModelInfoVO(modelInfo);
+            return HttpResponse.success(AppCode.MODEL_SUCCESS, result);
+        }
+
+        // 处理其他状态
         if (modelInfo.getStatus().equals("init") ||
-                modelInfo.getStatus().equals(TaskStatus.QUEUED.getValue())
-                || modelInfo.getStatus().equals(TaskStatus.RUNNING.getValue())) {
-            ModelBo<TaskBo> modelBo = taskPolling(taskId);
-            TaskStatus taskStatus = TaskStatus.fromValue(modelBo.getData().getStatus());
+                modelInfo.getStatus().equals(TaskStatus.QUEUED.getValue()) ||
+                modelInfo.getStatus().equals(TaskStatus.RUNNING.getValue())) {
+            
             modelStatusUpdate(taskId, modelBo.getData().getStatus());
+            
             switch (taskStatus) {
                 case QUEUED:
-                    // 处理排队任务的逻辑
                     return HttpResponse.success(AppCode.MODEL_QUEUED);
                 case RUNNING:
-                    // 处理运行中的任务的逻辑
-                    modelStatusUpdate(taskId, modelInfo.getValue());
                     return HttpResponse.success(AppCode.MODEL_RUNNING);
-                case SUCCESS:
-                    //处理模型完成
-                    UpdateWrapper<ModelInfo> updateWrapper = new UpdateWrapper<>();
-                    updateWrapper.eq("task_id", taskId);
-                    modelInfo.setStatus(taskStatus.getValue());
-                    // 渲染图
-                    byte[] renderBytes = HttpUtil.downloadBytes(modelBo.getData().getOutput().getRendered_image());
-                    String renderFileName = getFileNameFromUrl(modelBo.getData().getOutput().getRendered_image());
-                    String renderQiniuUrl = qiniuUtils.uploadModelImage(renderBytes, renderFileName);
-                    modelInfo.setRenderUrl(renderQiniuUrl);
-                    // pbr_model
-                    byte[] pbrModelBytes = HttpUtil.downloadBytes(modelBo.getData().getOutput().getPbr_model());
-                    String pbrModelFileName = getFileNameFromUrl(modelBo.getData().getOutput().getPbr_model());
-                    String pbrModelQiniuUrl = qiniuUtils.uploadModelFile(pbrModelBytes, pbrModelFileName);
-                    modelInfo.setPbrModelUrl(pbrModelQiniuUrl);
-                    modelInfoService.update(modelInfo, updateWrapper);
-                    AiModelInfoVO result=new AiModelInfoVO(modelInfo);
-                    return HttpResponse.success(AppCode.MODEL_SUCCESS,result);
                 case FAILED:
-                    // 处理失败任务的逻辑
                     return HttpResponse.success(AppCode.MODEL_FAILED);
                 case CANCELLED:
-                    // 处理已取消任务的逻辑
                     return HttpResponse.success(AppCode.MODEL_CANCELLED);
                 case UNKNOWN:
-                    // 处理未知状态的逻辑
-                    return HttpResponse.success(AppCode.MODEL_UNKNOWN);
                 default:
-                    // 默认情况下处理未预料的状态
                     return HttpResponse.success(AppCode.MODEL_UNKNOWN);
             }
-        } else {
-            AiModelInfoVO result=new AiModelInfoVO(modelInfo);
-            return HttpResponse.success(result);
         }
+
+        // 返回当前状态
+        AiModelInfoVO result = new AiModelInfoVO(modelInfo);
+        return HttpResponse.success(result);
     }
 
 

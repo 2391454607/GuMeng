@@ -1,6 +1,5 @@
 package com.gumeng.controller.ai;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.config.Al.Tripo3d;
 import com.gumeng.domain.ModelInfo;
@@ -8,8 +7,6 @@ import com.gumeng.entity.DTO.ToModels.ImageToModelRequest;
 import com.gumeng.entity.DTO.ToModels.TextToModelRequest;
 import com.gumeng.entity.bo.ModelBo;
 import com.gumeng.entity.bo.TaskBo;
-import com.gumeng.entity.vo.model.ModelInfoVO;
-import com.gumeng.entity.vo.model.ToModelInfoVO;
 import com.gumeng.service.coze.AiModelService;
 import com.gumeng.service.coze.ModelInfoService;
 import jakarta.annotation.Resource;
@@ -26,9 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 功能：tripo3d模型生成
