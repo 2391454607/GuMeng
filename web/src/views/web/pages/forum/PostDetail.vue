@@ -1237,16 +1237,17 @@ const scrollToComments = () => {
           </template>
           
           <!-- 评论输入框 -->
-          <div class="comment-container">
-            <a-textarea
-              v-model="commentContent"
-              placeholder="留下你的精彩评论吧"
-              :disabled="!isLogin"
-              :auto-size="{ minRows: 3, maxRows: 5 }"
-              class="comment-textarea"
-            />
-            <!-- 敏感词错误提示 -->
-            <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 10px 0;" />
+          <a-textarea
+            v-model="commentContent"
+            placeholder="留下你的精彩评论吧"
+            :disabled="!isLogin"
+            :auto-size="{ minRows: 2, maxRows: 5 }"
+            class="comment-textarea"
+            @input="sensitiveWordsError = ''"
+          />
+          <!-- 敏感词错误提示 -->
+          <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 10px 0;" />
+          <div class="comment-btn-container">
             <a-button 
               type="primary" 
               @click="submitComment" 
@@ -1293,32 +1294,38 @@ const scrollToComments = () => {
                 </div>
                 
                 <!-- 回复输入框 -->
-                <div v-if="replyingTo && replyingTo.id === comment.id" :class="['reply-form', `reply-form-${comment.id}`]">
+                <div v-if="replyingTo && replyingTo.id === comment.id" class="reply-form">
                   <a-textarea
                     v-model="replyContent"
                     placeholder="输入您想回复的内容"
                     :auto-size="{ minRows: 2, maxRows: 4 }"
                     class="reply-textarea"
+                    @input="sensitiveWordsError = ''"
                   />
                   <!-- 敏感词错误提示 -->
                   <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 5px 0;" />
-                  <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
-                    取消
-                  </a-button>
-                  <a-button 
-                    type="primary" 
-                    size="small" 
-                    @click="submitReply" 
-                    :loading="checkingSensitiveWords"
-                    :disabled="!replyContent.trim() || checkingSensitiveWords" 
-                    class="reply-submit-btn"
-                  >
-                    {{ checkingSensitiveWords ? '检测中...' : '回复' }}
-                  </a-button>
+                  <div class="reply-btn-container">
+                    <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
+                      取消
+                    </a-button>
+                    <a-button 
+                      type="primary" 
+                      size="small" 
+                      @click="submitReply" 
+                      :loading="checkingSensitiveWords"
+                      :disabled="!replyContent.trim() || checkingSensitiveWords" 
+                      class="reply-submit-btn"
+                    >
+                      {{ checkingSensitiveWords ? '检测中...' : '回复' }}
+                    </a-button>
+                  </div>
                 </div>
                 
                 <!-- 子评论 -->
                 <div v-if="comment.children && comment.children.length > 0" class="child-comments">
+                  <div class="child-comments-header">
+                    <span>{{ comment.children.length }}条回复</span>
+                  </div>
                   <div v-for="child in comment.children" :key="child.id" class="child-comment-item">
                     <div class="comment-author">
                       <img :src="child.userPic || '@/assets/avatar/default-avatar.png'" alt="头像" class="reply-avatar" />
@@ -1348,28 +1355,31 @@ const scrollToComments = () => {
                     </div>
                     
                     <!-- 回复输入框 -->
-                    <div v-if="replyingTo && replyingTo.id === child.id" :class="['reply-form', `reply-form-${child.id}`]">
+                    <div v-if="replyingTo && replyingTo.id === child.id" class="reply-form">
                       <a-textarea
                         v-model="replyContent"
                         placeholder="输入您想回复的内容"
                         :auto-size="{ minRows: 2, maxRows: 4 }"
                         class="reply-textarea"
+                        @input="sensitiveWordsError = ''"
                       />
                       <!-- 敏感词错误提示 -->
                       <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 5px 0;" />
-                      <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
-                        取消
-                      </a-button>
-                      <a-button 
-                        type="primary" 
-                        size="small" 
-                        @click="submitReply" 
-                        :loading="checkingSensitiveWords"
-                        :disabled="!replyContent.trim() || checkingSensitiveWords" 
-                        class="reply-submit-btn"
-                      >
-                        {{ checkingSensitiveWords ? '检测中...' : '回复' }}
-                      </a-button>
+                      <div class="reply-btn-container">
+                        <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
+                          取消
+                        </a-button>
+                        <a-button 
+                          type="primary" 
+                          size="small" 
+                          @click="submitReply" 
+                          :loading="checkingSensitiveWords"
+                          :disabled="!replyContent.trim() || checkingSensitiveWords" 
+                          class="reply-submit-btn"
+                        >
+                          {{ checkingSensitiveWords ? '检测中...' : '回复' }}
+                        </a-button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1843,14 +1853,13 @@ const scrollToComments = () => {
   border-radius: 2px;
 }
 
-.comment-container {
-  position: relative;
-  margin-bottom: 24px;
+/* .comment-container {
+  margin-bottom: 20px;
   background-color: #f9f5ec;
   border-radius: 8px;
-  padding: 20px;
+  padding: 15px;
   border: 1px solid #E4D9C3;
-}
+} */
 
 .comment-textarea {
   background-color: #f9f5ec;
@@ -1860,8 +1869,7 @@ const scrollToComments = () => {
   color: #582F0E;
   resize: none;
   width: 100%;
-  padding: 15px;
-  padding-bottom: 50px;
+  margin-bottom: 10px;
   font-family: "SimSun", "宋体", serif;
 }
 
@@ -1869,10 +1877,14 @@ const scrollToComments = () => {
   border-color: #8C1F28;
 }
 
+.comment-btn-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
 .comment-submit-btn {
-  position: absolute;
-  right: 30px;
-  bottom: 30px;
   background-color: #8C1F28;
   border-color: #8C1F28;
   color: #FFFBF0;
@@ -1917,7 +1929,6 @@ const scrollToComments = () => {
 
 .comment-content:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
 .comment-author {
@@ -1933,7 +1944,6 @@ const scrollToComments = () => {
   object-fit: cover;
   margin-right: 12px;
   border: 2px solid #E4D9C3;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .reply-avatar {
@@ -2013,15 +2023,6 @@ const scrollToComments = () => {
   background-color: rgba(165, 42, 42, 0.1);
 }
 
-.reply-form {
-  position: relative;
-  margin-top: 16px;
-  margin-bottom: 16px;
-  background-color: #f9f5ec;
-  padding: 15px;
-  border-radius: 8px;
-  border: 1px dashed #E4D9C3;
-}
 
 .reply-textarea {
   background-color: #f9f5ec;
@@ -2031,9 +2032,6 @@ const scrollToComments = () => {
   color: #582F0E;
   resize: none;
   width: 100%;
-  padding: 10px;
-  padding-right: 160px;
-  padding-bottom: 15px;
   font-family: "SimSun", "宋体", serif;
 }
 
@@ -2041,11 +2039,14 @@ const scrollToComments = () => {
   border-color: #8C1F28;
 }
 
+.reply-btn-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .reply-cancel-btn {
-  position: absolute;
-  right: 70px;
-  bottom: 10px;
-  z-index: 2;
   color: #666;
   border-radius: 15px;
   transition: all 0.3s ease;
@@ -2057,15 +2058,11 @@ const scrollToComments = () => {
 }
 
 .reply-submit-btn {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
   background-color: #8C1F28;
   border-color: #8C1F28;
   color: #FFFBF0;
   border-radius: 15px;
   transition: all 0.3s ease;
-  z-index: 2;
 }
 
 .reply-submit-btn:hover {
@@ -2080,6 +2077,15 @@ const scrollToComments = () => {
   background-color: #f9f5ec;
   border-radius: 8px;
   border: 1px dashed #E4D9C3;
+}
+
+.child-comments-header {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #E4D9C3;
+  font-size: 14px;
+  color: #7F4F24;
+  font-weight: 500;
 }
 
 .child-comment-item {
@@ -2098,82 +2104,12 @@ const scrollToComments = () => {
   text-align: center;
   margin-top: 20px;
   padding: 10px 0;
-  position: relative;
-}
-
-.load-more::before,
-.load-more::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 20%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #E4D9C3);
-}
-
-.load-more::before {
-  left: 10%;
-}
-
-.load-more::after {
-  right: 10%;
-  transform: rotate(180deg);
-}
-
-.load-more :deep(.arco-btn) {
-  background-color: transparent;
-  border: 1px solid #8C1F28;
-  color: #8C1F28;
-  padding: 6px 20px;
-  border-radius: 20px;
-  transition: all 0.3s;
-}
-
-.load-more :deep(.arco-btn:hover) {
-  background-color: #8C1F28;
-  border-color: #8C1F28;
-  color: #FFFBF0;
-  transform: translateY(-2px);
-}
-
-.footer {
-  display: flex;
-  bottom: 0;
 }
 
 /* 响应式设计 */
 @media screen and (max-width: 768px) {
-  .post-detail-container {
-    padding: 12px;
-  }
-  
-  .post-title {
-    font-size: 20px;
-  }
-  
-  .post-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .post-footer {
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .interaction-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
   .comment-container {
-    padding: 15px;
-  }
-  
-  .comment-submit-btn {
-    right: 25px;
-    bottom: 25px;
+    padding: 12px;
   }
   
   .comment-content {
@@ -2184,26 +2120,13 @@ const scrollToComments = () => {
     flex-wrap: wrap;
   }
   
-  .image-grid {
-    grid-gap: 8px;
+  .reply-btn-container {
+    flex-wrap: wrap;
   }
-  
-  .post-image {
-    min-height: 150px;
-  }
-  
-  .reply-textarea {
-    padding-right: 10px;
-    padding-bottom: 50px;
-  }
-  
-  .reply-cancel-btn,
-  .reply-submit-btn {
-    bottom: 10px;
-  }
-  
-  .reply-cancel-btn {
-    right: 90px;
-  }
+}
+
+.footer {
+  display: flex;
+  bottom: 0;
 }
 </style>

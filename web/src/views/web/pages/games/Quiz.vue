@@ -304,7 +304,7 @@ const startTimer = () => {
 };
 const stopTimer = () => { clearInterval(timer); };
 const handleTimeout = () => {
-  Message.error('超时！');
+  // Message.error('超时！');
   if (endlessMode.value) {
     endEndless();
   } else {
