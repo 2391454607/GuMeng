@@ -400,8 +400,22 @@ onMounted(() => {
               <div class="post-content">
                 <h3>{{ post.title }}</h3>
                 
-                <div class="post-tags">
-                  <a-tag>{{ post.topic }}</a-tag>
+                <div class="post-info-row">
+                  <!-- 用户信息区域 -->
+                  <div class="author-info">
+                    <div class="author-avatar">
+                      <img 
+                        :src="post.authorAvatar" 
+                        :alt="post.authorName"
+                        @error="(e) => e.target.src = '/image/gumeng.png'"
+                      >
+                    </div>
+                    <span class="author-name">{{ post.authorName }}</span>
+                  </div>
+                  
+                  <div class="post-tags">
+                    <a-tag>{{ post.topic }}</a-tag>
+                  </div>
                 </div>
                 
                 <div class="post-card-bottom">
@@ -695,6 +709,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .post-card:hover {
@@ -704,9 +719,21 @@ onMounted(() => {
 }
 
 .post-image {
-  height: 160px;
+  height: 0;
+  padding-bottom: 66.67%;
   overflow: hidden;
   position: relative;
+}
+
+.post-image img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: transform 0.5s ease;
 }
 
 .post-overlay {
@@ -745,26 +772,54 @@ onMounted(() => {
   margin-bottom: 8px;
 }
 
-.post-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
 .post-card:hover .post-image img {
   transform: scale(1.05);
 }
 
+/* 作者信息样式 */
+.author-info {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.author-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 8px;
+  border: 1px solid #8C1F28;
+  box-shadow: 0 2px 4px rgba(140, 31, 40, 0.2);
+}
+
+.author-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.author-name {
+  font-size: 13px;
+  color: #8C1F28;
+  font-weight: bold;
+  font-family: "STKaiti", "楷体", serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 80px;
+  line-height: 1.2;
+}
+
 .post-content {
-  padding: 12px;
+  padding: 16px;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .post-content h3 {
-  margin: 0 0 10px 0;
+  margin: 0 0 12px 0;
   font-size: 16px;
   color: #582F0E;
   font-weight: bold;
@@ -775,20 +830,36 @@ onMounted(() => {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  height: 44px;
+  min-height: 44px;
+}
+
+.post-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  width: 100%;
 }
 
 .post-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-left: 10px;
+  max-width: 60%;
 }
 
 .post-tags :deep(.arco-tag) {
   border-color: #8C1F28;
   color: #8C1F28;
   background: #FFF7E9;
+  white-space: normal;
+  line-height: 1.2;
+  font-size: 12px;
+  padding: 2px 6px;
+  height: auto;
+  max-width: 100%;
+  word-break: break-word;
 }
 
 .post-card-bottom {
@@ -901,11 +972,19 @@ onMounted(() => {
   .post-grid {
     grid-template-columns: repeat(3, 1fr);
   }
+  
+  .author-name {
+    max-width: 100px;
+  }
 }
 
 @media screen and (max-width: 992px) {
   .post-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .author-name {
+    max-width: 120px;
   }
 }
 
@@ -955,7 +1034,26 @@ onMounted(() => {
   }
   
   .post-image {
-    height: 180px;
+    padding-bottom: 56.25%;
+  }
+  
+  .post-info-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .post-tags {
+    margin-left: 0;
+    margin-top: 8px;
+  }
+  
+  .author-info {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+  
+  .author-name {
+    max-width: 160px;
   }
 }
 </style>
