@@ -14,3 +14,10 @@ export const addPolicyAPI = (data) => {
 export const updatePolicyAPI = async (data) => {
     return http.post("/sys/policy/update",data)
 }
+
+//删除政策信息
+export const deletePolicyAPI = (id) => {
+    return http.post("/sys/policy/deletePolicy",id,{
+        params: { id }
+    })
+}

@@ -146,9 +146,25 @@ public class PolicyController {
         }
     }
 
-    //删除
+    //删除政策
     @PostMapping("/deletePolicy")
     public HttpResponse deletePolicy(@RequestParam Integer id) {
-        return HttpResponse.success();
+        try {
+            // 检查政策是否存在
+            Policy policy = policyService.getById(id);
+            if (policy == null) {
+                return HttpResponse.error("政策不存在");
+            }
+
+            // 执行删除操作
+            boolean result = policyService.removeById(id);
+            if (!result) {
+                return HttpResponse.error("删除失败");
+            }
+
+            return HttpResponse.success("删除成功");
+        } catch (Exception e) {
+            return HttpResponse.error("删除失败：" + e.getMessage());
+        }
     }
 }

@@ -2,7 +2,7 @@
 import {onMounted, reactive, ref} from "vue";
 
 import {Message} from '@arco-design/web-vue';
-import {addPolicyAPI, getPolicyListAPI, updatePolicyAPI} from "@/api/manage/Policy.js";
+import {addPolicyAPI, deletePolicyAPI, getPolicyListAPI, updatePolicyAPI} from "@/api/manage/Policy.js";
 
 //分页器状态
 const status = reactive({
@@ -157,7 +157,21 @@ const delClick = () => {
   del.value = true;
 };
 const delOk = (record) => {
-
+  deletePolicyAPI(record.id).then((res) => {
+    if (res.code === 200) {
+      Message.success(res.msg)
+      loading.value = true;
+      //更新信息列表
+      getPolicyListAPI(status).then(res => {
+        PolicyList.value = res.data.records;
+        total.value = res.data.total;
+        loading.value = false;
+      });
+    } else {
+      Message.error(res.msg)
+    }
+  })
+  del.value = false;
 };
 </script>
 
