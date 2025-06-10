@@ -314,11 +314,11 @@ const easeOutQuart = (x) => {
             </div>
             <div class="system-item" :class="{ 'fade-in': animationStarted }" style="animation-delay: 1s">
               <div class="item-label">后端框架</div>
-              <div class="item-value">Spring Boot 2.7.0</div>
+              <div class="item-value">Spring Boot 3.2.4 + MyBatis-plus</div>
             </div>
             <div class="system-item" :class="{ 'fade-in': animationStarted }" style="animation-delay: 1.1s">
               <div class="item-label">上线时间</div>
-              <div class="item-value">2024-06-01</div>
+              <div class="item-value">2024-06-10</div>
             </div>
           </div>
         </div>
