@@ -3,7 +3,6 @@ package com.gumeng.service.coze;
 import com.gumeng.code.HttpResponse;
 import com.gumeng.entity.bo.ModelBo;
 import com.gumeng.entity.bo.TaskBo;
-import com.gumeng.entity.vo.model.AiModelInfoVO;
 
 /**
  * 功能：

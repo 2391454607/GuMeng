@@ -342,7 +342,7 @@ const viewProjectClick = (record) => {
   // 假如数据库中的content为空，尝试从localStorage获取内容作为备份
   if (!viewProjectData.content) {
     const storedContent = localStorage.getItem(`${PROJECT_CONTENT_KEY_PREFIX}${record.id}`);
-    console.log('数据库内容为空，从localStorage获取项目内容，ID:', record.id, '内容:', storedContent ? storedContent.substring(0, 50) + '...' : '无内容');
+    // console.log('数据库内容为空，从localStorage获取项目内容，ID:', record.id, '内容:', storedContent ? storedContent.substring(0, 50) + '...' : '无内容');
     viewProjectData.content = storedContent || '';
   } else {
     console.log('从数据库获取项目内容，ID:', record.id);
@@ -417,7 +417,7 @@ const updateProjectClick = async (record) => {
   if (!updateProjectData.content) {
     const storedContent = localStorage.getItem(`${PROJECT_CONTENT_KEY_PREFIX}${record.id}`);
     updateProjectData.content = storedContent || '';
-    console.log('数据库内容为空，从localStorage获取项目内容用于编辑，ID:', record.id);
+    // console.log('数据库内容为空，从localStorage获取项目内容用于编辑，ID:', record.id);
   } else {
     console.log('从数据库获取项目内容用于编辑，ID:', record.id);
   }

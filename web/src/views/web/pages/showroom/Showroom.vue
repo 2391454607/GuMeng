@@ -327,21 +327,29 @@ const copyToClipboard = async (text) => {
           title="模型生成信息列表"
           @cancel="modelInfoListVisible = false"
           :footer="false"
-          width="800px"
+          width="60%"
       >
-        <a-table :data="modelInfoList" :bordered="false">
+        <a-table 
+          :data="modelInfoList" 
+          :bordered="false"
+          :pagination="{
+            pageSize: 4,
+            total: modelInfoList?.length || 0,
+            showPageSize: false
+          }"
+        >
           <template #columns>
-            <a-table-column title="iD" data-index="id"></a-table-column>
-            <a-table-column title="任务ID" data-index="taskId">
+            <a-table-column align="center" title="id" data-index="id" :width=50></a-table-column>
+            <a-table-column align="center" title="任务ID" data-index="taskId">
               <template #cell="{ record }">
                 <a-tooltip content="点击复制">
-                  <div style="cursor: pointer" @click="copyToClipboard(record.taskId)">
+                  <div class="copy-text" @click="copyToClipboard(record.taskId)">
                     {{ record.taskId }}
                   </div>
                 </a-tooltip>
               </template>
             </a-table-column>
-            <a-table-column title="状态" data-index="status">
+            <a-table-column align="center" title="状态" data-index="status">
               <template #cell="{ record }">
                 <a-tag :color="record.status === 'success' ? 'green' : 'blue'">
                   {{ record.status === 'success' ? '已完成' : '生成中' }}
@@ -349,7 +357,7 @@ const copyToClipboard = async (text) => {
               </template>
             </a-table-column>
             <!-- 预览图列的显示方式 -->
-            <a-table-column title="预览图" data-index="renderUrl">
+            <a-table-column align="center" title="预览图" data-index="renderUrl">
                 <template #cell="{ record }">
                     <img 
                         v-if="record.renderUrl"
@@ -361,10 +369,10 @@ const copyToClipboard = async (text) => {
                 </template>
             </a-table-column>
 
-            <a-table-column title="模型路径" data-index="pbrModelUrl">
+            <a-table-column align="center" title="模型链接" data-index="pbrModelUrl">
               <template #cell="{ record }">
                 <a-tooltip content="点击复制">
-                  <div style="cursor: pointer" @click="copyToClipboard(record.pbrModelUrl)">
+                  <div class="copy-text" @click="copyToClipboard(record.pbrModelUrl)">
                     {{ record.pbrModelUrl }}
                   </div>
                 </a-tooltip>
@@ -385,6 +393,9 @@ const copyToClipboard = async (text) => {
           title="生成模型"
           @ok="handleGenerate"
       >
+        <span style="display: flex; justify-content: center;margin-bottom: 10px">
+          生成模型后需要查询状态后通过返回链接查看模型
+        </span>
         <div class="generate-form">
           <!-- 生成类型切换 -->
           <div class="generate-type">
@@ -544,7 +555,7 @@ const copyToClipboard = async (text) => {
   flex: 1;
   max-width: 100vw;
   padding: 40px;
-  background-color: #fdf6e3; /* 更改为米色背景 */
+  background-color: #fff7e9;
   min-height: calc(100vh - 80px);
 }
 
@@ -613,7 +624,6 @@ const copyToClipboard = async (text) => {
 
 .custom-tag:hover {
   background: var(--color-primary-light-1);
-  color: var(--color-primary);
 }
 
 .model-grid {
@@ -754,3 +764,47 @@ const copyToClipboard = async (text) => {
 }
 
 </style>
+
+/* 模型生成信息列表样式 */
+.arco-table {
+  background-color: #fff7e9;
+}
+
+.arco-table-th {
+  background-color: #8b1f1f !important;
+  color: white !important;
+  font-weight: 600;
+  text-align: center;
+}
+
+.arco-table-td {
+  text-align: center;
+  color: #333;
+}
+
+.arco-table-tr:hover {
+  background-color: rgba(139, 31, 31, 0.05) !important;
+}
+
+.arco-tag-green {
+  background-color: rgba(0, 128, 0, 0.1);
+  color: #006400;
+  border-color: #006400;
+}
+
+.arco-tag-blue {
+  background-color: rgba(139, 31, 31, 0.1);
+  color: #8b1f1f;
+  border-color: #8b1f1f;
+}
+
+.copy-text {
+  cursor: pointer;
+  transition: color 0.3s;
+  color: #8b1f1f;
+}
+
+.copy-text:hover {
+  color: #a52424;
+  text-decoration: underline;
+}

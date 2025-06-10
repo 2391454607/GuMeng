@@ -7,6 +7,7 @@ import com.qiniu.storage.Configuration;
 import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.util.Auth;
+import com.qiniu.util.StringMap;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -31,13 +32,21 @@ public class QiniuUtils {
 
         try {
             Auth auth = Auth.create(accessKey, secretKey);
-            String upToken = auth.uploadToken(bucket);
+            // 修改上传策略，添加覆盖上传的选项
+            StringMap putPolicy = new StringMap();
+            putPolicy.put("insertOnly", 0); // 设置为0表示允许覆盖上传
+            String upToken = auth.uploadToken(bucket, fileName, 3600, putPolicy);
+            
             Response response = uploadManager.put(fileBytes, fileName, upToken);
             
             if (response.isOK()) {
                 return "http://" + domain + "/" + fileName;
             }
         } catch (QiniuException e) {
+            // 如果是文件已存在的错误，尝试返回文件的URL
+            if (e.code() == 614) {
+                return "http://" + domain + "/" + fileName;
+            }
             e.printStackTrace();
         }
         return null;

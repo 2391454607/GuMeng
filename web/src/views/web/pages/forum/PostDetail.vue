@@ -1074,6 +1074,9 @@ watch(() => postId.value, (newId, oldId) => {
 });
 
 onMounted(() => {
+  // 初始化评论区为隐藏状态
+  showComments.value = false;
+  // 获取帖子详情
   fetchPostDetail();
   
   // 监听DOM变化，确保在内容加载后修复图片位置
@@ -1104,6 +1107,27 @@ onMounted(() => {
     hideOriginalImages.value = true;
   });
 });
+
+// 控制评论区显示
+const showComments = ref(false);
+
+// 切换评论区显示/隐藏
+const toggleComments = () => {
+  showComments.value = !showComments.value;
+  if (showComments.value) {
+    nextTick(() => {
+      const commentSection = document.getElementById('comment-section');
+      if (commentSection) {
+        commentSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
+};
+
+// 滚动到评论区
+const scrollToComments = () => {
+  toggleComments();
+};
 </script>
 
 <template>
@@ -1178,9 +1202,9 @@ onMounted(() => {
                   </span>
                 </div>
                 <div class="interaction-actions">
-                  <a-button type="outline" @click="showDeleteConfirm = true" class="action-btn" v-if="canDelete">
-                    <icon-delete />
-                    删除
+                  <a-button type="outline" @click="toggleComments" class="action-btn comment-btn">
+                    <icon-message />
+                    {{ showComments ? '收起评论' : '评论' }} {{ totalCommentCount }}
                   </a-button>
                   <a-button 
                     :type="post.isLiked ? 'primary' : 'outline'" 
@@ -1190,7 +1214,11 @@ onMounted(() => {
                   >
                     <icon-heart-fill v-if="post.isLiked" />
                     <icon-heart v-else />
-                    {{ post.thumbsUpNum || 0 }} 点赞
+                    {{ post.isLiked ? '已点赞' : '点赞' }} {{ post.thumbsUpNum || 0 }}
+                  </a-button>
+                  <a-button type="outline" @click="showDeleteConfirm = true" class="action-btn delete-btn" v-if="canDelete">
+                    <icon-delete />
+                    删除
                   </a-button>
                 </div>
               </div>
@@ -1200,7 +1228,7 @@ onMounted(() => {
       </a-spin>
 
       <!-- 评论区 -->
-      <div id="comment-section" class="comment-section" v-if="!loading && !error">
+      <div id="comment-section" class="comment-section" v-if="(!loading && !error) && showComments">
         <a-card>
           <template #title>
             <div class="section-header">
@@ -1209,16 +1237,17 @@ onMounted(() => {
           </template>
           
           <!-- 评论输入框 -->
-          <div class="comment-container">
-            <a-textarea
-              v-model="commentContent"
-              placeholder="留下你的精彩评论吧"
-              :disabled="!isLogin"
-              :auto-size="{ minRows: 3, maxRows: 5 }"
-              class="comment-textarea"
-            />
-            <!-- 敏感词错误提示 -->
-            <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 10px 0;" />
+          <a-textarea
+            v-model="commentContent"
+            placeholder="留下你的精彩评论吧"
+            :disabled="!isLogin"
+            :auto-size="{ minRows: 2, maxRows: 5 }"
+            class="comment-textarea"
+            @input="sensitiveWordsError = ''"
+          />
+          <!-- 敏感词错误提示 -->
+          <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 10px 0;" />
+          <div class="comment-btn-container">
             <a-button 
               type="primary" 
               @click="submitComment" 
@@ -1265,32 +1294,38 @@ onMounted(() => {
                 </div>
                 
                 <!-- 回复输入框 -->
-                <div v-if="replyingTo && replyingTo.id === comment.id" :class="['reply-form', `reply-form-${comment.id}`]">
+                <div v-if="replyingTo && replyingTo.id === comment.id" class="reply-form">
                   <a-textarea
                     v-model="replyContent"
                     placeholder="输入您想回复的内容"
                     :auto-size="{ minRows: 2, maxRows: 4 }"
                     class="reply-textarea"
+                    @input="sensitiveWordsError = ''"
                   />
                   <!-- 敏感词错误提示 -->
                   <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 5px 0;" />
-                  <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
-                    取消
-                  </a-button>
-                  <a-button 
-                    type="primary" 
-                    size="small" 
-                    @click="submitReply" 
-                    :loading="checkingSensitiveWords"
-                    :disabled="!replyContent.trim() || checkingSensitiveWords" 
-                    class="reply-submit-btn"
-                  >
-                    {{ checkingSensitiveWords ? '检测中...' : '回复' }}
-                  </a-button>
+                  <div class="reply-btn-container">
+                    <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
+                      取消
+                    </a-button>
+                    <a-button 
+                      type="primary" 
+                      size="small" 
+                      @click="submitReply" 
+                      :loading="checkingSensitiveWords"
+                      :disabled="!replyContent.trim() || checkingSensitiveWords" 
+                      class="reply-submit-btn"
+                    >
+                      {{ checkingSensitiveWords ? '检测中...' : '回复' }}
+                    </a-button>
+                  </div>
                 </div>
                 
                 <!-- 子评论 -->
                 <div v-if="comment.children && comment.children.length > 0" class="child-comments">
+                  <div class="child-comments-header">
+                    <span>{{ comment.children.length }}条回复</span>
+                  </div>
                   <div v-for="child in comment.children" :key="child.id" class="child-comment-item">
                     <div class="comment-author">
                       <img :src="child.userPic || '@/assets/avatar/default-avatar.png'" alt="头像" class="reply-avatar" />
@@ -1320,28 +1355,31 @@ onMounted(() => {
                     </div>
                     
                     <!-- 回复输入框 -->
-                    <div v-if="replyingTo && replyingTo.id === child.id" :class="['reply-form', `reply-form-${child.id}`]">
+                    <div v-if="replyingTo && replyingTo.id === child.id" class="reply-form">
                       <a-textarea
                         v-model="replyContent"
                         placeholder="输入您想回复的内容"
                         :auto-size="{ minRows: 2, maxRows: 4 }"
                         class="reply-textarea"
+                        @input="sensitiveWordsError = ''"
                       />
                       <!-- 敏感词错误提示 -->
                       <a-alert v-if="sensitiveWordsError" type="error" :content="sensitiveWordsError" style="margin: 5px 0;" />
-                      <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
-                        取消
-                      </a-button>
-                      <a-button 
-                        type="primary" 
-                        size="small" 
-                        @click="submitReply" 
-                        :loading="checkingSensitiveWords"
-                        :disabled="!replyContent.trim() || checkingSensitiveWords" 
-                        class="reply-submit-btn"
-                      >
-                        {{ checkingSensitiveWords ? '检测中...' : '回复' }}
-                      </a-button>
+                      <div class="reply-btn-container">
+                        <a-button size="small" @click="cancelReply" class="reply-cancel-btn">
+                          取消
+                        </a-button>
+                        <a-button 
+                          type="primary" 
+                          size="small" 
+                          @click="submitReply" 
+                          :loading="checkingSensitiveWords"
+                          :disabled="!replyContent.trim() || checkingSensitiveWords" 
+                          class="reply-submit-btn"
+                        >
+                          {{ checkingSensitiveWords ? '检测中...' : '回复' }}
+                        </a-button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1392,10 +1430,9 @@ onMounted(() => {
 
 <style scoped>
 .post-detail-container {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 20px;
-  background-color: #fffbf0;
   font-family: "SimSun", "宋体", serif;
   min-height: calc(100vh - 176px);
 }
@@ -1411,12 +1448,16 @@ onMounted(() => {
   background-color: #8C1F28;
   border-color: #8C1F28;
   color: #FFFBF0;
+  transition: all 0.3s ease;
+  padding: 6px 16px;
+  border-radius: 20px;
 }
 
 .back-btn:hover {
   background-color: #A52A2A;
   border-color: #A52A2A;
   color: #FFFBF0;
+  transform: translateY(-2px);
 }
 
 .post-detail-content {
@@ -1425,12 +1466,11 @@ onMounted(() => {
 }
 
 .error-container {
-  background-color: #FFF7E9;
+  background-color: #f9f5ec;
   padding: 40px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   margin-bottom: 20px;
-  border: 1px solid #D6C6AF;
+  border: 1px solid #E4D9C3;
 }
 
 :deep(.arco-spin) {
@@ -1439,19 +1479,13 @@ onMounted(() => {
   justify-content: center;
 }
 
-:deep(.arco-spin-icon) {
-  color: #8C1F28;
-  font-size: 24px;
-}
-
 /* 帖子内容区域 */
 .post-card {
   margin-bottom: 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  background-color: #FFFBF0;
-  border: 1px solid #D6C6AF;
+  background-color: #f9f5ec;
+  border: 1px solid #E4D9C3;
 }
 
 .post-header {
@@ -1460,8 +1494,7 @@ onMounted(() => {
   background-color: #8C1F28;
   color: #F9F3E9;
   position: relative;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border-radius: 8px 8px 0 0;
 }
 
 .post-header::before {
@@ -1475,13 +1508,14 @@ onMounted(() => {
 }
 
 .topic-tag {
-  padding: 4px 12px;
+  padding: 6px 16px;
   background-color: rgba(255, 251, 240, 0.2);
   color: #FFFBF0;
   font-size: 14px;
-  border-radius: 4px;
+  border-radius: 20px;
   display: inline-block;
   border: 1px solid rgba(255, 251, 240, 0.3);
+  font-weight: 500;
 }
 
 .post-title {
@@ -1518,7 +1552,6 @@ onMounted(() => {
   object-fit: cover;
   margin-right: 12px;
   border: 2px solid rgba(255, 251, 240, 0.7);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .author-detail {
@@ -1547,7 +1580,7 @@ onMounted(() => {
 
 .post-body {
   padding: 24px;
-  background-color: #FFF7E9;
+  background-color: #f9f5ec;
 }
 
 .content-text {
@@ -1588,15 +1621,20 @@ onMounted(() => {
 
 /* 图片样式 */
 .content-markdown :deep(.markdown-body img) {
-  max-width: 60%;
+  max-width: 80%;
   max-height: 500px;
-  margin: 10px auto;
+  margin: 20px auto;
   display: block;
-  border-radius: 4px;
+  border-radius: 8px;
   border: 1px solid #E4D9C3;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   opacity: 1; /* 确保图片显示正常 */
   animation: fadeIn 0.3s ease; /* 添加淡入动画 */
+  transition: all 0.3s ease;
+}
+
+.content-markdown :deep(.markdown-body img:hover) {
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 @keyframes fadeIn {
@@ -1614,6 +1652,11 @@ onMounted(() => {
   color: #8C1F28;
   font-family: "STKaiti", "楷体", serif;
   position: relative;
+  margin-top: 1.5em;
+  margin-bottom: 0.8em;
+  font-weight: 600;
+  border-bottom: 1px solid #E4D9C3;
+  padding-bottom: 0.3em;
 }
 
 .post-images {
@@ -1624,11 +1667,11 @@ onMounted(() => {
 
 .image-grid {
   display: grid;
-  grid-gap: 8px;
+  grid-gap: 12px;
   width: 100%;
   max-width: 700px;
-  margin: 0;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  margin: 0 auto;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 }
 
 .image-wrapper {
@@ -1636,11 +1679,14 @@ onMounted(() => {
   padding-bottom: 75%;
   height: 0;
   overflow: hidden;
-  border-radius: 4px;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.image-wrapper:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
 
 .post-image {
@@ -1649,13 +1695,8 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   transition: transform 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  max-width: 100%;
-  max-height: 100%;
 }
 
 :deep(.arco-image) {
@@ -1678,27 +1719,37 @@ onMounted(() => {
 
 /* 根据图片数量定义网格布局 */
 .grid-1 {
-  grid-template-columns: minmax(0, 300px);
-  max-width: 300px;
+  grid-template-columns: minmax(0, 400px);
+  max-width: 400px;
 }
 
 .grid-2 {
   grid-template-columns: repeat(2, 1fr);
-  max-width: 500px;
-}
-
-.grid-3, .grid-5, .grid-6, .grid-7, .grid-8, .grid-9 {
-  grid-template-columns: repeat(3, 1fr);
   max-width: 600px;
 }
 
+.grid-3 {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 700px;
+}
+
+.grid-4 {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 600px;
+}
+
+.grid-5, .grid-6, .grid-7, .grid-8, .grid-9 {
+  grid-template-columns: repeat(3, 1fr);
+  max-width: 800px;
+}
+
 .post-footer {
-  padding: 16px 24px;
+  padding: 20px 24px;
   border-top: 1px solid #E4D9C3;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #FFFBF0;
+  background-color: #f9f5ec;
 }
 
 .post-stats {
@@ -1714,12 +1765,12 @@ onMounted(() => {
 
 .topic-tag-footer {
   padding: 4px 12px;
-  background-color: #FBF0E9;
+  background-color: rgba(140, 31, 40, 0.1);
   color: #8C1F28;
   font-size: 12px;
-  border-radius: 4px;
+  border-radius: 16px;
   display: inline-block;
-  border: 1px solid #E4D9C3;
+  border: 1px solid rgba(140, 31, 40, 0.3);
 }
 
 .interaction-actions {
@@ -1734,7 +1785,9 @@ onMounted(() => {
   transition: all 0.3s ease;
   color: #582F0E;
   border-color: #D6C6AF;
-  background-color: #FFFBF0;
+  background-color: #f9f5ec;
+  border-radius: 20px;
+  padding: 6px 16px;
 }
 
 .action-btn.liked {
@@ -1748,6 +1801,7 @@ onMounted(() => {
   background-color: #8C1F28;
   color: #FFFBF0;
   border-color: #8C1F28;
+  box-shadow: 0 4px 8px rgba(140, 31, 40, 0.2);
 }
 
 /* 评论区域 */
@@ -1755,8 +1809,25 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
+:deep(.arco-card) {
+  background-color: #f9f5ec;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  border: 1px solid #E4D9C3;
+}
+
+:deep(.arco-card-header) {
+  border-bottom: 1px solid #E4D9C3;
+  padding: 16px 20px;
+}
+
+:deep(.arco-card-body) {
+  padding: 20px;
+}
+
 .section-header {
-  margin-bottom: 16px;
+  margin-bottom: 0;
 }
 
 .section-title {
@@ -1767,66 +1838,80 @@ onMounted(() => {
   display: inline-block;
   font-family: "STKaiti", "楷体", serif;
   letter-spacing: 1px;
+  padding-left: 15px;
 }
 
-.section-title::after {
+.section-title::before {
   content: '';
   position: absolute;
   left: 0;
-  bottom: -8px;
-  width: 40px;
-  height: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 20px;
   background-color: #8C1F28;
+  border-radius: 2px;
 }
 
-.comment-container {
-  position: relative;
-  margin-bottom: 24px;
-}
+/* .comment-container {
+  margin-bottom: 20px;
+  background-color: #f9f5ec;
+  border-radius: 8px;
+  padding: 15px;
+  border: 1px solid #E4D9C3;
+} */
 
 .comment-textarea {
-  background-color: #FFFDF7;
+  background-color: #f9f5ec;
   border: 1px solid #D6C6AF;
-  border-radius: 4px;
+  border-radius: 8px;
   transition: all 0.3s ease;
   color: #582F0E;
   resize: none;
   width: 100%;
-  padding-right: 100px;
-  padding-bottom: 15px;
+  margin-bottom: 10px;
+  font-family: "SimSun", "宋体", serif;
 }
 
 .comment-textarea:hover, .comment-textarea:focus {
   border-color: #8C1F28;
 }
 
+.comment-btn-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
 .comment-submit-btn {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
   background-color: #8C1F28;
   border-color: #8C1F28;
   color: #FFFBF0;
-  z-index: 2;
+  border-radius: 20px;
+  padding: 6px 20px;
+  transition: all 0.3s ease;
 }
 
 .comment-submit-btn:hover {
   background-color: #A52A2A;
   border-color: #A52A2A;
+  transform: translateY(-2px);
 }
 
 .empty-comments {
   text-align: center;
-  padding: 20px 0;
-  background-color: #FFF7E9;
+  padding: 30px 0;
+  background-color: #f9f5ec;
   border-radius: 8px;
-  border: 1px solid #D6C6AF;
+  border: 1px dashed #E4D9C3;
+  margin: 20px 0;
 }
 
 .comments-list {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .comment-item {
@@ -1834,37 +1919,36 @@ onMounted(() => {
 }
 
 .comment-content {
-  background-color: #FFF7E9;
+  background-color: #f9f5ec;
   border-radius: 8px;
-  padding: 16px;
+  padding: 20px;
   border-left: 3px solid #8C1F28;
   transition: all 0.3s ease;
-  border: 1px solid #D6C6AF;
+  border: 1px solid #E4D9C3;
 }
 
 .comment-content:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  transform: translateY(-2px);
 }
 
 .comment-author {
   display: flex;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
 }
 
 .comment-avatar, .reply-avatar {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   margin-right: 12px;
   border: 2px solid #E4D9C3;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .reply-avatar {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
 }
 
 .user-name {
@@ -1872,177 +1956,176 @@ onMounted(() => {
   color: #582F0E;
   margin-right: 15px;
   margin-bottom: 0;
+  font-size: 16px;
 }
 
 .comment-time {
-  font-size: 12px;
+  font-size: 13px;
   color: #7F4F24;
-  min-width: 120px;
+  margin-top: 2px;
 }
 
 .comment-text {
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.7;
   color: #582F0E;
-  margin-bottom: 12px;
+  margin-bottom: 15px;
   word-break: break-word;
+  padding: 0 0 0 12px;
+  border-left: 2px solid #E4D9C3;
 }
 
 .reply-to {
   color: #7F4F24;
+  font-style: italic;
+  margin-right: 5px;
 }
 
 .reply-name {
   color: #8C1F28;
   font-weight: 500;
+  font-style: normal;
 }
 
 .comment-actions {
   display: flex;
-  gap: 16px;
+  gap: 15px;
+  border-top: 1px solid #E4D9C3;
+  padding-top: 12px;
+  margin-top: 12px;
 }
 
 .action-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   color: #582F0E;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  padding: 5px 10px;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  background: transparent;
 }
 
 .action-link:hover {
-  background-color: #8C1F28;
+  background-color: rgba(140, 31, 40, 0.1);
   transform: translateY(-1px);
-  color: #FFFBF0;
+  color: #8C1F28;
 }
 
 .action-link.active {
   color: #8C1F28;
+  font-weight: 500;
 }
 
 .action-link.delete:hover {
-  color: #FFFBF0;
-  background-color: #8C1F28;
+  color: #A52A2A;
+  background-color: rgba(165, 42, 42, 0.1);
 }
 
-.reply-form {
-  position: relative;
-  margin-top: 16px;
-  margin-bottom: 10px;
-}
 
 .reply-textarea {
-  background-color: #FFFDF7;
+  background-color: #f9f5ec;
   border: 1px solid #D6C6AF;
-  border-radius: 4px;
+  border-radius: 6px;
   transition: all 0.3s ease;
   color: #582F0E;
   resize: none;
   width: 100%;
-  padding-right: 160px;
-  padding-bottom: 15px;
+  font-family: "SimSun", "宋体", serif;
 }
 
 .reply-textarea:hover, .reply-textarea:focus {
   border-color: #8C1F28;
 }
 
-.reply-submit-btn {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  background-color: #8C1F28;
-  border-color: #8C1F28;
-  color: #FFFBF0;
-  z-index: 2;
+.reply-btn-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .reply-cancel-btn {
-  position: absolute;
-  right: 70px;
-  bottom: 10px;
-  z-index: 2;
+  color: #666;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+}
+
+.reply-cancel-btn:hover {
+  background-color: #E4D9C3;
+  color: #582F0E;
+}
+
+.reply-submit-btn {
+  background-color: #8C1F28;
+  border-color: #8C1F28;
+  color: #FFFBF0;
+  border-radius: 15px;
+  transition: all 0.3s ease;
 }
 
 .reply-submit-btn:hover {
   background-color: #A52A2A;
   border-color: #A52A2A;
+  transform: translateY(-1px);
 }
 
 .child-comments {
-  margin-top: 16px;
-  padding-left: 12px;
-  border-left: 2px solid #E4D9C3;
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f5ec;
+  border-radius: 8px;
+  border: 1px dashed #E4D9C3;
+}
+
+.child-comments-header {
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #E4D9C3;
+  font-size: 14px;
+  color: #7F4F24;
+  font-weight: 500;
 }
 
 .child-comment-item {
   margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #E4D9C3;
 }
 
 .child-comment-item:last-child {
   margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .load-more {
   text-align: center;
-  margin-top: 24px;
-}
-
-.load-more :deep(.arco-btn) {
-  background-color: #8C1F28;
-  border-color: #8C1F28;
-  color: #FFFBF0;
-}
-
-.load-more :deep(.arco-btn:hover) {
-  background-color: #A52A2A;
-  border-color: #A52A2A;
+  margin-top: 20px;
+  padding: 10px 0;
 }
 
 /* 响应式设计 */
 @media screen and (max-width: 768px) {
-  .post-detail-container {
+  .comment-container {
     padding: 12px;
   }
   
-  .post-title {
-    font-size: 20px;
+  .comment-content {
+    padding: 15px;
   }
   
-  .post-meta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+  .comment-actions {
+    flex-wrap: wrap;
   }
   
-  .post-footer {
-    flex-direction: column;
-    gap: 16px;
-  }
-  
-  .interaction-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .comment-container {
-    flex-direction: column;
-    gap: 12px;
-  }
-  
-  .input-area {
-    display: none;
-  }
-  
-  .image-grid {
-    grid-gap: 8px;
-  }
-  
-  .post-image {
-    min-height: 150px;
+  .reply-btn-container {
+    flex-wrap: wrap;
   }
 }
 
-.footer{
+.footer {
   display: flex;
   bottom: 0;
 }
