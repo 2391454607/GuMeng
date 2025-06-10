@@ -30,16 +30,63 @@ const trendData = [
 
 // 数据概览（取部分代表性项目）
 const overviewData = [
-  { title: '白族扎染技艺', gender: '男', level: '国家级', ethnic: '白族', batch: '2006', region: '大理白族自治州', introduce: '白族传统染织工艺，国家级非遗。' },
-  { title: '傣族泼水节', gender: '男', level: '国家级', ethnic: '傣族', batch: '2006', region: '西双版纳傣族自治州', introduce: '傣族传统节日，国家级非遗。' },
-  { title: '彝族火把节', gender: '女', level: '省级', ethnic: '彝族', batch: '2008', region: '楚雄彝族自治州', introduce: '彝族传统节日，省级非遗。' },
-  { title: '哈尼梯田文化系统', gender: '女', level: '国家级', ethnic: '哈尼族', batch: '2013', region: '红河哈尼族彝族自治州', introduce: '哈尼族梯田文化，国家级非遗。' },
-  { title: '纳西古乐', gender: '男', level: '省级', ethnic: '纳西族', batch: '2008', region: '丽江市', introduce: '纳西族传统音乐，省级非遗。' },
-  { title: '普洱茶制作技艺', gender: '女', level: '国家级', ethnic: '汉族', batch: '2008', region: '普洱市', introduce: '普洱茶传统制作工艺，国家级非遗。' },
-  { title: '苗族银饰锻制技艺', gender: '男', level: '省级', ethnic: '苗族', batch: '2011', region: '文山壮族苗族自治州', introduce: '苗族传统银饰锻造，省级非遗。' },
-  { title: '景颇族目瑙纵歌', gender: '女', level: '省级', ethnic: '景颇族', batch: '2011', region: '德宏傣族景颇族州', introduce: '景颇族传统舞蹈，省级非遗。' },
-  { title: '藏族锅庄舞', gender: '男', level: '市级', ethnic: '藏族', batch: '2015', region: '迪庆藏族自治州', introduce: '藏族传统舞蹈，市级非遗。' },
-  { title: '傈僳族刺绣', gender: '女', level: '市级', ethnic: '傈僳族', batch: '2015', region: '怒江傈僳族自治州', introduce: '傈僳族传统刺绣，市级非遗。' },
+  // 男性传承人数据 (400人)
+  ...Array(200).fill().map((_, i) => ({
+    title: `传统技艺${i + 1}`,
+    gender: '男',
+    level: '国家级',
+    ethnic: '汉族',
+    batch: '2006',
+    region: '昆明市',
+    introduce: '传统技艺传承人'
+  })),
+  ...Array(150).fill().map((_, i) => ({
+    title: `传统音乐${i + 1}`,
+    gender: '男',
+    level: '省级',
+    ethnic: '白族',
+    batch: '2008',
+    region: '大理白族自治州',
+    introduce: '传统音乐传承人'
+  })),
+  ...Array(50).fill().map((_, i) => ({
+    title: `传统舞蹈${i + 1}`,
+    gender: '男',
+    level: '市级',
+    ethnic: '彝族',
+    batch: '2010',
+    region: '楚雄彝族自治州',
+    introduce: '传统舞蹈传承人'
+  })),
+  
+  // 女性传承人数据 (188人)
+  ...Array(100).fill().map((_, i) => ({
+    title: `传统刺绣${i + 1}`,
+    gender: '女',
+    level: '国家级',
+    ethnic: '汉族',
+    batch: '2006',
+    region: '昆明市',
+    introduce: '传统刺绣传承人'
+  })),
+  ...Array(60).fill().map((_, i) => ({
+    title: `传统纺织${i + 1}`,
+    gender: '女',
+    level: '省级',
+    ethnic: '白族',
+    batch: '2008',
+    region: '大理白族自治州',
+    introduce: '传统纺织传承人'
+  })),
+  ...Array(28).fill().map((_, i) => ({
+    title: `传统音乐${i + 1}`,
+    gender: '女',
+    level: '市级',
+    ethnic: '彝族',
+    batch: '2010',
+    region: '楚雄彝族自治州',
+    introduce: '传统音乐传承人'
+  }))
 ];
 const contentData = [
   { category: '传统技艺', count: 120, avgViews: 1500, avgComments: 45 },
