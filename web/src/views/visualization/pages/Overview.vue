@@ -4,8 +4,13 @@ import * as echarts from 'echarts';
 
 const mockData = [
   { title: '项目1', gender: '男', level: '国家级', ethnic: '汉族', batch: '2023', region: '北京', introduce: '介绍1' },
-  { title: '项目2', gender: '女', level: '省级', ethnic: '满族', batch: '2023', region: '上海', introduce: '介绍2' },
+  { title: '项目2', gender: '男', level: '省级', ethnic: '满族', batch: '2023', region: '上海', introduce: '介绍2' },
   { title: '项目3', gender: '男', level: '市级', ethnic: '汉族', batch: '2022', region: '广州', introduce: '介绍3' },
+  { title: '项目4', gender: '女', level: '国家级', ethnic: '壮族', batch: '2022', region: '南京', introduce: '介绍4' },
+  { title: '项目5', gender: '男', level: '省级', ethnic: '汉族', batch: '2021', region: '武汉', introduce: '介绍5' },
+  { title: '项目6', gender: '男', level: '市级', ethnic: '回族', batch: '2021', region: '成都', introduce: '介绍6' },
+  { title: '项目7', gender: '男', level: '国家级', ethnic: '汉族', batch: '2020', region: '重庆', introduce: '介绍7' },
+  { title: '项目8', gender: '女', level: '省级', ethnic: '苗族', batch: '2020', region: '西安', introduce: '介绍8' },
 ];
 
 const charts = ref([]);
